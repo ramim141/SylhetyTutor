@@ -1,18 +1,11 @@
 import { create } from "zustand";
 
-export type LanguageMode = "en" | "bn" | "mixed";
-
-interface LanguageState {
-  lang: LanguageMode;
-  setLang: (lang: LanguageMode) => void;
-}
-
 const savedLang =
   (typeof window !== "undefined" &&
-    (localStorage.getItem("sylhetytutor_lang") as LanguageMode)) ||
+    localStorage.getItem("sylhetytutor_lang")) ||
   "mixed";
 
-export const useLanguageStore = create<LanguageState>((set) => ({
+export const useLanguageStore = create((set) => ({
   lang: savedLang,
   setLang: (lang) => {
     if (typeof window !== "undefined") {

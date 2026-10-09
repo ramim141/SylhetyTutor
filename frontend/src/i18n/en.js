@@ -1,20 +1,18 @@
-import type { TranslationKeys } from "./en";
-
-export const mixed: Record<TranslationKeys, string> = {
+export const en = {
   // Brand & Nav
   "brand.name": "SylhetyTutor",
-  "brand.tagline": "সিলেটের verified university tutors দের সাথে connect হন",
+  "brand.tagline": "Connect with verified university home tutors in Sylhet",
   "nav.home": "Home",
-  "nav.findTutors": "Tutors খুঁজুন",
-  "nav.postRequirement": "Tuition Post করুন",
+  "nav.findTutors": "Find Tutors",
+  "nav.postRequirement": "Post Tuition",
   "nav.becomeTutor": "Become a Tutor",
   "nav.signIn": "Sign In",
 
   // Hero Section
   "hero.badge": "🛡️ 100% NID & University ID Verified",
-  "hero.title": "Find করুন Your Perfect Home Tutor",
-  "hero.subtitle": "সিলেটের SUST, Metropolitan ও Leading University র verified tutor দের সাথে connect হন। ১০০% নিরাপদ ও বিশ্বস্ত।",
-  "hero.searchPlaceholder": "Subject, area বা tutor name দিয়ে search করুন...",
+  "hero.title": "Find Your Perfect Home Tutor",
+  "hero.subtitle": "Connect with verified SUST, Metropolitan, and Leading University tutors in Sylhet. Safety, quality, and excellence for your child.",
+  "hero.searchPlaceholder": "Search by subject, area, or tutor name...",
   "hero.searchButton": "Search Tutors",
   "hero.popularAreas": "Popular Areas:",
 
@@ -25,9 +23,9 @@ export const mixed: Record<TranslationKeys, string> = {
   "stats.sylhetAreas": "Sylhet Areas Covered",
 
   // Sections
-  "section.featuredTitle": "Sylhet এর Featured Tutors",
+  "section.featuredTitle": "Featured Tutors in Sylhet",
   "section.featuredSubtitle": "Top-rated university students ready for home tutoring",
-  "section.howItWorksTitle": "কীভাবে প্ল্যাটফর্মটি কাজ করে",
+  "section.howItWorksTitle": "How It Works",
 
   // Tutor Card
   "card.featured": "Featured",

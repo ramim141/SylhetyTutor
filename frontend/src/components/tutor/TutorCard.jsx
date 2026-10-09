@@ -3,39 +3,21 @@ import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
 import { useTranslation } from "../../i18n";
 
-export interface TutorCardProps {
-  id: string;
-  name: string;
-  initials: string;
-  avatarUrl?: string;
-  university: string;
-  department: string;
-  area: string;
-  subjects: string[];
-  classes: string[];
-  rating: number;
-  reviewCount: number;
-  feeMin: number;
-  feeMax: number;
-  isFeatured?: boolean;
-  isVerified?: boolean;
-}
-
 export function TutorCard({
   name,
   initials,
   avatarUrl,
   university,
   area,
-  subjects,
-  classes,
-  rating,
-  reviewCount,
-  feeMin,
-  feeMax,
+  subjects = [],
+  classes = [],
+  rating = 0,
+  reviewCount = 0,
+  feeMin = 0,
+  feeMax = 0,
   isFeatured = false,
   isVerified = true,
-}: TutorCardProps) {
+}) {
   const { t } = useTranslation();
 
   return (

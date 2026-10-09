@@ -1,18 +1,18 @@
-export const en = {
+export const mixed = {
   // Brand & Nav
   "brand.name": "SylhetyTutor",
-  "brand.tagline": "Connect with verified university home tutors in Sylhet",
+  "brand.tagline": "সিলেটের verified university tutors দের সাথে connect হন",
   "nav.home": "Home",
-  "nav.findTutors": "Find Tutors",
-  "nav.postRequirement": "Post Tuition",
+  "nav.findTutors": "Tutors খুঁজুন",
+  "nav.postRequirement": "Tuition Post করুন",
   "nav.becomeTutor": "Become a Tutor",
   "nav.signIn": "Sign In",
 
   // Hero Section
   "hero.badge": "🛡️ 100% NID & University ID Verified",
-  "hero.title": "Find Your Perfect Home Tutor",
-  "hero.subtitle": "Connect with verified SUST, Metropolitan, and Leading University tutors in Sylhet. Safety, quality, and excellence for your child.",
-  "hero.searchPlaceholder": "Search by subject, area, or tutor name...",
+  "hero.title": "Find করুন Your Perfect Home Tutor",
+  "hero.subtitle": "সিলেটের SUST, Metropolitan ও Leading University র verified tutor দের সাথে connect হন। ১০০% নিরাপদ ও বিশ্বস্ত।",
+  "hero.searchPlaceholder": "Subject, area বা tutor name দিয়ে search করুন...",
   "hero.searchButton": "Search Tutors",
   "hero.popularAreas": "Popular Areas:",
 
@@ -23,9 +23,9 @@ export const en = {
   "stats.sylhetAreas": "Sylhet Areas Covered",
 
   // Sections
-  "section.featuredTitle": "Featured Tutors in Sylhet",
+  "section.featuredTitle": "Sylhet এর Featured Tutors",
   "section.featuredSubtitle": "Top-rated university students ready for home tutoring",
-  "section.howItWorksTitle": "How It Works",
+  "section.howItWorksTitle": "কীভাবে প্ল্যাটফর্মটি কাজ করে",
 
   // Tutor Card
   "card.featured": "Featured",
@@ -38,5 +38,3 @@ export const en = {
   "theme.dark": "Dark",
   "theme.system": "System",
 };
-
-export type TranslationKeys = keyof typeof en;

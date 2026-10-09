@@ -1,13 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { Search, MapPin, ShieldCheck, ArrowRight } from "lucide-react";
 import { Header } from "./components/layout/Header";
 import { Button } from "./components/ui/Button";
 import { TutorCard } from "./components/tutor/TutorCard";
-import type { TutorCardProps } from "./components/tutor/TutorCard";
 import { useTranslation } from "./i18n";
 
-// Sample verified tutors from Sylhet Universities for demonstration
-const SAMPLE_TUTORS: TutorCardProps[] = [
+const SAMPLE_TUTORS = [
   {
     id: "1",
     name: "Rahim Uddin",
@@ -86,23 +84,21 @@ const POPULAR_AREAS = [
 
 export default function App() {
   const { t } = useTranslation();
-  const [searchQuery, setSearchQuery] = React.useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   return (
     <div className="min-h-screen bg-bg text-fg flex flex-col font-body transition-colors">
-      {/* Top Header */}
       <Header />
 
       <main className="flex-1">
         {/* Hero Section */}
         <section className="relative overflow-hidden pt-12 pb-20 md:py-24 bg-orange-pale/50 border-b border-border">
-          {/* Subtle Orange Circles Decor (DESIGN.md 1 & 7) */}
           <div className="absolute top-10 left-1/4 w-96 h-96 rounded-full bg-orange/8 blur-3xl pointer-events-none -z-10" />
           <div className="absolute -bottom-10 right-10 w-80 h-80 rounded-full bg-orange/6 blur-2xl pointer-events-none -z-10" />
 
           <div className="max-w-[1200px] mx-auto px-4 md:px-6 text-center">
             {/* Trust Pill */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-bg-card border border-border shadow-xs text-xs font-display font-semibold text-navy mb-6 animate-in fade-in duration-300">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-bg-card border border-border shadow-xs text-xs font-display font-semibold text-navy mb-6">
               <ShieldCheck className="w-4 h-4 text-info" />
               <span>{t("hero.badge")}</span>
             </div>
@@ -137,7 +133,6 @@ export default function App() {
                   />
                 </div>
 
-                {/* Single Primary Action Button on Hero */}
                 <Button type="submit" variant="primary" size="md" className="shrink-0">
                   <Search className="w-4 h-4" />
                   {t("hero.searchButton")}
@@ -245,7 +240,6 @@ export default function App() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Step 1 */}
               <div className="bg-bg-card p-6 rounded-xl border border-border shadow-xs text-center">
                 <div className="w-12 h-12 rounded-full bg-orange-light text-orange font-display font-extrabold text-lg flex items-center justify-center mx-auto mb-4">
                   1
@@ -258,7 +252,6 @@ export default function App() {
                 </p>
               </div>
 
-              {/* Step 2 */}
               <div className="bg-bg-card p-6 rounded-xl border border-border shadow-xs text-center">
                 <div className="w-12 h-12 rounded-full bg-info/10 text-info font-display font-extrabold text-lg flex items-center justify-center mx-auto mb-4">
                   2
@@ -271,7 +264,6 @@ export default function App() {
                 </p>
               </div>
 
-              {/* Step 3 */}
               <div className="bg-bg-card p-6 rounded-xl border border-border shadow-xs text-center">
                 <div className="w-12 h-12 rounded-full bg-success-bg text-success font-display font-extrabold text-lg flex items-center justify-center mx-auto mb-4">
                   3

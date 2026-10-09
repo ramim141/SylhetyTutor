@@ -8,37 +8,31 @@ const variants = {
   outline: "border-2 border-orange text-orange-text hover:bg-orange-pale",
   ghost: "border border-border text-fg-secondary hover:bg-bg-subtle",
   danger: "bg-error text-on-error hover:opacity-90",
-} as const;
+};
 
 const sizes = {
   sm: "min-h-9 px-4 text-xs",
   md: "min-h-11 px-6 text-sm",
   lg: "min-h-13 px-8 text-base",
-} as const;
-
-export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: keyof typeof variants;
-  size?: keyof typeof sizes;
-  loading?: boolean;
 };
 
 export function Button({
   variant = "primary",
   size = "md",
-  loading,
-  className,
+  loading = false,
+  className = "",
   children,
-  disabled,
+  disabled = false,
   ...rest
-}: ButtonProps) {
+}) {
   return (
     <button
       className={twMerge(
         clsx(
           "inline-flex items-center justify-center gap-2 rounded-md font-display font-semibold transition-colors duration-200 cursor-pointer select-none",
           "focus-visible:ring-2 focus-visible:ring-orange focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-          variants[variant],
-          sizes[size],
+          variants[variant] || variants.primary,
+          sizes[size] || sizes.md,
           className
         )
       )}

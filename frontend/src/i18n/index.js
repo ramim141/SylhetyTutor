@@ -1,5 +1,4 @@
 import { en } from "./en";
-import type { TranslationKeys } from "./en";
 import { bn } from "./bn";
 import { mixed } from "./mixed";
 import { useLanguageStore } from "../store/languageStore";
@@ -13,7 +12,7 @@ const translations = {
 export function useTranslation() {
   const { lang, setLang } = useLanguageStore();
 
-  const t = (key: TranslationKeys): string => {
+  const t = (key) => {
     const dict = translations[lang] || translations.mixed;
     return dict[key] || translations.mixed[key] || key;
   };
@@ -22,4 +21,3 @@ export function useTranslation() {
 }
 
 export { en, bn, mixed };
-export type { TranslationKeys };

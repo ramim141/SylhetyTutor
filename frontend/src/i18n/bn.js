@@ -1,6 +1,4 @@
-import type { TranslationKeys } from "./en";
-
-export const bn: Record<TranslationKeys, string> = {
+export const bn = {
   // Brand & Nav
   "brand.name": "SylhetyTutor",
   "brand.tagline": "সিলেটে ভেরিফাইড বিশ্ববিদ্যালয় হোম টিউটরদের সাথে যুক্ত হন",

@@ -1,22 +1,21 @@
-import React from "react";
+import React, { useState } from "react";
 import { GraduationCap, Sun, Moon, Laptop, Menu, X } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import { useThemeStore } from "../../store/themeStore";
-import type { Theme } from "../../store/themeStore";
 import { Button } from "../ui/Button";
 
 export function Header() {
   const { t, lang, setLang } = useTranslation();
   const { theme, setTheme } = useThemeStore();
-  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const cycleTheme = () => {
-    const next: Record<Theme, Theme> = {
+    const next = {
       light: "dark",
       dark: "system",
       system: "light",
     };
-    setTheme(next[theme]);
+    setTheme(next[theme] || "light");
   };
 
   return (

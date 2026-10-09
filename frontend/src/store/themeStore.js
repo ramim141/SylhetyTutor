@@ -1,13 +1,6 @@
 import { create } from "zustand";
 
-export type Theme = "light" | "dark" | "system";
-
-interface ThemeState {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
-}
-
-function applyTheme(theme: Theme) {
+function applyTheme(theme) {
   const root = document.documentElement;
   let effectiveTheme = theme;
   if (theme === "system") {
@@ -19,12 +12,12 @@ function applyTheme(theme: Theme) {
   localStorage.setItem("sylhetytutor_theme", theme);
 }
 
-const initialTheme: Theme =
+const initialTheme =
   (typeof window !== "undefined" &&
-    (localStorage.getItem("sylhetytutor_theme") as Theme)) ||
+    localStorage.getItem("sylhetytutor_theme")) ||
   "system";
 
-export const useThemeStore = create<ThemeState>((set) => ({
+export const useThemeStore = create((set) => ({
   theme: initialTheme,
   setTheme: (theme) => {
     applyTheme(theme);
@@ -32,7 +25,6 @@ export const useThemeStore = create<ThemeState>((set) => ({
   },
 }));
 
-// Listen for system theme changes if set to 'system'
 if (typeof window !== "undefined") {
   window
     .matchMedia("(prefers-color-scheme: dark)")
