@@ -1,0 +1,24 @@
+@layer base {
+  html {
+    background: var(--color-bg);
+    color: var(--color-fg);
+  }
+  body {
+    font-family: var(--font-body);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    color: var(--color-fg);
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  [lang="bn"] body, [lang="bn"] p {
+    line-height: 1.85;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-orange);
+    outline-offset: 2px;
+  }
+}

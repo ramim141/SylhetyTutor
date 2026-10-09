@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+/* ───────── Light (default) ───────── */
+@theme {
+  /* Brand */
+  --color-navy: #1a2e5e;
+  --color-navy-deep: #0f1d3d;
+  --color-navy-light: #2a4480;
+  --color-orange: #f47920;
+  --color-orange-hover: #e06810;
+  --color-orange-text: #b44d0c;
+  --color-on-orange: #0f1d3d;
+  --color-on-navy: #ffffff;
+  --color-orange-light: #fef3ea;
+  --color-orange-pale: #fff8f2;
+
+  /* Surfaces & text */
+  --color-bg: #ffffff;
+  --color-bg-subtle: #faf9f7;
+  --color-bg-card: #ffffff;
+  --color-fg: #1a2e5e;
+  --color-fg-secondary: #5a6a8a;
+  --color-fg-muted: #647089;
+  --color-border: #e8e6e1;
+  --color-border-light: #f0eee9;
+
+  /* Semantic */
+  --color-success: #15803d;
+  --color-success-bg: #f0fdf4;
+  --color-warning: #b45309;
+  --color-warning-bg: #fffbeb;
+  --color-error: #dc2626;
+  --color-error-bg: #fef2f2;
+  --color-info: #2563eb;
+  --color-info-bg: #eff6ff;
+  --color-on-error: #ffffff;
+
+  /* Special */
+  --color-featured-border: #16a34a;
+  --color-featured-bg: #f0fdf4;
+  --color-star: #f59e0b;
+  --color-badge-pro: #7c3aed;
+  --color-badge-premium: #b44d0c;
+
+  /* Fonts */
+  --font-display: "Plus Jakarta Sans", "Hind Siliguri", system-ui, sans-serif;
+  --font-body: "Hind Siliguri", "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 3px rgb(26 46 94 / 0.06);
+  --shadow-card: 0 2px 8px rgb(26 46 94 / 0.06);
+  --shadow-md: 0 4px 12px rgb(26 46 94 / 0.08);
+  --shadow-lg: 0 8px 30px rgb(26 46 94 / 0.12);
+}
+
+/* ───────── Dark ───────── */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-navy: #c8d4ee;
+  --color-navy-deep: #e2e8f4;
+  --color-navy-light: #8da0cc;
+  --color-orange: #f5923f;
+  --color-orange-hover: #f9a85e;
+  --color-orange-text: #f5923f;
+  --color-on-orange: #0e1117;
+  --color-on-navy: #0e1117;
+  --color-orange-light: #2a1f14;
+  --color-orange-pale: #1e1814;
+
+  --color-bg: #0e1117;
+  --color-bg-subtle: #151921;
+  --color-bg-card: #1a1f2b;
+  --color-fg: #e2e8f4;
+  --color-fg-secondary: #9aa5bd;
+  --color-fg-muted: #7d8aa8;
+  --color-border: #2a3042;
+  --color-border-light: #1e2435;
+
+  --color-success: #4ade80;
+  --color-success-bg: #0f2418;
+  --color-warning: #fbbf24;
+  --color-warning-bg: #241e0a;
+  --color-error: #f87171;
+  --color-error-bg: #240f0f;
+  --color-info: #60a5fa;
+  --color-info-bg: #0f1a2e;
+  --color-on-error: #0e1117;
+
+  --color-featured-border: #4ade80;
+  --color-featured-bg: #0f2418;
+  --color-star: #fbbf24;
+  --color-badge-pro: #a78bfa;
+  --color-badge-premium: #f5923f;
+
+  --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.3);
+  --shadow-card: 0 2px 8px rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 12px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 8px 30px rgb(0 0 0 / 0.5);
+}
