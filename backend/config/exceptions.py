@@ -21,13 +21,15 @@ def custom_exception_handler(exc, context):
 
     if response.status_code == 401:
         custom_data["detail"] = "Authentication credentials were not provided or are invalid."
-        custom_data["code"] = "invalid_credentials"
+        custom_data["code"] = "not_authenticated"
         if isinstance(data, dict):
             detail_val = data.get("detail", "")
             if detail_val:
                 custom_data["detail"] = str(detail_val)
-            if "code" in data:
-                custom_data["code"] = str(data["code"])
+            # simplejwt puts its code (token_not_valid) in the body; DRF keeps it on ErrorDetail
+            custom_data["code"] = str(
+                data.get("code") or getattr(detail_val, "code", None) or custom_data["code"]
+            )
         response.data = custom_data
         return response
 
@@ -40,6 +42,9 @@ def custom_exception_handler(exc, context):
     if response.status_code == 429:
         custom_data["detail"] = "Request was throttled. Expected available in some time."
         custom_data["code"] = "throttled"
+        wait = getattr(exc, "wait", None)
+        if wait is not None:
+            custom_data["retry_after"] = int(wait) + 1
         response.data = custom_data
         return response
 

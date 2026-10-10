@@ -10,6 +10,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 
@@ -20,6 +21,7 @@ from .serializers import (
     UserSerializer,
     UserUpdateSerializer,
 )
+from .throttles import LoginIdentifierThrottle, LoginIPThrottle, RegisterIPThrottle
 
 
 def get_tokens_for_user(user):
@@ -33,7 +35,7 @@ def get_tokens_for_user(user):
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
-    throttle_scope = "anon_register"
+    throttle_classes = [RegisterIPThrottle]
 
     @extend_schema(
         tags=["auth"],
@@ -59,7 +61,7 @@ class RegisterView(APIView):
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
-    throttle_scope = "anon_login"
+    throttle_classes = [LoginIdentifierThrottle, LoginIPThrottle]
 
     @extend_schema(
         tags=["auth"],
@@ -127,12 +129,14 @@ class LogoutView(APIView):
         responses={204: None},
     )
     def post(self, request):
+        # Idempotent: an expired/unknown token still logs the client out (204)
         refresh_token = request.data.get("refresh")
         if refresh_token:
             try:
                 token = RefreshToken(refresh_token)
-                token.blacklist()
-            except Exception:
+                if str(token.get("user_id")) == str(request.user.pk):
+                    token.blacklist()
+            except TokenError:
                 pass
         return Response(status=status.HTTP_204_NO_CONTENT)
 

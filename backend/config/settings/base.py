@@ -175,14 +175,12 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 20,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "EXCEPTION_HANDLER": "config.exceptions.custom_exception_handler",
-    "DEFAULT_THROTTLE_CLASSES": (
-        "rest_framework.throttling.AnonRateThrottle",
-        "rest_framework.throttling.ScopedRateThrottle",
-    ),
+    # No global anonymous limit: Bangladeshi mobile users share IPs (CGNAT), so a
+    # per-IP daily cap would block real guardians browsing tutors. See accounts/throttles.py
     "DEFAULT_THROTTLE_RATES": {
-        "anon": "200/day",
-        "anon_login": "5/minute",
-        "anon_register": "10/hour",
+        "login_identifier": "5/minute",
+        "login_ip": "60/minute",
+        "register_ip": "30/hour",
     },
 }
 

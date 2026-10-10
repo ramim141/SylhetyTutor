@@ -16,11 +16,23 @@ def test_create_user_with_phone_defaults_to_guardian_and_mixed():
     assert not user.is_staff
 
 
-def test_create_user_with_email_only_normalizes_email():
+def test_create_user_with_email_only_lowercases_whole_email():
+    # Login lowercases the identifier, so storage must match (Postgres compares case-sensitively)
     user = User.objects.create_user("Tanjina", email="Tanjina@EXAMPLE.com")
 
     assert user.phone is None
-    assert user.email == "Tanjina@example.com"
+    assert user.email == "tanjina@example.com"
+
+
+def test_create_user_normalizes_phone_like_the_api():
+    user = User.objects.create_user("Rahim", phone="+880 1712-345678")
+
+    assert user.phone == "01712345678"
+
+
+def test_create_user_rejects_invalid_phone():
+    with pytest.raises(ValueError):
+        User.objects.create_user("Rahim", phone="12345")
 
 
 def test_create_user_without_phone_or_email_is_rejected():

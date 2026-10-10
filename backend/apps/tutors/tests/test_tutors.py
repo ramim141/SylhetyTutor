@@ -76,3 +76,12 @@ def test_create_and_fetch_tutor(api_client):
     assert "HSC" in tutor_data["classes"]
     assert tutor_data["isFeatured"] is True
     assert tutor_data["isVerified"] is True
+
+
+def test_new_tutor_profile_is_hidden_until_verified_and_has_no_fake_rating(api_client):
+    user = User.objects.create_user("New Tutor", phone="01912345678", role="tutor")
+    profile = TutorProfile.objects.create(user=user)
+
+    assert profile.verification_status == TutorProfile.VerificationStatus.PENDING
+    assert profile.rating_avg == 0
+    assert api_client.get("/api/v1/tutors/").json() == []

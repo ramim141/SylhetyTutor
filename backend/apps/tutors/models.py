@@ -44,9 +44,9 @@ class TutorProfile(models.Model):
     verification_status = models.CharField(
         max_length=20,
         choices=VerificationStatus.choices,
-        default=VerificationStatus.APPROVED,
+        default=VerificationStatus.PENDING,
     )
-    rating_avg = models.DecimalField(max_digits=3, decimal_places=1, default=5.0)
+    rating_avg = models.DecimalField(max_digits=3, decimal_places=1, default=0)
     review_count = models.PositiveIntegerField(default=0)
 
     # Preferences & Specializations

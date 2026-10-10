@@ -30,6 +30,11 @@ class PhoneOrEmailBackend(ModelBackend):
         # Look for matching active user by phone or email
         user = User.objects.filter(Q(phone=normalized_ph) | Q(email=normalized_em)).first()
 
-        if user and user.check_password(password) and self.user_can_authenticate(user):
+        if user is None:
+            # Hash anyway so "no such phone" takes as long as "wrong password"
+            # (otherwise response time reveals which numbers have accounts)
+            User().set_password(password)
+            return None
+        if user.check_password(password) and self.user_can_authenticate(user):
             return user
         return None
