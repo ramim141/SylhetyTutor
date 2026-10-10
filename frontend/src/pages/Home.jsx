@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Search,
   MapPin,
@@ -14,13 +15,16 @@ import { Button } from "../components/ui/Button";
 import { TutorCard } from "../components/tutor/TutorCard";
 import { BottomSheet } from "../components/ui/BottomSheet";
 import { useTranslation } from "../i18n";
+import { useAuthStore } from "../store/authStore";
 import { getLookups } from "../api/lookups";
 import { getTutors } from "../api/tutors";
 
 const CURRENT_YEAR = new Date().getFullYear();
 
 export default function Home() {
+  const navigate = useNavigate();
   const { t, lang } = useTranslation();
+  const { status } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedArea, setSelectedArea] = useState("");
   const [activeTab, setActiveTab] = useState("home");
@@ -95,6 +99,8 @@ export default function Home() {
       document.getElementById("searchInput")?.focus();
     } else if (tabId === "areas") {
       document.getElementById("areasSection")?.scrollIntoView({ behavior: "smooth" });
+    } else if (tabId === "account") {
+      navigate(status === "authenticated" ? "/dashboard" : "/login");
     }
   };
 

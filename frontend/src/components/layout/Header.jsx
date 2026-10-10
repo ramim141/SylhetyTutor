@@ -1,13 +1,16 @@
 import React, { useState } from "react";
-import { GraduationCap, Sun, Moon, Laptop, Globe } from "lucide-react";
+import { Link } from "react-router-dom";
+import { GraduationCap, Sun, Moon, Laptop, Globe, User as UserIcon } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import { useThemeStore } from "../../store/themeStore";
+import { useAuthStore } from "../../store/authStore";
 import { Button } from "../ui/Button";
 import { BottomSheet } from "../ui/BottomSheet";
 
 export function Header() {
   const { t, lang, setLang } = useTranslation();
   const { theme, setTheme } = useThemeStore();
+  const { user, status, logout } = useAuthStore();
   const [langSheetOpen, setLangSheetOpen] = useState(false);
 
   const cycleTheme = () => {
@@ -30,7 +33,7 @@ export function Header() {
       <header className="sticky top-0 z-40 bg-bg/95 backdrop-blur-md border-b border-border transition-colors">
         <div className="max-w-[1200px] mx-auto px-4 md:px-6 h-15 md:h-18 flex items-center justify-between">
           {/* Brand Logo Wordmark */}
-          <a href="/" className="flex items-center gap-1.5 select-none active:scale-98 transition-transform">
+          <Link to="/" className="flex items-center gap-1.5 select-none active:scale-98 transition-transform">
             <div className="relative flex items-center">
               <span className="font-display font-extrabold text-xl md:text-2xl tracking-tight text-navy">
                 Sylhety
@@ -45,16 +48,16 @@ export function Header() {
                 </span>
               </div>
             </div>
-          </a>
+          </Link>
 
           {/* Desktop Nav Links */}
           <nav className="hidden md:flex items-center gap-7">
-            <a
-              href="/"
+            <Link
+              to="/"
               className="text-sm font-display font-semibold text-fg hover:text-navy-light transition-colors"
             >
               {t("nav.home")}
-            </a>
+            </Link>
             <a
               href="/tutors"
               className="text-sm font-display font-semibold text-fg-secondary hover:text-fg transition-colors"
@@ -122,16 +125,51 @@ export function Header() {
               {theme === "system" && <Laptop className="w-4 h-4" />}
             </button>
 
-            <Button variant="ghost" size="sm">
-              {t("nav.signIn")}
-            </Button>
-            <Button variant="primary" size="sm">
-              {t("nav.becomeTutor")}
-            </Button>
+            {status === "authenticated" && user ? (
+              <div className="flex items-center gap-2">
+                <Link to="/dashboard">
+                  <Button variant="ghost" size="sm" className="font-display font-semibold">
+                    <UserIcon className="w-4 h-4 mr-1 text-orange" />
+                    <span>{user.full_name?.split(" ")[0] || t("dashboard.title")}</span>
+                  </Button>
+                </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => logout()}
+                  className="text-xs"
+                >
+                  {t("auth.logout")}
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link to="/login">
+                  <Button variant="ghost" size="sm">
+                    {t("nav.signIn")}
+                  </Button>
+                </Link>
+                <Link to="/register">
+                  <Button variant="primary" size="sm">
+                    {t("nav.becomeTutor")}
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Mobile App Top Right Quick Actions */}
           <div className="flex md:hidden items-center gap-2">
+            {status === "authenticated" && (
+              <Link
+                to="/dashboard"
+                aria-label="Dashboard"
+                className="p-2 text-fg-secondary bg-bg-subtle border border-border rounded-full cursor-pointer active:scale-95 transition-transform"
+              >
+                <UserIcon className="w-4 h-4 text-orange" />
+              </Link>
+            )}
+
             {/* Quick Language Chip */}
             <button
               type="button"

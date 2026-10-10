@@ -1,9 +1,16 @@
 import React from "react";
 import { Home, Search, PlusCircle, MapPin, User } from "lucide-react";
 import { useTranslation } from "../../i18n";
+import { useAuthStore } from "../../store/authStore";
 
 export function BottomNav({ activeTab = "home", onTabChange }) {
   const { t } = useTranslation();
+  const { user, status } = useAuthStore();
+
+  const accountLabel =
+    status === "authenticated" && user
+      ? user.full_name?.split(" ")[0] || "Account"
+      : t("nav.signIn") || "Account";
 
   const tabs = [
     { id: "home", label: t("nav.home") || "Home", icon: Home },
@@ -15,7 +22,7 @@ export function BottomNav({ activeTab = "home", onTabChange }) {
       isAction: true,
     },
     { id: "areas", label: "Areas", icon: MapPin },
-    { id: "account", label: t("nav.signIn") || "Account", icon: User },
+    { id: "account", label: accountLabel, icon: User },
   ];
 
   return (

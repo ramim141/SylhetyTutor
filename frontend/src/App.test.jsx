@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import App from "./App";
 import { mixed } from "./i18n";
+import { useAuthStore } from "./store/authStore";
 
 function renderAt(path) {
   return render(
@@ -16,6 +17,25 @@ describe("routes", () => {
     renderAt("/");
 
     expect(screen.getByRole("heading", { level: 1, name: mixed["hero.title"] })).toBeInTheDocument();
+  });
+
+  it("renders the login page at /login", () => {
+    renderAt("/login");
+
+    expect(screen.getByRole("heading", { level: 1, name: mixed["auth.login.title"] })).toBeInTheDocument();
+  });
+
+  it("renders the register page at /register", () => {
+    renderAt("/register");
+
+    expect(screen.getByRole("heading", { level: 1, name: mixed["auth.register.title"] })).toBeInTheDocument();
+  });
+
+  it("redirects unauthenticated users visiting /dashboard to /login", () => {
+    useAuthStore.setState({ status: "guest", user: null });
+    renderAt("/dashboard");
+
+    expect(screen.getByRole("heading", { level: 1, name: mixed["auth.login.title"] })).toBeInTheDocument();
   });
 
   it("renders the 404 page with a link home for unknown paths", () => {
