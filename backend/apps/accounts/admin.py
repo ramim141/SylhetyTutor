@@ -17,9 +17,18 @@ class UserAdmin(BaseUserAdmin):
     fieldsets = [
         (None, {"fields": ["phone", "email", "password"]}),
         ("Profile", {"fields": ["full_name", "role", "avatar", "preferred_language"]}),
-        ("Permissions", {"fields": ["is_active", "is_staff", "is_superuser", "groups", "user_permissions"]}),
+        (
+            "Permissions",
+            {"fields": ["is_active", "is_staff", "is_superuser", "groups", "user_permissions"]},
+        ),
         ("Dates", {"fields": ["last_login", "date_joined"]}),
     ]
     add_fieldsets = [
-        (None, {"classes": ["wide"], "fields": ["full_name", "phone", "email", "role", "password1", "password2"]}),
+        (
+            None,
+            {
+                "classes": ["wide"],
+                "fields": ["full_name", "phone", "email", "role", "password1", "password2"],
+            },
+        ),
     ]

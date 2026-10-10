@@ -2,6 +2,7 @@
 Custom User model — Architecture Doc Section 3.1.
 Single table for all roles; login with phone or email.
 """
+
 import uuid
 
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
@@ -38,7 +39,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
-    # Phone is the primary login in Sylhet; email-only users are resolved in the auth backend (Sprint 1)
+    # Phone is the primary login in Sylhet;
+    # email-only users are resolved in the auth backend (Sprint 1)
     USERNAME_FIELD = "phone"
     REQUIRED_FIELDS = ["full_name"]
 

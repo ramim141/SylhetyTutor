@@ -1,9 +1,10 @@
 """
 Base settings for SylhetyTutor project.
 """
-from pathlib import Path
-from datetime import timedelta
+
 import os
+from datetime import timedelta
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -119,9 +120,7 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
-    "DEFAULT_PERMISSION_CLASSES": (
-        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
-    ),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticatedOrReadOnly",),
     "DEFAULT_FILTER_BACKENDS": (
         "django_filters.rest_framework.DjangoFilterBackend",
         "rest_framework.filters.SearchFilter",
