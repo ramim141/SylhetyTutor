@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Search,
   MapPin,
@@ -6,6 +6,7 @@ import {
   ArrowRight,
   Filter,
   GraduationCap,
+  Sparkles,
 } from "lucide-react";
 import { Header } from "../components/layout/Header";
 import { BottomNav } from "../components/layout/BottomNav";
@@ -13,95 +14,78 @@ import { Button } from "../components/ui/Button";
 import { TutorCard } from "../components/tutor/TutorCard";
 import { BottomSheet } from "../components/ui/BottomSheet";
 import { useTranslation } from "../i18n";
+import { getLookups } from "../api/lookups";
+import { getTutors } from "../api/tutors";
 
 const CURRENT_YEAR = new Date().getFullYear();
 
-const SAMPLE_TUTORS = [
-  {
-    id: "1",
-    name: "Rahim Uddin",
-    initials: "RU",
-    university: "SUST (CSE, 3rd Year)",
-    department: "Computer Science & Engineering",
-    area: "Amberkhana",
-    subjects: ["Physics", "Higher Math", "ICT"],
-    classes: ["SSC 9–10", "HSC 11–12"],
-    rating: 4.9,
-    reviewCount: 28,
-    feeMin: 5000,
-    feeMax: 7000,
-    isFeatured: true,
-    isVerified: true,
-  },
-  {
-    id: "2",
-    name: "Tanjina Akter",
-    initials: "TA",
-    university: "Metropolitan University (English)",
-    department: "English",
-    area: "Zindabazar",
-    subjects: ["English", "Bangla", "General Science"],
-    classes: ["Class 6–8", "SSC 9–10"],
-    rating: 4.8,
-    reviewCount: 19,
-    feeMin: 4000,
-    feeMax: 6000,
-    isFeatured: true,
-    isVerified: true,
-  },
-  {
-    id: "3",
-    name: "Sayeed Chowdhury",
-    initials: "SC",
-    university: "Leading University (EEE)",
-    department: "Electrical & Electronic Eng.",
-    area: "Akhalia",
-    subjects: ["Math", "Physics", "Chemistry"],
-    classes: ["Class 6–8", "SSC 9–10"],
-    rating: 4.7,
-    reviewCount: 14,
-    feeMin: 4500,
-    feeMax: 6500,
-    isFeatured: false,
-    isVerified: true,
-  },
-  {
-    id: "4",
-    name: "Fariha Jannat",
-    initials: "FJ",
-    university: "SUST (Chemistry)",
-    department: "Chemistry",
-    area: "Shibganj",
-    subjects: ["Chemistry", "Biology", "General Science"],
-    classes: ["SSC 9–10", "HSC 11–12"],
-    rating: 5.0,
-    reviewCount: 22,
-    feeMin: 5500,
-    feeMax: 8000,
-    isFeatured: false,
-    isVerified: true,
-  },
-];
-
-const POPULAR_AREAS = [
-  "Amberkhana",
-  "Akhalia",
-  "Zindabazar",
-  "Shibganj",
-  "Subidbazar",
-  "Uposhohor",
-  "Tilagarh",
-  "Pathantula",
-  "Lamabazar",
-  "Modina Market",
-];
-
 export default function Home() {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedArea, setSelectedArea] = useState("");
   const [activeTab, setActiveTab] = useState("home");
   const [postSheetOpen, setPostSheetOpen] = useState(false);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+
+  // Live Backend Data States
+  const [lookups, setLookups] = useState({
+    areas: [],
+    subjects: [],
+    class_levels: [],
+    universities: [],
+  });
+  const [tutors, setTutors] = useState([]);
+  const [loadingTutors, setLoadingTutors] = useState(true);
+  const [loadingLookups, setLoadingLookups] = useState(true);
+
+  // Fetch Lookups on Mount
+  useEffect(() => {
+    let isMounted = true;
+    async function loadLookups() {
+      try {
+        const data = await getLookups();
+        if (isMounted && data) {
+          setLookups(data);
+        }
+      } catch (err) {
+        console.warn("Could not load lookups from backend:", err);
+      } finally {
+        if (isMounted) setLoadingLookups(false);
+      }
+    }
+    loadLookups();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Fetch Tutors when search query or selected area changes
+  useEffect(() => {
+    let isMounted = true;
+    async function loadTutors() {
+      setLoadingTutors(true);
+      try {
+        const params = {};
+        if (searchQuery) params.search = searchQuery;
+        if (selectedArea) params.area = selectedArea;
+        const data = await getTutors(params);
+        if (isMounted) {
+          setTutors(data || []);
+        }
+      } catch (err) {
+        console.warn("Could not load tutors from backend:", err);
+        if (isMounted) setTutors([]);
+      } finally {
+        if (isMounted) setLoadingTutors(false);
+      }
+    }
+
+    const timer = setTimeout(loadTutors, 200);
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [searchQuery, selectedArea]);
 
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
@@ -113,6 +97,15 @@ export default function Home() {
       document.getElementById("areasSection")?.scrollIntoView({ behavior: "smooth" });
     }
   };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    document.getElementById("tutorsListSection")?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const areasList = lookups.areas || [];
+  const classLevelsList = lookups.class_levels || [];
+  const universitiesList = lookups.universities || [];
 
   return (
     <div className="min-h-screen bg-bg text-fg flex flex-col font-body transition-colors pb-20 md:pb-0">
@@ -146,13 +139,7 @@ export default function Home() {
 
             {/* App-like Search Bar Card */}
             <div className="max-w-2xl mx-auto bg-bg-card border border-border rounded-2xl p-2.5 sm:p-3 shadow-md mb-5">
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  alert(`Searching for: ${searchQuery || "All Tutors"}`);
-                }}
-                className="flex items-center gap-2"
-              >
+              <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
                 <div className="flex-1 flex items-center gap-2.5 px-3 py-2 bg-bg-subtle rounded-xl border border-border focus-within:border-orange focus-within:ring-2 focus-within:ring-orange/15 transition-all">
                   <Search className="w-4 h-4 text-fg-muted shrink-0" />
                   <input
@@ -163,6 +150,15 @@ export default function Home() {
                     placeholder={t("hero.searchPlaceholder")}
                     className="w-full bg-transparent text-sm text-fg placeholder:text-fg-muted focus:outline-hidden"
                   />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery("")}
+                      className="text-xs text-fg-muted hover:text-fg px-1"
+                    >
+                      Clear
+                    </button>
+                  )}
                 </div>
 
                 {/* Filter toggle button on mobile */}
@@ -171,6 +167,7 @@ export default function Home() {
                   onClick={() => setFilterSheetOpen(true)}
                   className="md:hidden p-2.5 rounded-xl border border-border bg-bg-subtle text-fg-secondary hover:text-fg active:scale-95 transition-all cursor-pointer"
                   title="Filter"
+                  aria-label="Filter"
                 >
                   <Filter className="w-4 h-4" />
                 </button>
@@ -182,7 +179,7 @@ export default function Home() {
                 </Button>
               </form>
 
-              {/* Horizontal Scroll Area Chips on Mobile (App-like snap scroll) */}
+              {/* Dynamic Horizontal Scroll Area Chips from Django Admin */}
               <div
                 id="areasSection"
                 className="mt-3 pt-2.5 border-t border-border-light flex items-center gap-1.5 overflow-x-auto scrollbar-none text-xs pb-1"
@@ -191,32 +188,54 @@ export default function Home() {
                   <MapPin className="w-3.5 h-3.5 text-orange shrink-0" />
                   <span>সিলেট:</span>
                 </span>
-                {POPULAR_AREAS.map((area) => (
-                  <button
-                    key={area}
-                    type="button"
-                    onClick={() => setSearchQuery(area)}
-                    className={`shrink-0 px-2.5 py-1 rounded-full border text-xs font-medium cursor-pointer active:scale-95 transition-all ${
-                      searchQuery === area
-                        ? "bg-orange text-on-orange border-orange font-bold shadow-xs"
-                        : "bg-bg-subtle text-fg border-border hover:bg-orange-light hover:text-orange-text"
-                    }`}
-                  >
-                    {area}
-                  </button>
-                ))}
+
+                {/* All Areas Filter Button */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedArea("")}
+                  className={`shrink-0 px-2.5 py-1 rounded-full border text-xs font-medium cursor-pointer active:scale-95 transition-all ${
+                    !selectedArea
+                      ? "bg-navy text-on-navy border-navy font-bold shadow-xs"
+                      : "bg-bg-subtle text-fg border-border hover:bg-orange-light hover:text-orange-text"
+                  }`}
+                >
+                  সব এলাকা
+                </button>
+
+                {loadingLookups ? (
+                  <span className="text-xs text-fg-muted px-2">এলাকা লোড হচ্ছে...</span>
+                ) : (
+                  areasList.map((area) => {
+                    const isSelected = selectedArea === area.slug;
+                    const areaName = lang === "en" ? area.name_en : area.name_bn;
+                    return (
+                      <button
+                        key={area.id}
+                        type="button"
+                        onClick={() => setSelectedArea(isSelected ? "" : area.slug)}
+                        className={`shrink-0 px-2.5 py-1 rounded-full border text-xs font-medium cursor-pointer active:scale-95 transition-all ${
+                          isSelected
+                            ? "bg-orange text-on-orange border-orange font-bold shadow-xs"
+                            : "bg-bg-subtle text-fg border-border hover:bg-orange-light hover:text-orange-text"
+                        }`}
+                      >
+                        {areaName}
+                      </button>
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>
         </section>
 
-        {/* Quick Stats Strip */}
+        {/* Dynamic Platform Stats from Live Backend Data */}
         <section className="bg-bg py-5 md:py-8 border-b border-border">
           <div className="max-w-[1200px] mx-auto px-4 md:px-6">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 md:gap-6 text-center">
               <div className="p-3 bg-bg-subtle/50 md:bg-transparent rounded-xl border md:border-0 border-border">
                 <p className="font-display font-extrabold text-xl sm:text-3xl text-navy">
-                  150+
+                  {tutors.length}
                 </p>
                 <p className="text-[11px] sm:text-xs text-fg-secondary mt-0.5">
                   {t("stats.verifiedTutors")}
@@ -224,34 +243,34 @@ export default function Home() {
               </div>
               <div className="p-3 bg-bg-subtle/50 md:bg-transparent rounded-xl border md:border-0 border-border">
                 <p className="font-display font-extrabold text-xl sm:text-3xl text-orange">
-                  320+
+                  {areasList.length || 14}
                 </p>
                 <p className="text-[11px] sm:text-xs text-fg-secondary mt-0.5">
-                  {t("stats.successfulMatches")}
+                  {t("stats.sylhetAreas")}
                 </p>
               </div>
               <div className="p-3 bg-bg-subtle/50 md:bg-transparent rounded-xl border md:border-0 border-border">
                 <p className="font-display font-extrabold text-xl sm:text-3xl text-success">
-                  98.5%
+                  {lookups.subjects?.length || 12}
                 </p>
                 <p className="text-[11px] sm:text-xs text-fg-secondary mt-0.5">
-                  {t("stats.satisfactionRate")}
+                  টিউশন বিষয়সমূহ
                 </p>
               </div>
               <div className="p-3 bg-bg-subtle/50 md:bg-transparent rounded-xl border md:border-0 border-border">
                 <p className="font-display font-extrabold text-xl sm:text-3xl text-navy">
-                  14
+                  {universitiesList.length || 3}
                 </p>
                 <p className="text-[11px] sm:text-xs text-fg-secondary mt-0.5">
-                  {t("stats.sylhetAreas")}
+                  ক্যাম্পাস পার্টনার
                 </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Featured Tutors Section */}
-        <section className="py-10 md:py-20 bg-bg">
+        {/* Live Tutors Section */}
+        <section id="tutorsListSection" className="py-10 md:py-20 bg-bg">
           <div className="max-w-[1200px] mx-auto px-4 md:px-6">
             <div className="flex items-center justify-between mb-6 md:mb-10">
               <div>
@@ -259,27 +278,66 @@ export default function Home() {
                   {t("section.featuredTitle")}
                 </h2>
                 <p className="text-xs sm:text-base text-fg-secondary mt-1">
-                  {t("section.featuredSubtitle")}
+                  {selectedArea
+                    ? `ফিল্টার: ${selectedArea}`
+                    : t("section.featuredSubtitle")}
                 </p>
               </div>
-              <Button variant="ghost" size="sm" className="hidden sm:inline-flex gap-1">
-                View All
-                <ArrowRight className="w-4 h-4" />
-              </Button>
+              {tutors.length > 0 && (
+                <Button variant="ghost" size="sm" className="hidden sm:inline-flex gap-1">
+                  View All
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              )}
             </div>
 
-            {/* Grid of Tutor Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-              {SAMPLE_TUTORS.map((tutor) => (
-                <TutorCard key={tutor.id} {...tutor} />
-              ))}
-            </div>
-
-            <div className="mt-6 text-center sm:hidden">
-              <Button variant="outline" className="w-full">
-                আরও টিউটর দেখুন (View All)
-              </Button>
-            </div>
+            {/* Live Tutors State Handler */}
+            {loadingTutors ? (
+              <div className="text-center py-16">
+                <div className="inline-block w-8 h-8 border-3 border-orange border-t-transparent rounded-full animate-spin mb-3" />
+                <p className="text-xs text-fg-secondary font-display">
+                  টিউটর তালিকা লোড হচ্ছে...
+                </p>
+              </div>
+            ) : tutors.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                {tutors.map((tutor) => (
+                  <TutorCard key={tutor.id} {...tutor} />
+                ))}
+              </div>
+            ) : (
+              /* Clean Empty State when no tutors added yet from Django admin */
+              <div className="text-center py-12 px-6 bg-bg-card rounded-2xl border border-border max-w-lg mx-auto shadow-xs">
+                <div className="w-14 h-14 rounded-full bg-orange-light text-orange flex items-center justify-center mx-auto mb-4">
+                  <GraduationCap className="w-7 h-7" />
+                </div>
+                <h3 className="font-display font-bold text-lg text-fg mb-1.5">
+                  এখনো কোনো টিউটর যুক্ত হয়নি
+                </h3>
+                <p className="text-xs sm:text-sm text-fg-secondary mb-6 leading-relaxed">
+                  Django Admin থেকে নতুন টিউটর যোগ করুন অথবা সরাসরি রেজিস্ট্রেশন করে সিলেটে টিউশনি শুরু করুন!
+                </p>
+                <div className="flex flex-col sm:flex-row gap-2.5 justify-center">
+                  <Button
+                    variant="primary"
+                    size="md"
+                    onClick={() => {
+                      window.location.href = "/register";
+                    }}
+                  >
+                    <Sparkles className="w-4 h-4 mr-1.5" />
+                    টিউটর হিসেবে প্রোফাইল তৈরি করুন
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="md"
+                    onClick={() => setPostSheetOpen(true)}
+                  >
+                    টিউশন রিকোয়ারমেন্ট দিন
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
@@ -319,7 +377,7 @@ export default function Home() {
                     ভেরিফাইড আইডি যাচাই
                   </h3>
                   <p className="text-xs md:text-sm text-fg-secondary leading-relaxed">
-                    এনআইডি ও বিশ্ববিদ্যালয় আইডি যাচাইকৃত টিউটরদের রেটিং ও বিভাগ দেখে শর্টলিস্ট করুন।
+                    SUST ও শীর্ষ ক্যাম্পাসের টিউটরদের ভেরিফাইড আইডি, রেটিং এবং রিভিউ দেখে নিশ্চিন্তে বাছাই করুন।
                   </p>
                 </div>
               </div>
@@ -353,7 +411,14 @@ export default function Home() {
             <p className="text-xs sm:text-base text-on-navy/80 max-w-md mx-auto mb-6">
               SUST, Metropolitan ও Leading University শিক্ষার্থীদের জন্য ১০০% ফ্রি রেজিস্ট্রেশন।
             </p>
-            <Button variant="primary" size="lg" className="w-full sm:w-auto">
+            <Button
+              variant="primary"
+              size="lg"
+              className="w-full sm:w-auto"
+              onClick={() => {
+                window.location.href = "/register";
+              }}
+            >
               টিউটর হিসেবে প্রোফাইল খুলুন
             </Button>
           </div>
@@ -399,18 +464,20 @@ export default function Home() {
           <div>
             <label className="text-xs font-bold text-fg block mb-1">কোন ক্লাসের শিক্ষার্থী?</label>
             <select className="w-full p-2.5 bg-bg-subtle border border-border rounded-lg text-sm text-fg">
-              <option>Class 1–5</option>
-              <option>Class 6–8</option>
-              <option>SSC 9–10</option>
-              <option>HSC 11–12</option>
-              <option>English Medium</option>
+              {classLevelsList.map((cl) => (
+                <option key={cl.id} value={cl.slug}>
+                  {cl.name_en} ({cl.name_bn})
+                </option>
+              ))}
             </select>
           </div>
           <div>
             <label className="text-xs font-bold text-fg block mb-1">এলাকা (Sylhet Area)</label>
             <select className="w-full p-2.5 bg-bg-subtle border border-border rounded-lg text-sm text-fg">
-              {POPULAR_AREAS.map((a) => (
-                <option key={a}>{a}</option>
+              {areasList.map((a) => (
+                <option key={a.id} value={a.slug}>
+                  {a.name_en} ({a.name_bn})
+                </option>
               ))}
             </select>
           </div>
@@ -459,18 +526,12 @@ export default function Home() {
           <div>
             <label className="text-xs font-bold text-fg block mb-1.5">বিশ্ববিদ্যালয়</label>
             <div className="space-y-1.5 text-xs text-fg">
-              <label className="flex items-center gap-2">
-                <input type="checkbox" defaultChecked className="rounded accent-orange" />
-                <span>SUST (শাহজালাল বিজ্ঞান ও প্রযুক্তি বিশ্ববিদ্যালয়)</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input type="checkbox" defaultChecked className="rounded accent-orange" />
-                <span>Metropolitan University</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input type="checkbox" defaultChecked className="rounded accent-orange" />
-                <span>Leading University</span>
-              </label>
+              {universitiesList.map((uni) => (
+                <label key={uni.id} className="flex items-center gap-2">
+                  <input type="checkbox" defaultChecked className="rounded accent-orange" />
+                  <span>{uni.short_name || uni.name_en} ({uni.name_bn})</span>
+                </label>
+              ))}
             </div>
           </div>
           <Button
