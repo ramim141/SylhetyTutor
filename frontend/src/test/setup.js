@@ -20,3 +20,7 @@ if (!window.matchMedia) {
     dispatchEvent: () => false,
   });
 }
+
+// jsdom doesn't implement scrolling; pages call these on tab taps and form submits
+Element.prototype.scrollIntoView ??= function scrollIntoView() {};
+window.scrollTo = () => {};

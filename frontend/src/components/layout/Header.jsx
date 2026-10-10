@@ -22,11 +22,8 @@ export function Header() {
     setTheme(next[theme] || "light");
   };
 
-  const langNames = {
-    en: "English",
-    bn: "বাংলা",
-    mixed: "Mixed (Banglish)",
-  };
+  const langNames = { en: t("lang.en"), bn: t("lang.bn"), mixed: t("lang.mixed") };
+  const themeLabel = `${t("theme." + theme)}`;
 
   return (
     <>
@@ -77,7 +74,7 @@ export function Header() {
             {/* Trilingual Pill Switcher */}
             <div
               role="radiogroup"
-              aria-label="Language selection"
+              aria-label={t("nav.langSelect")}
               className="inline-flex items-center p-1 bg-bg-subtle border border-border rounded-full text-xs font-display font-semibold"
             >
               <button
@@ -116,8 +113,8 @@ export function Header() {
             <button
               type="button"
               onClick={cycleTheme}
-              aria-label={`Current theme: ${theme}. Click to switch theme.`}
-              title={`Theme: ${theme}`}
+              aria-label={themeLabel}
+              title={themeLabel}
               className="p-2 text-fg-secondary hover:text-fg bg-bg-subtle border border-border rounded-md transition-colors cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-orange/30"
             >
               {theme === "light" && <Sun className="w-4 h-4 text-orange" />}
@@ -163,7 +160,7 @@ export function Header() {
             {status === "authenticated" && (
               <Link
                 to="/dashboard"
-                aria-label="Dashboard"
+                aria-label={t("dashboard.title")}
                 className="p-2 text-fg-secondary bg-bg-subtle border border-border rounded-full cursor-pointer active:scale-95 transition-transform"
               >
                 <UserIcon className="w-4 h-4 text-orange" />
@@ -174,7 +171,7 @@ export function Header() {
             <button
               type="button"
               onClick={() => setLangSheetOpen(true)}
-              aria-label="Select language"
+              aria-label={t("nav.langSelect")}
               className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-bg-subtle border border-border text-xs font-display font-bold text-fg cursor-pointer active:scale-95 transition-transform"
             >
               <Globe className="w-3.5 h-3.5 text-orange" />
@@ -185,7 +182,7 @@ export function Header() {
             <button
               type="button"
               onClick={cycleTheme}
-              aria-label={`Current theme: ${theme}. Click to switch theme.`}
+              aria-label={themeLabel}
               className="p-2 text-fg-secondary bg-bg-subtle border border-border rounded-full cursor-pointer active:scale-95 transition-transform"
             >
               {theme === "light" ? (
@@ -204,7 +201,7 @@ export function Header() {
       <BottomSheet
         isOpen={langSheetOpen}
         onClose={() => setLangSheetOpen(false)}
-        title="ভাষা নির্বাচন করুন (Choose Language)"
+        title={t("nav.langSelect")}
       >
         <div className="space-y-2.5">
           {["mixed", "bn", "en"].map((mode) => (

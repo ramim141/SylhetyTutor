@@ -6,7 +6,7 @@ import { useLanguageStore } from "./languageStore";
 
 export const useAuthStore = create((set) => ({
   user: null,
-  status: "idle", // 'idle' | 'loading' | 'authenticated' | 'guest'
+  status: "idle", // 'idle' | 'loading' | 'authenticated' | 'guest' | 'error' (server unreachable)
   error: null,
 
   /**
@@ -28,9 +28,16 @@ export const useAuthStore = create((set) => ({
         useLanguageStore.getState().setLang(user.preferred_language);
       }
       set({ user, status: "authenticated", error: null });
-    } catch {
-      tokens.clear();
-      set({ user: null, status: "guest" });
+    } catch (err) {
+      if (err.response?.status === 401) {
+        // Server says the session is over (refresh already failed in the client)
+        tokens.clear();
+        set({ user: null, status: "guest" });
+      } else {
+        // Flaky mobile network or server down: keep the tokens so a retry can restore
+        // the session instead of signing the user out
+        set({ user: null, status: "error" });
+      }
     }
   },
 

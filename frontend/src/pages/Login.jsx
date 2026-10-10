@@ -7,9 +7,11 @@ import { Input } from "../components/ui/Input";
 import { PasswordInput } from "../components/ui/PasswordInput";
 import { Button } from "../components/ui/Button";
 import { Alert } from "../components/ui/Alert";
+import { getFieldErrors, getFormError } from "../api/errors";
 
 export default function Login() {
-  const { t } = useTranslation();
+  const i18n = useTranslation();
+  const { t } = i18n;
   const navigate = useNavigate();
   const location = useLocation();
   const login = useAuthStore((state) => state.login);
@@ -27,11 +29,11 @@ export default function Login() {
     const trimmedId = identifier.trim();
 
     if (!trimmedId) {
-      newErrors.identifier = t("auth.identifier.label") + " is required";
+      newErrors.identifier = t("error.identifier.required");
     }
 
     if (!password) {
-      newErrors.password = t("auth.password.label") + " is required";
+      newErrors.password = t("error.password.required");
     }
 
     setErrors(newErrors);
@@ -52,33 +54,15 @@ export default function Login() {
       });
       navigate(from, { replace: true });
     } catch (err) {
-      const resp = err.response?.data;
-      const status = err.response?.status;
-
-      if (!err.response) {
-        setServerError(t("error.network"));
-      } else if (status === 429 || resp?.code === "throttled") {
-        setServerError(t("error.throttled"));
-      } else if (resp?.code === "invalid_credentials" || status === 401) {
-        setServerError(t("error.invalid_credentials"));
-      } else if (resp?.fields) {
-        const fieldErrors = {};
-        for (const [key, val] of Object.entries(resp.fields)) {
-          const errItem = Array.isArray(val) ? val[0] : val;
-          const code = typeof errItem === "object" ? errItem.code : errItem;
-          fieldErrors[key] = t(`error.${key}.${code}`) || errItem.message || t("error.generic");
-        }
-        setErrors(fieldErrors);
-      } else {
-        setServerError(resp?.detail || t("error.generic"));
-      }
+      setServerError(getFormError(err, i18n) || "");
+      setErrors(getFieldErrors(err, i18n));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-bg flex flex-col justify-center py-12 sm:px-6 lg:px-8 px-4 transition-colors">
+    <div className="min-h-dvh bg-bg flex flex-col justify-center py-8 sm:py-12 sm:px-6 lg:px-8 px-4 pb-[max(2rem,env(safe-area-inset-bottom))] transition-colors">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex items-center justify-between mb-6">
           <Link
@@ -127,6 +111,10 @@ export default function Login() {
               }}
               error={errors.identifier}
               autoComplete="username"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint="next"
               required
               disabled={loading}
             />
@@ -142,6 +130,7 @@ export default function Login() {
               }}
               error={errors.password}
               autoComplete="current-password"
+              enterKeyHint="go"
               required
               disabled={loading}
             />

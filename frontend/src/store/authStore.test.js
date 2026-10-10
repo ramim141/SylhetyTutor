@@ -30,6 +30,26 @@ describe("authStore", () => {
     expect(authApi.getMe).not.toHaveBeenCalled();
   });
 
+  it("keeps the session when the network fails while checking it", async () => {
+    tokens.set({ access: "acc-123", refresh: "ref-123" });
+    authApi.getMe.mockRejectedValueOnce(new Error("Network Error"));
+
+    await useAuthStore.getState().loadUser();
+
+    expect(useAuthStore.getState().status).toBe("error");
+    expect(tokens.getRefresh()).toBe("ref-123");
+  });
+
+  it("clears the session when the server rejects it", async () => {
+    tokens.set({ access: "acc-123", refresh: "ref-123" });
+    authApi.getMe.mockRejectedValueOnce({ response: { status: 401 } });
+
+    await useAuthStore.getState().loadUser();
+
+    expect(useAuthStore.getState().status).toBe("guest");
+    expect(tokens.getRefresh()).toBeNull();
+  });
+
   it("loads user profile if tokens exist", async () => {
     tokens.set({ access: "acc-123", refresh: "ref-123" });
     const mockUser = { id: "1", full_name: "Farhan", role: "guardian", preferred_language: "bn" };

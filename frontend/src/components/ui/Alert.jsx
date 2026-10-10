@@ -1,5 +1,6 @@
 import React from "react";
 import { AlertCircle, CheckCircle2, AlertTriangle, Info, X } from "lucide-react";
+import { useTranslation } from "../../i18n";
 
 export function Alert({
   variant = "info",
@@ -8,6 +9,7 @@ export function Alert({
   onClose,
   className = "",
 }) {
+  const { t } = useTranslation();
   const config = {
     error: {
       bg: "bg-error-bg border-error/30 text-error",
@@ -61,7 +63,7 @@ export function Alert({
         <button
           type="button"
           onClick={onClose}
-          aria-label="Dismiss alert"
+          aria-label={t("common.dismiss")}
           className="p-1 -mr-1 -mt-1 rounded-md opacity-70 hover:opacity-100 transition-opacity cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-current"
         >
           <X className="w-4 h-4" />

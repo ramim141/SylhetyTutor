@@ -22,3 +22,11 @@
     outline-offset: 2px;
   }
 }
+
+/* Horizontal chip rows: swipeable on phones without a visible scrollbar */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

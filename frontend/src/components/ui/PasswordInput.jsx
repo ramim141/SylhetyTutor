@@ -1,5 +1,6 @@
 import React, { useState, forwardRef, useId } from "react";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
+import { useTranslation } from "../../i18n";
 
 export const PasswordInput = forwardRef(function PasswordInput(
   {
@@ -15,6 +16,7 @@ export const PasswordInput = forwardRef(function PasswordInput(
   },
   ref
 ) {
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const generatedId = useId();
   const inputId = explicitId || generatedId;
@@ -72,7 +74,7 @@ export const PasswordInput = forwardRef(function PasswordInput(
             type="button"
             onClick={() => setShowPassword((prev) => !prev)}
             disabled={disabled}
-            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-label={showPassword ? t("common.hidePassword") : t("common.showPassword")}
             className="p-1.5 text-fg-muted hover:text-fg rounded-md transition-colors cursor-pointer disabled:cursor-not-allowed focus:outline-hidden focus:ring-2 focus:ring-orange/30"
           >
             {showPassword ? (

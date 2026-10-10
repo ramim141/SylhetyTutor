@@ -35,7 +35,9 @@ describe("Login Page", () => {
     const submitBtn = screen.getByRole("button", { name: mixed["auth.submit.login"] });
     await user.click(submitBtn);
 
-    expect(screen.getAllByText(/is required/i)).toHaveLength(2);
+    // Messages come from i18n (Mixed is the default), not English string concatenation
+    expect(screen.getByText(mixed["error.identifier.required"])).toBeInTheDocument();
+    expect(screen.getByText(mixed["error.password.required"])).toBeInTheDocument();
   });
 
   it("calls authStore.login on valid form submission", async () => {

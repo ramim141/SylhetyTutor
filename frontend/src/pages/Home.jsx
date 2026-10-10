@@ -1,551 +1,512 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  Search,
-  MapPin,
-  ShieldCheck,
-  ArrowRight,
-  Filter,
+  BadgeCheck,
+  CalendarCheck,
   GraduationCap,
-  Sparkles,
+  MapPin,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  SlidersHorizontal,
+  X,
 } from "lucide-react";
 import { Header } from "../components/layout/Header";
 import { BottomNav } from "../components/layout/BottomNav";
+import { Alert } from "../components/ui/Alert";
 import { Button } from "../components/ui/Button";
-import { TutorCard } from "../components/tutor/TutorCard";
 import { BottomSheet } from "../components/ui/BottomSheet";
+import { TutorCard } from "../components/tutor/TutorCard";
 import { useTranslation } from "../i18n";
 import { useAuthStore } from "../store/authStore";
 import { getLookups } from "../api/lookups";
 import { getTutors } from "../api/tutors";
 
 const CURRENT_YEAR = new Date().getFullYear();
+const CONTAINER = "max-w-[1200px] mx-auto px-4 md:px-6";
+
+const HOW_IT_WORKS = [
+  { n: 1, icon: Search, tone: "bg-orange-light text-orange-text" },
+  { n: 2, icon: BadgeCheck, tone: "bg-info-bg text-info" },
+  { n: 3, icon: CalendarCheck, tone: "bg-success-bg text-success" },
+];
+
+function TutorCardSkeleton() {
+  return (
+    <div className="rounded-lg border border-border bg-bg-card p-5 flex flex-col gap-4" aria-hidden>
+      <div className="flex gap-3.5">
+        <div className="w-13 h-13 rounded-full bg-bg-subtle animate-pulse" />
+        <div className="flex-1 flex flex-col gap-2 pt-1">
+          <div className="h-4 w-2/3 rounded-sm bg-bg-subtle animate-pulse" />
+          <div className="h-3.5 w-1/2 rounded-sm bg-bg-subtle animate-pulse" />
+          <div className="h-3 w-3/4 rounded-sm bg-bg-subtle animate-pulse" />
+        </div>
+      </div>
+      <div className="h-px bg-border-light" />
+      <div className="h-11 rounded-md bg-bg-subtle animate-pulse" />
+    </div>
+  );
+}
+
+function AreaChip({ selected, onClick, children, className = "" }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={selected}
+      className={`shrink-0 min-h-10 px-4 rounded-full border text-sm font-medium cursor-pointer active:scale-95 transition ${
+        selected
+          ? "bg-navy text-on-navy border-navy font-semibold"
+          : "bg-bg-card text-fg border-border hover:bg-orange-light hover:text-orange-text"
+      } ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
 
 export default function Home() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t, lang } = useTranslation();
   const { status } = useAuthStore();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedArea, setSelectedArea] = useState("");
   const [activeTab, setActiveTab] = useState("home");
   const [postSheetOpen, setPostSheetOpen] = useState(false);
-  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  const [areaSheetOpen, setAreaSheetOpen] = useState(false);
 
-  // Live Backend Data States
-  const [lookups, setLookups] = useState({
-    areas: [],
-    subjects: [],
-    class_levels: [],
-    universities: [],
-  });
-  const [tutors, setTutors] = useState([]);
-  const [loadingTutors, setLoadingTutors] = useState(true);
+  const [lookups, setLookups] = useState({ areas: [], subjects: [], universities: [] });
   const [loadingLookups, setLoadingLookups] = useState(true);
+  const [tutors, setTutors] = useState([]);
+  const [tutorsState, setTutorsState] = useState("loading"); // loading | ready | error
+  const [reloadKey, setReloadKey] = useState(0);
 
-  // Fetch Lookups on Mount
   useEffect(() => {
-    let isMounted = true;
-    async function loadLookups() {
-      try {
-        const data = await getLookups();
-        if (isMounted && data) {
-          setLookups(data);
-        }
-      } catch (err) {
-        console.warn("Could not load lookups from backend:", err);
-      } finally {
-        if (isMounted) setLoadingLookups(false);
-      }
-    }
-    loadLookups();
+    let active = true;
+    getLookups()
+      .then((data) => active && data && setLookups(data))
+      .catch(() => {}) // chips simply stay hidden; tutors list shows its own error
+      .finally(() => active && setLoadingLookups(false));
     return () => {
-      isMounted = false;
+      active = false;
     };
   }, []);
 
-  // Fetch Tutors when search query or selected area changes
   useEffect(() => {
-    let isMounted = true;
-    async function loadTutors() {
-      setLoadingTutors(true);
+    let active = true;
+    setTutorsState("loading");
+    const timer = setTimeout(async () => {
       try {
         const params = {};
-        if (searchQuery) params.search = searchQuery;
+        if (searchQuery.trim()) params.search = searchQuery.trim();
         if (selectedArea) params.area = selectedArea;
         const data = await getTutors(params);
-        if (isMounted) {
+        if (active) {
           setTutors(data || []);
+          setTutorsState("ready");
         }
-      } catch (err) {
-        console.warn("Could not load tutors from backend:", err);
-        if (isMounted) setTutors([]);
-      } finally {
-        if (isMounted) setLoadingTutors(false);
+      } catch {
+        if (active) setTutorsState("error");
       }
-    }
-
-    const timer = setTimeout(loadTutors, 200);
+    }, 300); // debounce typing
     return () => {
-      isMounted = false;
+      active = false;
       clearTimeout(timer);
     };
-  }, [searchQuery, selectedArea]);
+  }, [searchQuery, selectedArea, reloadKey]);
 
-  const handleTabChange = (tabId) => {
+  const scrollToTutors = (behavior = "smooth") =>
+    document.getElementById("tutors")?.scrollIntoView({ behavior, block: "start" });
+
+  const handleTabChange = (tabId, { instant = false } = {}) => {
     setActiveTab(tabId);
-    if (tabId === "post") {
-      setPostSheetOpen(true);
-    } else if (tabId === "tutors") {
-      document.getElementById("searchInput")?.focus();
-    } else if (tabId === "areas") {
-      document.getElementById("areasSection")?.scrollIntoView({ behavior: "smooth" });
-    } else if (tabId === "account") {
-      navigate(status === "authenticated" ? "/dashboard" : "/login");
-    }
+    if (tabId === "post") setPostSheetOpen(true);
+    else if (tabId === "tutors") {
+      scrollToTutors(instant ? "auto" : "smooth");
+      document.getElementById("searchInput")?.focus({ preventScroll: true });
+    } else if (tabId === "areas") setAreaSheetOpen(true);
+    else if (tabId === "account") navigate(status === "authenticated" ? "/dashboard" : "/login");
+    else window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    document.getElementById("tutorsListSection")?.scrollIntoView({ behavior: "smooth" });
-  };
+  // Tabs tapped on other pages (Dashboard's BottomNav) arrive as router state
+  useEffect(() => {
+    const tab = location.state?.tab;
+    if (!tab) return;
+    navigate(location.pathname, { replace: true, state: null });
+    // Jump (not smooth-scroll) after first paint: content loading in would cancel a smooth
+    // scroll. No cleanup on purpose — clearing state above re-runs this effect, and a cleanup
+    // would cancel the timer before it fires.
+    setTimeout(() => handleTabChange(tab, { instant: true }), 50);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
 
-  const areasList = lookups.areas || [];
-  const classLevelsList = lookups.class_levels || [];
-  const universitiesList = lookups.universities || [];
+  const areas = lookups.areas || [];
+  const areaName = (area) => (lang === "en" ? area.name_en : area.name_bn);
+  const selectedAreaObj = areas.find((a) => a.slug === selectedArea);
+
+  const stats = [
+    tutors.length > 0 && !selectedArea && !searchQuery
+      ? { value: tutors.length, label: t("stats.verifiedTutors"), tone: "text-navy" }
+      : { value: "100%", label: t("stats.nidVerified"), tone: "text-navy" },
+    { value: areas.length || "—", label: t("stats.sylhetAreas"), tone: "text-orange-text" },
+    { value: lookups.subjects?.length || "—", label: t("stats.subjects"), tone: "text-success" },
+    { value: lookups.universities?.length || "—", label: t("stats.campuses"), tone: "text-navy" },
+  ];
 
   return (
-    <div className="min-h-screen bg-bg text-fg flex flex-col font-body transition-colors pb-20 md:pb-0">
-      {/* App Top Bar */}
+    <div className="min-h-dvh bg-bg text-fg flex flex-col font-body pb-24 md:pb-0">
       <Header />
 
       <main className="flex-1">
-        {/* Mobile App Style Hero */}
-        <section className="relative overflow-hidden pt-6 pb-12 md:py-24 bg-orange-pale/50 border-b border-border">
-          {/* Subtle Ambient Glow */}
-          <div className="absolute top-10 left-1/4 w-80 h-80 rounded-full bg-orange/8 blur-3xl pointer-events-none -z-10" />
-
-          <div className="max-w-[1200px] mx-auto px-4 md:px-6">
-            {/* Trust Pill */}
+        {/* Hero + search */}
+        {/* overflow-clip, not -hidden: a hidden box is still scrollable by the browser, which
+            shifted the hero sideways when filters changed (the decor circle overflows) */}
+        <section className="relative overflow-clip bg-orange-pale border-b border-border pt-6 pb-8 md:py-20">
+          <div
+            className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-orange/10 pointer-events-none"
+            aria-hidden
+          />
+          <div className={`${CONTAINER} relative`}>
             <div className="flex justify-center mb-4">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-bg-card border border-border shadow-xs text-xs font-display font-semibold text-navy">
-                <ShieldCheck className="w-3.5 h-3.5 text-info" />
-                <span>{t("hero.badge")}</span>
-              </div>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-bg-card border border-border text-xs font-display font-semibold text-navy">
+                <ShieldCheck className="w-3.5 h-3.5 text-info" aria-hidden />
+                {t("hero.badge")}
+              </span>
             </div>
 
-            {/* Main Headline */}
-            <h1 className="text-2xl sm:text-4xl md:text-5xl font-display font-extrabold tracking-tight text-fg text-center max-w-3xl mx-auto leading-tight mb-3 md:mb-5">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-extrabold tracking-tight text-center max-w-3xl mx-auto leading-tight">
               {t("hero.title")}
             </h1>
-
-            {/* Subtitle */}
-            <p className="text-sm sm:text-base md:text-lg text-fg-secondary text-center max-w-2xl mx-auto mb-6 md:mb-10 leading-relaxed px-2">
+            <p className="text-base md:text-lg text-fg-secondary text-center max-w-prose mx-auto mt-3 md:mt-5">
               {t("hero.subtitle")}
             </p>
 
-            {/* App-like Search Bar Card */}
-            <div className="max-w-2xl mx-auto bg-bg-card border border-border rounded-2xl p-2.5 sm:p-3 shadow-md mb-5">
-              <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
-                <div className="flex-1 flex items-center gap-2.5 px-3 py-2 bg-bg-subtle rounded-xl border border-border focus-within:border-orange focus-within:ring-2 focus-within:ring-orange/15 transition-all">
-                  <Search className="w-4 h-4 text-fg-muted shrink-0" />
+            <div className="max-w-2xl mx-auto mt-6 md:mt-10 bg-bg-card border border-border rounded-xl p-3 shadow-md">
+              <form
+                role="search"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.querySelector("input")?.blur(); // close the phone keyboard
+                  scrollToTutors();
+                }}
+                className="flex items-center gap-2"
+              >
+                <label className="flex-1 min-w-0 flex items-center gap-2 min-h-12 px-3 bg-bg-subtle rounded-md border border-border focus-within:border-orange focus-within:ring-3 focus-within:ring-orange/15 transition">
+                  <Search className="w-5 h-5 text-fg-muted shrink-0" aria-hidden />
+                  <span className="sr-only">{t("hero.searchButton")}</span>
                   <input
                     id="searchInput"
-                    type="text"
+                    type="search"
+                    enterKeyHint="search"
+                    autoComplete="off"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder={t("hero.searchPlaceholder")}
-                    className="w-full bg-transparent text-sm text-fg placeholder:text-fg-muted focus:outline-hidden"
+                    className="w-full min-w-0 bg-transparent text-base text-fg placeholder:text-fg-muted focus:outline-hidden [&::-webkit-search-cancel-button]:hidden"
                   />
                   {searchQuery && (
                     <button
                       type="button"
                       onClick={() => setSearchQuery("")}
-                      className="text-xs text-fg-muted hover:text-fg px-1"
+                      className="w-8 h-8 -mr-1 flex items-center justify-center rounded-full text-fg-muted hover:text-fg"
+                      aria-label={t("common.clear")}
                     >
-                      Clear
+                      <X className="w-4 h-4" aria-hidden />
                     </button>
                   )}
-                </div>
+                </label>
 
-                {/* Filter toggle button on mobile */}
                 <button
                   type="button"
-                  onClick={() => setFilterSheetOpen(true)}
-                  className="md:hidden p-2.5 rounded-xl border border-border bg-bg-subtle text-fg-secondary hover:text-fg active:scale-95 transition-all cursor-pointer"
-                  title="Filter"
-                  aria-label="Filter"
+                  onClick={() => setAreaSheetOpen(true)}
+                  className="md:hidden relative w-12 h-12 shrink-0 flex items-center justify-center rounded-md border border-border bg-bg-subtle text-fg-secondary active:scale-95 transition"
+                  aria-label={t("home.filter")}
                 >
-                  <Filter className="w-4 h-4" />
+                  <SlidersHorizontal className="w-5 h-5" aria-hidden />
+                  {selectedArea && (
+                    <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-orange ring-2 ring-bg-subtle" />
+                  )}
                 </button>
 
-                {/* Primary Action Button */}
-                <Button type="submit" variant="primary" size="md" className="shrink-0 px-4 md:px-6">
-                  <span className="hidden sm:inline">{t("hero.searchButton")}</span>
-                  <Search className="w-4 h-4 sm:hidden" />
+                <Button type="submit" className="hidden md:inline-flex shrink-0 min-h-12">
+                  {t("hero.searchButton")}
                 </Button>
               </form>
 
-              {/* Dynamic Horizontal Scroll Area Chips from Django Admin */}
-              <div
-                id="areasSection"
-                className="mt-3 pt-2.5 border-t border-border-light flex items-center gap-1.5 overflow-x-auto scrollbar-none text-xs pb-1"
-              >
-                <span className="shrink-0 font-semibold text-fg-secondary flex items-center gap-1 pl-1 pr-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-orange shrink-0" />
-                  <span>সিলেট:</span>
-                </span>
-
-                {/* All Areas Filter Button */}
-                <button
-                  type="button"
-                  onClick={() => setSelectedArea("")}
-                  className={`shrink-0 px-2.5 py-1 rounded-full border text-xs font-medium cursor-pointer active:scale-95 transition-all ${
-                    !selectedArea
-                      ? "bg-navy text-on-navy border-navy font-bold shadow-xs"
-                      : "bg-bg-subtle text-fg border-border hover:bg-orange-light hover:text-orange-text"
-                  }`}
-                >
-                  সব এলাকা
-                </button>
-
-                {loadingLookups ? (
-                  <span className="text-xs text-fg-muted px-2">এলাকা লোড হচ্ছে...</span>
-                ) : (
-                  areasList.map((area) => {
-                    const isSelected = selectedArea === area.slug;
-                    const areaName = lang === "en" ? area.name_en : area.name_bn;
-                    return (
-                      <button
-                        key={area.id}
-                        type="button"
-                        onClick={() => setSelectedArea(isSelected ? "" : area.slug)}
-                        className={`shrink-0 px-2.5 py-1 rounded-full border text-xs font-medium cursor-pointer active:scale-95 transition-all ${
-                          isSelected
-                            ? "bg-orange text-on-orange border-orange font-bold shadow-xs"
-                            : "bg-bg-subtle text-fg border-border hover:bg-orange-light hover:text-orange-text"
-                        }`}
-                      >
-                        {areaName}
-                      </button>
-                    );
-                  })
-                )}
-              </div>
+              {/* Area chips: swipe on phones; the filter sheet shows all areas at once */}
+              {!loadingLookups && areas.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-border-light flex items-center gap-2 overflow-x-auto scroll-px-3 scrollbar-none -mx-3 px-3">
+                  <span className="shrink-0 flex items-center gap-1 text-sm font-semibold text-fg-secondary">
+                    <MapPin className="w-4 h-4 text-orange" aria-hidden />
+                    {t("home.sylhet")}
+                  </span>
+                  <AreaChip selected={!selectedArea} onClick={() => setSelectedArea("")}>
+                    {t("home.allAreas")}
+                  </AreaChip>
+                  {areas.map((area) => (
+                    <AreaChip
+                      key={area.id}
+                      selected={selectedArea === area.slug}
+                      onClick={() => setSelectedArea(selectedArea === area.slug ? "" : area.slug)}
+                    >
+                      {areaName(area)}
+                    </AreaChip>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </section>
 
-        {/* Dynamic Platform Stats from Live Backend Data */}
-        <section className="bg-bg py-5 md:py-8 border-b border-border">
-          <div className="max-w-[1200px] mx-auto px-4 md:px-6">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 md:gap-6 text-center">
-              <div className="p-3 bg-bg-subtle/50 md:bg-transparent rounded-xl border md:border-0 border-border">
-                <p className="font-display font-extrabold text-xl sm:text-3xl text-navy">
-                  {tutors.length}
-                </p>
-                <p className="text-[11px] sm:text-xs text-fg-secondary mt-0.5">
-                  {t("stats.verifiedTutors")}
-                </p>
+        {/* Stats */}
+        <section className="py-6 md:py-10 border-b border-border">
+          <dl className={`${CONTAINER} grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-6 text-center`}>
+            {stats.map((s) => (
+              <div key={s.label} className="p-3 rounded-lg bg-bg-subtle md:bg-transparent">
+                <dd className={`font-display font-extrabold text-2xl sm:text-3xl tabular-nums ${s.tone}`}>
+                  {s.value}
+                </dd>
+                <dt className="text-xs text-fg-secondary mt-0.5">{s.label}</dt>
               </div>
-              <div className="p-3 bg-bg-subtle/50 md:bg-transparent rounded-xl border md:border-0 border-border">
-                <p className="font-display font-extrabold text-xl sm:text-3xl text-orange">
-                  {areasList.length || 14}
-                </p>
-                <p className="text-[11px] sm:text-xs text-fg-secondary mt-0.5">
-                  {t("stats.sylhetAreas")}
-                </p>
-              </div>
-              <div className="p-3 bg-bg-subtle/50 md:bg-transparent rounded-xl border md:border-0 border-border">
-                <p className="font-display font-extrabold text-xl sm:text-3xl text-success">
-                  {lookups.subjects?.length || 12}
-                </p>
-                <p className="text-[11px] sm:text-xs text-fg-secondary mt-0.5">
-                  টিউশন বিষয়সমূহ
-                </p>
-              </div>
-              <div className="p-3 bg-bg-subtle/50 md:bg-transparent rounded-xl border md:border-0 border-border">
-                <p className="font-display font-extrabold text-xl sm:text-3xl text-navy">
-                  {universitiesList.length || 3}
-                </p>
-                <p className="text-[11px] sm:text-xs text-fg-secondary mt-0.5">
-                  ক্যাম্পাস পার্টনার
-                </p>
-              </div>
-            </div>
-          </div>
+            ))}
+          </dl>
         </section>
 
-        {/* Live Tutors Section */}
-        <section id="tutorsListSection" className="py-10 md:py-20 bg-bg">
-          <div className="max-w-[1200px] mx-auto px-4 md:px-6">
-            <div className="flex items-center justify-between mb-6 md:mb-10">
-              <div>
-                <h2 className="text-xl sm:text-3xl font-display font-bold text-fg">
-                  {t("section.featuredTitle")}
-                </h2>
-                <p className="text-xs sm:text-base text-fg-secondary mt-1">
-                  {selectedArea
-                    ? `ফিল্টার: ${selectedArea}`
-                    : t("section.featuredSubtitle")}
-                </p>
-              </div>
-              {tutors.length > 0 && (
-                <Button variant="ghost" size="sm" className="hidden sm:inline-flex gap-1">
-                  View All
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
+        {/* Tutors */}
+        <section id="tutors" className="py-10 md:py-16 scroll-mt-16">
+          <div className={CONTAINER}>
+            <div className="flex flex-col gap-1 mb-5 md:mb-8">
+              <h2 className="text-2xl sm:text-3xl font-display font-bold">{t("section.featuredTitle")}</h2>
+              <p className="text-sm sm:text-base text-fg-secondary">{t("section.featuredSubtitle")}</p>
+              {selectedAreaObj && (
+                <div className="mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedArea("")}
+                    className="inline-flex items-center gap-1.5 min-h-9 pl-3 pr-2 rounded-full bg-orange-light text-orange-text text-sm font-semibold"
+                    aria-label={`${t("home.filterActive", { area: areaName(selectedAreaObj) })} — ${t("common.clear")}`}
+                  >
+                    {t("home.filterActive", { area: areaName(selectedAreaObj) })}
+                    <X className="w-4 h-4" aria-hidden />
+                  </button>
+                </div>
               )}
             </div>
 
-            {/* Live Tutors State Handler */}
-            {loadingTutors ? (
-              <div className="text-center py-16">
-                <div className="inline-block w-8 h-8 border-3 border-orange border-t-transparent rounded-full animate-spin mb-3" />
-                <p className="text-xs text-fg-secondary font-display">
-                  টিউটর তালিকা লোড হচ্ছে...
-                </p>
+            {tutorsState === "loading" && (
+              <div
+                className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6"
+                role="status"
+                aria-label={t("home.tutorsLoading")}
+              >
+                <TutorCardSkeleton />
+                <TutorCardSkeleton />
+                <TutorCardSkeleton />
               </div>
-            ) : tutors.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            )}
+
+            {tutorsState === "error" && (
+              <div className="max-w-md mx-auto flex flex-col items-center gap-4 py-8 text-center">
+                <Alert variant="error">{t("home.tutorsError")}</Alert>
+                <Button variant="outline" onClick={() => setReloadKey((k) => k + 1)}>
+                  <RefreshCw className="w-4 h-4" aria-hidden />
+                  {t("common.retry")}
+                </Button>
+              </div>
+            )}
+
+            {tutorsState === "ready" && tutors.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
                 {tutors.map((tutor) => (
                   <TutorCard key={tutor.id} {...tutor} />
                 ))}
               </div>
-            ) : (
-              /* Clean Empty State when no tutors added yet from Django admin */
-              <div className="text-center py-12 px-6 bg-bg-card rounded-2xl border border-border max-w-lg mx-auto shadow-xs">
-                <div className="w-14 h-14 rounded-full bg-orange-light text-orange flex items-center justify-center mx-auto mb-4">
-                  <GraduationCap className="w-7 h-7" />
+            )}
+
+            {tutorsState === "ready" && tutors.length === 0 && (
+              <div className="max-w-lg mx-auto text-center py-10 px-6 bg-bg-card rounded-lg border border-border flex flex-col items-center gap-3">
+                <div className="w-14 h-14 rounded-full bg-orange-light text-orange-text flex items-center justify-center">
+                  <GraduationCap className="w-7 h-7" aria-hidden />
                 </div>
-                <h3 className="font-display font-bold text-lg text-fg mb-1.5">
-                  এখনো কোনো টিউটর যুক্ত হয়নি
-                </h3>
-                <p className="text-xs sm:text-sm text-fg-secondary mb-6 leading-relaxed">
-                  Django Admin থেকে নতুন টিউটর যোগ করুন অথবা সরাসরি রেজিস্ট্রেশন করে সিলেটে টিউশনি শুরু করুন!
+                <h3 className="font-display font-bold text-lg">{t("home.empty.title")}</h3>
+                <p className="text-sm text-fg-secondary max-w-prose">
+                  {selectedArea || searchQuery ? t("home.empty.filtered") : t("home.empty.body")}
                 </p>
-                <div className="flex flex-col sm:flex-row gap-2.5 justify-center">
-                  <Button
-                    variant="primary"
-                    size="md"
-                    onClick={() => {
-                      window.location.href = "/register";
-                    }}
-                  >
-                    <Sparkles className="w-4 h-4 mr-1.5" />
-                    টিউটর হিসেবে প্রোফাইল তৈরি করুন
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="md"
-                    onClick={() => setPostSheetOpen(true)}
-                  >
-                    টিউশন রিকোয়ারমেন্ট দিন
-                  </Button>
+                <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-2.5 mt-2">
+                  {selectedArea || searchQuery ? (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedArea("");
+                        setSearchQuery("");
+                      }}
+                    >
+                      {t("home.empty.showAll")}
+                    </Button>
+                  ) : (
+                    <Link
+                      to="/register"
+                      className="inline-flex items-center justify-center min-h-11 px-6 rounded-md bg-orange text-on-orange font-display font-semibold text-sm hover:bg-orange-hover transition-colors"
+                    >
+                      {t("home.empty.becomeTutor")}
+                    </Link>
+                  )}
                 </div>
               </div>
             )}
           </div>
         </section>
 
-        {/* How It Works - Mobile Friendly Cards */}
-        <section className="py-12 md:py-16 bg-bg-subtle border-t border-b border-border">
-          <div className="max-w-[1200px] mx-auto px-4 md:px-6">
+        {/* How it works */}
+        <section className="py-12 md:py-16 bg-bg-subtle border-y border-border">
+          <div className={CONTAINER}>
             <div className="text-center max-w-xl mx-auto mb-8 md:mb-12">
-              <h2 className="text-xl sm:text-3xl font-display font-bold text-fg">
-                {t("section.howItWorksTitle")}
-              </h2>
-              <p className="text-xs sm:text-sm text-fg-secondary mt-1.5">
-                সহজ তিন ধাপে সিলেটে বিশ্বস্ত হোম টিউটর
-              </p>
+              <h2 className="text-2xl sm:text-3xl font-display font-bold">{t("section.howItWorksTitle")}</h2>
+              <p className="text-sm text-fg-secondary mt-1.5">{t("howItWorks.subtitle")}</p>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
-              <div className="bg-bg-card p-5 rounded-xl border border-border shadow-xs flex md:flex-col items-start md:items-center gap-4 md:text-center">
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-orange-light text-orange font-display font-extrabold text-base md:text-lg flex items-center justify-center shrink-0">
-                  1
-                </div>
-                <div>
-                  <h3 className="font-display font-bold text-base md:text-lg text-fg mb-1">
-                    খুঁজুন বা পোস্ট করুন
-                  </h3>
-                  <p className="text-xs md:text-sm text-fg-secondary leading-relaxed">
-                    আপনার এলাকা ও বিষয় দিয়ে সরাসরি সার্চ করুন অথবা চাহিদা জানিয়ে রিকোয়ারমেন্ট পোস্ট করুন।
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-bg-card p-5 rounded-xl border border-border shadow-xs flex md:flex-col items-start md:items-center gap-4 md:text-center">
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-info/10 text-info font-display font-extrabold text-base md:text-lg flex items-center justify-center shrink-0">
-                  2
-                </div>
-                <div>
-                  <h3 className="font-display font-bold text-base md:text-lg text-fg mb-1">
-                    ভেরিফাইড আইডি যাচাই
-                  </h3>
-                  <p className="text-xs md:text-sm text-fg-secondary leading-relaxed">
-                    SUST ও শীর্ষ ক্যাম্পাসের টিউটরদের ভেরিফাইড আইডি, রেটিং এবং রিভিউ দেখে নিশ্চিন্তে বাছাই করুন।
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-bg-card p-5 rounded-xl border border-border shadow-xs flex md:flex-col items-start md:items-center gap-4 md:text-center">
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-success-bg text-success font-display font-extrabold text-base md:text-lg flex items-center justify-center shrink-0">
-                  3
-                </div>
-                <div>
-                  <h3 className="font-display font-bold text-base md:text-lg text-fg mb-1">
-                    ফ্রি ট্রায়াল ও ক্লাস শুরু
-                  </h3>
-                  <p className="text-xs md:text-sm text-fg-secondary leading-relaxed">
-                    কথা বলুন এবং প্রয়োজনে ট্রায়াল ক্লাস নিয়ে ১০০% নিশ্চিত হয়ে ক্লাস শুরু করুন।
-                  </p>
-                </div>
-              </div>
-            </div>
+            <ol className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-8">
+              {HOW_IT_WORKS.map(({ n, icon: Icon, tone }) => (
+                <li
+                  key={n}
+                  className="bg-bg-card p-5 rounded-lg border border-border flex md:flex-col items-start md:items-center gap-4 md:text-center"
+                >
+                  <div className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 ${tone}`}>
+                    <Icon className="w-5 h-5" aria-hidden />
+                  </div>
+                  <div>
+                    <h3 className="font-display font-bold text-base md:text-lg mb-1">
+                      {t(`howItWorks.step${n}.title`)}
+                    </h3>
+                    <p className="text-sm text-fg-secondary">{t(`howItWorks.step${n}.body`)}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
           </div>
         </section>
 
-        {/* Mobile Tutor Registration Banner */}
-        <section className="py-12 md:py-16 bg-navy text-on-navy relative overflow-hidden px-4">
-          <div className="max-w-[1200px] mx-auto text-center relative z-10">
-            <div className="w-12 h-12 rounded-full bg-on-navy/10 flex items-center justify-center mx-auto mb-4">
-              <GraduationCap className="w-6 h-6 text-orange" />
-            </div>
-            <h2 className="text-xl sm:text-3xl font-display font-extrabold text-on-navy mb-2">
-              আপনি কি সিলেটে টিউশনি খুঁজছেন?
-            </h2>
-            <p className="text-xs sm:text-base text-on-navy/80 max-w-md mx-auto mb-6">
-              SUST, Metropolitan ও Leading University শিক্ষার্থীদের জন্য ১০০% ফ্রি রেজিস্ট্রেশন।
-            </p>
-            <Button
-              variant="primary"
-              size="lg"
-              className="w-full sm:w-auto"
-              onClick={() => {
-                window.location.href = "/register";
-              }}
+        {/* Tutor recruitment */}
+        <section className="py-12 md:py-16 bg-navy text-on-navy">
+          <div className={`${CONTAINER} text-center flex flex-col items-center gap-3`}>
+            <GraduationCap className="w-8 h-8 text-orange" aria-hidden />
+            <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-on-navy">{t("banner.title")}</h2>
+            <p className="text-sm sm:text-base opacity-85 max-w-md">{t("banner.body")}</p>
+            <Link
+              to="/register"
+              className="mt-2 w-full sm:w-auto inline-flex items-center justify-center min-h-13 px-8 rounded-md bg-orange text-on-orange font-display font-semibold hover:bg-orange-hover transition-colors"
             >
-              টিউটর হিসেবে প্রোফাইল খুলুন
-            </Button>
+              {t("banner.cta")}
+            </Link>
           </div>
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-navy-deep text-on-navy/70 py-8 md:py-12 border-t border-border/20 text-xs">
-        <div className="max-w-[1200px] mx-auto px-4 md:px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
+      <footer className="bg-navy-deep text-on-navy py-8 md:py-12 text-sm">
+        <div className={`${CONTAINER} flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left`}>
           <div>
-            <div className="flex items-center justify-center md:justify-start gap-1 mb-1">
-              <span className="font-display font-bold text-lg text-on-navy">Sylhety</span>
-              <span className="font-display font-bold text-lg text-orange-text">Tutor</span>
-            </div>
-            <p className="text-[11px] text-on-navy/60">
-              Webnify IT Solution, Sylhet.
+            <p className="font-display font-bold text-lg">
+              Sylhety<span className="text-orange">Tutor</span>
             </p>
+            <p className="text-xs opacity-75">Webnify IT Solution, Sylhet</p>
           </div>
-          <div className="flex gap-4 text-on-navy/80">
-            <a href="#about" className="hover:text-on-navy transition-colors">আমাদের সম্পর্কে</a>
-            <a href="#privacy" className="hover:text-on-navy transition-colors">প্রাইভেসি</a>
-            <a href="#terms" className="hover:text-on-navy transition-colors">শর্তাবলী</a>
-          </div>
-          <p className="text-[10px] text-on-navy/50">
-            © {CURRENT_YEAR} SylhetyTutor.
-          </p>
+          <nav className="flex gap-1">
+            {["about", "privacy", "terms"].map((key) => (
+              <a
+                key={key}
+                href={`#${key}`}
+                className="min-h-11 px-3 inline-flex items-center opacity-85 hover:opacity-100 hover:underline"
+              >
+                {t(`footer.${key}`)}
+              </a>
+            ))}
+          </nav>
+          <p className="text-xs opacity-60">© {CURRENT_YEAR} SylhetyTutor</p>
         </div>
       </footer>
 
-      {/* Native App-like Bottom Navigation Bar (Mobile only) */}
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
 
-      {/* Post Tuition Bottom Sheet Modal (Mobile App Feel) */}
+      {/* Post requirement: honest placeholder until Sprint 4 builds posting */}
       <BottomSheet
         isOpen={postSheetOpen}
-        onClose={() => setPostSheetOpen(false)}
-        title="টিউশন রিকোয়ারমেন্ট পোস্ট করুন"
+        onClose={() => {
+          setPostSheetOpen(false);
+          setActiveTab("home");
+        }}
+        title={t("post.title")}
       >
-        <div className="space-y-4">
-          <p className="text-xs text-fg-secondary">
-            আপনার সন্তানের জন্য প্রয়োজনীয় বিষয় ও এলাকা জানান, আমরা উপযুক্ত টিউটর খুঁজে দেব।
-          </p>
-          <div>
-            <label className="text-xs font-bold text-fg block mb-1">কোন ক্লাসের শিক্ষার্থী?</label>
-            <select className="w-full p-2.5 bg-bg-subtle border border-border rounded-lg text-sm text-fg">
-              {classLevelsList.map((cl) => (
-                <option key={cl.id} value={cl.slug}>
-                  {cl.name_en} ({cl.name_bn})
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="text-xs font-bold text-fg block mb-1">এলাকা (Sylhet Area)</label>
-            <select className="w-full p-2.5 bg-bg-subtle border border-border rounded-lg text-sm text-fg">
-              {areasList.map((a) => (
-                <option key={a.id} value={a.slug}>
-                  {a.name_en} ({a.name_bn})
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="text-xs font-bold text-fg block mb-1">বিষয়সমূহ</label>
-            <input
-              type="text"
-              placeholder="e.g. Math, Physics, English"
-              className="w-full p-2.5 bg-bg-subtle border border-border rounded-lg text-sm text-fg placeholder:text-fg-muted"
-            />
-          </div>
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-fg-secondary">{t("post.body")}</p>
+          <Alert variant="info">
+            {status === "authenticated" ? t("post.signedInNote") : t("post.comingSoon")}
+          </Alert>
+          {status !== "authenticated" && (
+            <Link
+              to="/register"
+              className="inline-flex items-center justify-center min-h-13 px-8 rounded-md bg-orange text-on-orange font-display font-semibold hover:bg-orange-hover transition-colors"
+            >
+              {t("post.registerCta")}
+            </Link>
+          )}
           <Button
-            variant="primary"
-            className="w-full mt-2"
+            variant="ghost"
+            size="lg"
             onClick={() => {
-              alert("রিকোয়ারমেন্ট ড্রাফট সংরক্ষিত হয়েছে!");
               setPostSheetOpen(false);
+              setActiveTab("home");
+              scrollToTutors();
             }}
           >
-            পোস্ট সম্পন্ন করুন (Submit)
+            {t("post.browseCta")}
           </Button>
         </div>
       </BottomSheet>
 
-      {/* Quick Filter Bottom Sheet Modal */}
+      {/* Area filter: every area visible at once (chips row scrolls on phones) */}
       <BottomSheet
-        isOpen={filterSheetOpen}
-        onClose={() => setFilterSheetOpen(false)}
-        title="ফিল্টার করুন (Filters)"
+        isOpen={areaSheetOpen}
+        onClose={() => {
+          setAreaSheetOpen(false);
+          setActiveTab("home");
+        }}
+        title={t("home.filterTitle")}
       >
-        <div className="space-y-4">
-          <div>
-            <label className="text-xs font-bold text-fg block mb-1.5">টিউটরের জেন্ডার</label>
-            <div className="grid grid-cols-3 gap-2">
-              <button type="button" className="p-2 border border-orange bg-orange-light text-orange-text font-bold text-xs rounded-lg">
-                যেকোনো
-              </button>
-              <button type="button" className="p-2 border border-border bg-bg-subtle text-fg text-xs rounded-lg">
-                ছাত্র (Male)
-              </button>
-              <button type="button" className="p-2 border border-border bg-bg-subtle text-fg text-xs rounded-lg">
-                ছাত্রী (Female)
-              </button>
-            </div>
-          </div>
-          <div>
-            <label className="text-xs font-bold text-fg block mb-1.5">বিশ্ববিদ্যালয়</label>
-            <div className="space-y-1.5 text-xs text-fg">
-              {universitiesList.map((uni) => (
-                <label key={uni.id} className="flex items-center gap-2">
-                  <input type="checkbox" defaultChecked className="rounded accent-orange" />
-                  <span>{uni.short_name || uni.name_en} ({uni.name_bn})</span>
-                </label>
-              ))}
-            </div>
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-fg-secondary">{t("home.filterHint")}</p>
+          <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label={t("home.filterTitle")}>
+            {[{ id: "all", slug: "" }, ...areas].map((area) => {
+              const selected = selectedArea === area.slug;
+              return (
+                <button
+                  key={area.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => setSelectedArea(area.slug)}
+                  className={`min-h-12 px-3 rounded-md border text-sm font-medium text-left transition cursor-pointer ${
+                    selected
+                      ? "border-orange bg-orange-light text-orange-text font-semibold"
+                      : "border-border bg-bg-subtle text-fg"
+                  }`}
+                >
+                  {area.slug ? areaName(area) : t("home.allAreas")}
+                </button>
+              );
+            })}
           </div>
           <Button
-            variant="primary"
+            size="lg"
             className="w-full"
-            onClick={() => setFilterSheetOpen(false)}
+            onClick={() => {
+              setAreaSheetOpen(false);
+              setActiveTab("home");
+              scrollToTutors();
+            }}
           >
-            ফিল্টার প্রয়োগ করুন (Apply Filters)
+            {t("home.filterApply")}
           </Button>
         </div>
       </BottomSheet>

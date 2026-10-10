@@ -60,8 +60,9 @@ export function TutorCard({
                 {name}
               </h3>
               {isVerified && (
-                <span title="NID & Student ID Verified" className="inline-flex">
-                  <CheckCircle className="w-4 h-4 text-info shrink-0" />
+                <span title={t("card.verifiedTitle")} className="inline-flex">
+                  <CheckCircle className="w-4 h-4 text-info shrink-0" aria-hidden />
+                  <span className="sr-only">{t("card.verifiedTitle")}</span>
                 </span>
               )}
             </div>
@@ -83,11 +84,16 @@ export function TutorCard({
 
         {/* Rating and Class tag row */}
         <div className="flex items-center justify-between text-xs mb-4">
-          <div className="flex items-center gap-1.5 font-display font-bold text-fg">
-            <Star className="w-4 h-4 text-star fill-star" />
-            <span>{rating.toFixed(1)}</span>
-            <span className="text-fg-muted font-normal">({reviewCount})</span>
-          </div>
+          {reviewCount > 0 ? (
+            <div className="flex items-center gap-1.5 font-display font-bold text-fg tabular-nums">
+              <Star className="w-4 h-4 text-star fill-star" aria-hidden />
+              <span>{Number(rating).toFixed(1)}</span>
+              <span className="text-fg-muted font-normal">({reviewCount})</span>
+            </div>
+          ) : (
+            // No reviews yet: say so honestly instead of showing 0.0 or a made-up rating
+            <Badge variant="free">{t("card.new")}</Badge>
+          )}
 
           <div className="flex gap-1 flex-wrap justify-end">
             {classes.slice(0, 2).map((c) => (
@@ -100,11 +106,11 @@ export function TutorCard({
 
         {/* Fee range */}
         <div className="text-xs text-fg-muted mb-4">
-          Salary:{" "}
-          <span className="font-display font-bold text-sm text-fg">
-            ৳{feeMin.toLocaleString()} - ৳{feeMax.toLocaleString()}
+          {t("card.salary")}:{" "}
+          <span className="font-display font-bold text-sm text-fg tabular-nums">
+            ৳{feeMin.toLocaleString("en-IN")}–{feeMax.toLocaleString("en-IN")}
           </span>
-          <span className="text-fg-muted"> /month</span>
+          <span className="text-fg-muted">{t("card.perMonth")}</span>
         </div>
       </div>
 

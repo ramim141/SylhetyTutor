@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { mixed } from "../../i18n";
 import { BottomSheet } from "./BottomSheet";
 
 describe("BottomSheet component", () => {
@@ -36,7 +37,7 @@ describe("BottomSheet component", () => {
       </BottomSheet>
     );
 
-    const closeButton = screen.getByRole("button", { name: /close bottom sheet/i });
+    const closeButton = screen.getByRole("button", { name: mixed["common.close"] });
     await user.click(closeButton);
 
     expect(handleClose).toHaveBeenCalledOnce();

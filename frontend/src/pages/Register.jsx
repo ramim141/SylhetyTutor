@@ -7,9 +7,11 @@ import { Input } from "../components/ui/Input";
 import { PasswordInput } from "../components/ui/PasswordInput";
 import { Button } from "../components/ui/Button";
 import { Alert } from "../components/ui/Alert";
+import { getFieldErrors, getFormError } from "../api/errors";
 
 export default function Register() {
-  const { t, lang } = useTranslation();
+  const i18n = useTranslation();
+  const { t, lang } = i18n;
   const navigate = useNavigate();
   const register = useAuthStore((state) => state.register);
 
@@ -26,12 +28,12 @@ export default function Register() {
     const newErrors = {};
 
     if (!fullName.trim() || fullName.trim().length < 2) {
-      newErrors.fullName = "Full name must be at least 2 characters";
+      newErrors.fullName = t("error.fullName.short");
     }
 
     const cleanPhone = phone.trim().replace(/[\s-]/g, "");
     if (!cleanPhone && !email.trim()) {
-      newErrors.phone = t("error.phone.invalid");
+      newErrors.phone = t("error.phone.required");
     } else if (cleanPhone) {
       // Basic BD mobile check: either 11 digits starting 01[3-9] or with +880
       const bdPhoneRegex = /^(?:\+?880|0)?1[3-9]\d{8}$/;
@@ -43,12 +45,12 @@ export default function Register() {
     if (email.trim()) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email.trim())) {
-        newErrors.email = "Please enter a valid email address";
+        newErrors.email = t("error.email.invalid");
       }
     }
 
     if (!password || password.length < 8) {
-      newErrors.password = t("error.password.weak");
+      newErrors.password = t("error.password.password_too_short");
     }
 
     setErrors(newErrors);
@@ -73,42 +75,15 @@ export default function Register() {
       });
       navigate("/dashboard", { replace: true });
     } catch (err) {
-      const resp = err.response?.data;
-      const status = err.response?.status;
-
-      if (!err.response) {
-        setServerError(t("error.network"));
-      } else if (status === 429 || resp?.code === "throttled") {
-        setServerError(t("error.throttled"));
-      } else if (resp?.fields) {
-        const fieldErrors = {};
-        for (const [key, val] of Object.entries(resp.fields)) {
-          const errItem = Array.isArray(val) ? val[0] : val;
-          const code = typeof errItem === "object" ? errItem.code : errItem;
-          const stateKey = key === "full_name" ? "fullName" : key;
-
-          if (key === "phone" && code === "unique") {
-            fieldErrors.phone = t("error.phone.unique");
-          } else if (key === "email" && code === "unique") {
-            fieldErrors.email = t("error.email.unique");
-          } else if (key === "password") {
-            fieldErrors.password = t("error.password.weak");
-          } else {
-            fieldErrors[stateKey] =
-              (typeof errItem === "object" ? errItem.message : errItem) || t("error.generic");
-          }
-        }
-        setErrors(fieldErrors);
-      } else {
-        setServerError(resp?.detail || t("error.generic"));
-      }
+      setServerError(getFormError(err, i18n) || "");
+      setErrors(getFieldErrors(err, i18n, { full_name: "fullName" }));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-bg flex flex-col justify-center py-12 sm:px-6 lg:px-8 px-4 transition-colors">
+    <div className="min-h-dvh bg-bg flex flex-col justify-center py-8 sm:py-12 sm:px-6 lg:px-8 px-4 pb-[max(2rem,env(safe-area-inset-bottom))] transition-colors">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex items-center justify-between mb-6">
           <Link
@@ -204,6 +179,9 @@ export default function Register() {
                 if (errors.fullName) setErrors((prev) => ({ ...prev, fullName: null }));
               }}
               error={errors.fullName}
+              autoComplete="name"
+              autoCapitalize="words"
+              enterKeyHint="next"
               required
               disabled={loading}
             />
@@ -220,6 +198,9 @@ export default function Register() {
                 if (errors.phone) setErrors((prev) => ({ ...prev, phone: null }));
               }}
               error={errors.phone}
+              helperText={t("auth.contact.hint")}
+              autoComplete="tel-national"
+              enterKeyHint="next"
               disabled={loading}
             />
 
@@ -234,6 +215,11 @@ export default function Register() {
                 if (errors.email) setErrors((prev) => ({ ...prev, email: null }));
               }}
               error={errors.email}
+              autoComplete="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint="next"
               disabled={loading}
             />
 
@@ -247,6 +233,8 @@ export default function Register() {
                 if (errors.password) setErrors((prev) => ({ ...prev, password: null }));
               }}
               error={errors.password}
+              autoComplete="new-password"
+              enterKeyHint="go"
               required
               disabled={loading}
             />

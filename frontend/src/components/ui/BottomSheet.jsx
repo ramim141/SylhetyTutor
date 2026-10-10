@@ -1,7 +1,9 @@
 import React, { useEffect } from "react";
 import { X } from "lucide-react";
+import { useTranslation } from "../../i18n";
 
 export function BottomSheet({ isOpen, onClose, title, children }) {
+  const { t } = useTranslation();
   useEffect(() => {
     if (!isOpen) return;
 
@@ -51,7 +53,7 @@ export function BottomSheet({ isOpen, onClose, title, children }) {
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close bottom sheet"
+            aria-label={t("common.close")}
             className="p-1 text-fg-muted hover:text-fg rounded-full bg-bg-subtle cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-orange/30"
           >
             <X className="w-5 h-5" />

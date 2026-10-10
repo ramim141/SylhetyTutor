@@ -1,54 +1,64 @@
-import React from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Home, Search, PlusCircle, MapPin, User } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import { useAuthStore } from "../../store/authStore";
 
-export function BottomNav({ activeTab = "home", onTabChange }) {
+const ACCOUNT_PATHS = ["/dashboard", "/login", "/register"];
+
+/**
+ * Mobile tab bar (DESIGN.md 6.5). Works on any page: Home passes onTabChange to open
+ * its sheets in place; elsewhere tabs navigate, and Home picks up the requested tab
+ * from router state (see Home's useEffect on location.state).
+ */
+export function BottomNav({ activeTab, onTabChange }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
   const { user, status } = useAuthStore();
+
+  const current = activeTab ?? (ACCOUNT_PATHS.includes(pathname) ? "account" : "home");
 
   const accountLabel =
     status === "authenticated" && user
-      ? user.full_name?.split(" ")[0] || "Account"
-      : t("nav.signIn") || "Account";
+      ? user.full_name?.split(" ")[0] || t("nav.account")
+      : t("nav.signIn");
 
   const tabs = [
-    { id: "home", label: t("nav.home") || "Home", icon: Home },
-    { id: "tutors", label: t("nav.findTutors") || "Tutors", icon: Search },
-    {
-      id: "post",
-      label: "Post",
-      icon: PlusCircle,
-      isAction: true,
-    },
-    { id: "areas", label: "Areas", icon: MapPin },
+    { id: "home", label: t("nav.home"), icon: Home },
+    { id: "tutors", label: t("nav.findTutors"), icon: Search },
+    { id: "post", label: t("nav.post"), icon: PlusCircle, isAction: true },
+    { id: "areas", label: t("nav.areas"), icon: MapPin },
     { id: "account", label: accountLabel, icon: User },
   ];
 
+  const handleTab = (id) => {
+    if (onTabChange) return onTabChange(id);
+    if (id === "account") return navigate(status === "authenticated" ? "/dashboard" : "/login");
+    navigate("/", id === "home" ? undefined : { state: { tab: id } });
+  };
+
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-bg/95 backdrop-blur-xl border-t border-border shadow-lg pb-[env(safe-area-inset-bottom,6px)] pt-1.5 transition-colors"
-      aria-label="Mobile Bottom Navigation"
+      className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-bg/95 backdrop-blur-xl border-t border-border shadow-lg pb-[env(safe-area-inset-bottom)] transition-colors"
+      aria-label={t("nav.mobileLabel")}
     >
-      <div className="flex items-center justify-around px-2 max-w-md mx-auto">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
+      <div className="grid grid-cols-5 items-end max-w-md mx-auto px-1">
+        {tabs.map(({ id, label, icon: Icon, isAction }) => {
+          const isActive = current === id;
 
-          if (tab.isAction) {
+          if (isAction) {
             return (
               <button
-                key={tab.id}
+                key={id}
                 type="button"
-                onClick={() => onTabChange && onTabChange(tab.id)}
-                aria-label={tab.label}
-                className="flex flex-col items-center justify-center -mt-5 group cursor-pointer focus:outline-hidden"
+                onClick={() => handleTab(id)}
+                className="flex flex-col items-center justify-end min-h-14 pb-1.5 group cursor-pointer"
               >
-                <div className="w-12 h-12 rounded-full bg-orange text-on-orange flex items-center justify-center shadow-md shadow-orange/30 group-active:scale-95 transition-all">
-                  <Icon className="w-6 h-6 stroke-[2.5]" />
-                </div>
-                <span className="text-[10px] font-display font-bold text-orange-text mt-1">
-                  {tab.label}
+                <span className="-mt-6 w-13 h-13 rounded-full bg-orange text-on-orange flex items-center justify-center shadow-md shadow-orange/30 ring-4 ring-bg group-active:scale-95 transition-transform">
+                  <Icon className="w-6 h-6" strokeWidth={2.5} aria-hidden />
+                </span>
+                <span className="text-[11px] leading-tight font-display font-bold text-orange-text mt-1">
+                  {label}
                 </span>
               </button>
             );
@@ -56,24 +66,21 @@ export function BottomNav({ activeTab = "home", onTabChange }) {
 
           return (
             <button
-              key={tab.id}
+              key={id}
               type="button"
-              onClick={() => onTabChange && onTabChange(tab.id)}
-              aria-label={tab.label}
+              onClick={() => handleTab(id)}
               aria-current={isActive ? "page" : undefined}
-              className={`flex flex-col items-center justify-center py-1 px-3 rounded-lg min-w-14 cursor-pointer select-none transition-all active:scale-95 focus:outline-hidden ${
-                isActive
-                  ? "text-orange-text font-bold"
-                  : "text-fg-secondary hover:text-fg font-medium"
+              className={`flex flex-col items-center justify-center gap-1 min-h-14 px-1 cursor-pointer select-none active:scale-95 transition ${
+                isActive ? "text-orange-text" : "text-fg-secondary hover:text-fg"
               }`}
             >
-              <Icon
-                className={`w-5 h-5 transition-transform ${
-                  isActive ? "stroke-[2.5] scale-110" : "stroke-2"
+              <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} aria-hidden />
+              <span
+                className={`text-[11px] leading-tight font-display truncate max-w-full ${
+                  isActive ? "font-bold" : "font-medium"
                 }`}
-              />
-              <span className="text-[11px] font-display mt-1 tracking-tight truncate max-w-16">
-                {tab.label}
+              >
+                {label}
               </span>
             </button>
           );

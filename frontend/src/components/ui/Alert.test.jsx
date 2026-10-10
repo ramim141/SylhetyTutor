@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { mixed } from "../../i18n";
 import { Alert } from "./Alert";
 
 describe("Alert component", () => {
@@ -36,7 +37,7 @@ describe("Alert component", () => {
       </Alert>
     );
 
-    const closeButton = screen.getByRole("button", { name: /dismiss alert/i });
+    const closeButton = screen.getByRole("button", { name: mixed["common.dismiss"] });
     await user.click(closeButton);
 
     expect(handleClose).toHaveBeenCalledOnce();
