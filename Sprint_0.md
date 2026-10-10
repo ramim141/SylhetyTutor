@@ -2,7 +2,7 @@
 
 **তারিখ**: ১০ অক্টোবর, ২০২৬  
 **ফেজ**: Sprint 0 (Groundwork & Foundation Setup)  
-**স্ট্যাটাস**: 🟡 Foundation প্রস্তুত (Frontend লাইভ ও ভেরিফায়েড, Backend কাঠামো তৈরি — DB ও সার্ভার রান Sprint 1-এ হবে)  
+**স্ট্যাটাস**: 🟡 Foundation প্রায় প্রস্তুত — Frontend বিল্ড হয়, Backend লোকালি চালু হয় (SQLite); Docker/PostgreSQL, CI ও test setup বাকি (নিচে "বাকি কাজ")  
 **গিটহাব রিপোজিটরি**: [https://github.com/ramim141/SylhetyTutor](https://github.com/ramim141/SylhetyTutor)
 
 ---
@@ -20,12 +20,12 @@
 
 - **গিট রিপোজিটরি ইনিশিয়ালাইজেশন**:
   - `main` ব্রাঞ্চ তৈরি ও রিমোট অরিজিন যুক্ত করা হয়েছে: `https://github.com/ramim141/SylhetyTutor.git`।
-  - সমস্ত কোড গিটহাবে সফলভাবে পুশ ও ট্র্যাক করা হয়েছে।
+  - সমস্ত কোড গিটহাবে সফলভাবে পুশ ও ট্র্যাক করা হয়েছে। Sprint 0 এর ঠিক করার কাজ `sprint-0` branch এ।
 - **রুট কনফিগারেশন ফাইলস**:
-  - `.gitignore`: পাইথন ভার্চুয়াল এনভায়রনমেন্ট, ডকার, মিডিয়া ও নোড মডিউল প্রটেক্টেড।
+  - `.gitignore`: পাইথন ভার্চুয়াল এনভায়রনমেন্ট, `.env`, মিডিয়া ও নোড মডিউল প্রটেক্টেড। (আগে `.dockerignore` ভুল করে ignore হচ্ছিল — ঠিক করা হয়েছে, এখন দুটো `.dockerignore` ট্র্যাক হয়।)
   - `.env.example`: ব্যাকএন্ড ও ফ্রন্টএন্ডের জন্য এনভায়রনমেন্ট ভেরিয়েবল টেমপ্লেট।
   - `docker-compose.yml`: PostgreSQL 16, Redis 7, Django Backend এবং React Frontend-এর মাল্টি-কনটেইনার অর্কেস্ট্রেশন।
-- **ডকার সেটআপ গাইড**: উইন্ডোজের জন্য WSL 2 ভিত্তিক Docker Desktop ইনস্টলেশন গাইডলাইন প্রস্তুত।
+- **ডকার সেটআপ গাইড**: root `README.md` এ `docker compose up --build` দিয়ে চালানোর নির্দেশনা। ⚠️ `docker compose up` এখনো একবারও end-to-end চালিয়ে যাচাই হয়নি।
 
 ---
 
@@ -39,18 +39,19 @@
   - **Zero-Flash Theme**: রেন্ডারিংয়ের পূর্বেই `data-theme` সেট করার স্ক্রিপ্ট (Light / Dark / System)।
 - **ট্রি-লিঙ্গুয়াল i18n (Trilingual Engine)**:
   - ডিফল্ট হিসেবে **Mixed (Banglish)** মোড সক্রিয়।
-  - এক ক্লিকেই রিলোড ছাড়াই **English (EN)**, **বাংলা (BN)** এবং **Mixed** মোডে সম্পূর্ণ টেক্সট রূপান্তরের সুবিধা।
+  - এক ক্লিকেই রিলোড ছাড়াই **English (EN)**, **বাংলা (BN)** এবং **Mixed** মোডে রূপান্তর। ⚠️ আংশিক: `App.jsx`, `BottomNav`, `BottomSheet` এর অনেক লেখা এখনো সরাসরি component এ লেখা, `t()` দিয়ে নয়।
 - **নেটিভ মোবাইল অ্যাপ-লাইক UI (Native App Feel)**:
   - `BottomNav.jsx`: মোবাইলে স্ক্রিনের নিচে ফিক্সড আধুনিক ৫-ট্যাব বটম নেভিগেশন বার (সেন্টারে বড় অরেঞ্জ প্লাস বাটন)।
-  - `BottomSheet.jsx`: নিচ থেকে স্মুথভাবে স্লাইড হয়ে আসা ড্রয়ার (টিউশন পোস্ট ফর্ম, ল্যাঙ্গুয়েজ সিলেক্টর ও ফিল্টারের জন্য)।
+  - `BottomSheet.jsx`: নিচ থেকে আসা ড্রয়ার (টিউশন পোস্ট ফর্ম, ল্যাঙ্গুয়েজ সিলেক্টর ও ফিল্টারের জন্য)। ⚠️ `animate-in`/`slide-in` class এর plugin নেই বলে animation চলে না; Esc এ বন্ধ হয় না।
   - `Header.jsx`: স্লিম মোবাইল অ্যাপ-বার, কুইক ল্যাঙ্গুয়েজ চিপ ও থিম টগল।
   - এরিয়া চিপস: আঙুল দিয়ে ডানে-বামে স্মুথভাবে সোয়াইপ করার মতো হরিজোন্টাল স্ন্যাপ স্ক্রোলিং।
   - `TutorCard.jsx`: WCAG AA কনট্রাস্ট মানদণ্ড মেনে ভেরিফায়েড ব্যাজ, রেটিং ও প্রাইস ট্যাগসহ টিউটর কার্ড।
-- **লাইভ স্ট্যাটাস**: প্রোডাকশন বিল্ড (`vite build`) মাত্র ২.৪ সেকেন্ডে সম্পন্ন এবং ব্রাউজার সাব-এজেন্ট দ্বারা মোবাইল (375x750) ও ডেস্কটপ ভিউপোর্টে সফলভাবে ভেরিফায়েড।
+- **লাইভ স্ট্যাটাস**: প্রোডাকশন বিল্ড (`vite build`) ৩–৪ সেকেন্ডে সম্পন্ন; মোবাইল (375x750) ও ডেস্কটপ ভিউপোর্টে দেখা হয়েছে।
+- **জানা UI সমস্যা (DESIGN.md এর বিরুদ্ধে)**: Dark mode এ টিউটর ব্যানার ও Footer এর সাদা লেখা হালকা navy এর উপর পড়া যায় না (1.5:1, `text-on-navy` লাগবে); কয়েক জায়গায় `text-white`/`gray-*`, লেখায় `text-orange`; icon বাটনে `aria-label` নেই; stats (150+, 98.5%) placeholder সংখ্যা — আসল data না আসা পর্যন্ত সরাতে হবে।
 
 ---
 
-## ৪. ব্যাকএন্ড ফাউন্ডেশন (Django 5.1 + DRF Scaffolding) — [কাঠামো প্রস্তুত]
+## ৪. ব্যাকএন্ড ফাউন্ডেশন (Django 5.1 + DRF Scaffolding) — [লোকালি চালু]
 
 - **আর্কিটেকচার স্কেলিং**:
   - `backend/manage.py`: এন্ট্রি পয়েন্ট স্ক্রিপ্ট।
@@ -60,8 +61,9 @@
 - **কনটেইনারাইজেশন ও ডিপেন্ডেন্সিজ**:
   - `backend/requirements.txt`: ব্যাকএন্ডের সকল ডিপেন্ডেন্সিজ তালিকাভুক্ত।
   - `backend/Dockerfile` ও `.dockerignore` তৈরি।
-  - `apps/` ফোল্ডার স্ট্রাকচার প্রস্তুত।
-- **স্ট্যাটাস**: ব্যাকএন্ডের মূল ফাইল ও সেটিংস কাঠামো রেডি করা হয়েছে। তবে পাইথন প্যাকেজ ইনস্টলেশন, মাইগ্রেশন এবং ডাটাবেজ কানেকশন এখনও রান করা হয়নি—যা Sprint 1-এর প্রাথমিক কাজ হিসেবে সম্পন্ন করা হবে।
+  - `apps/accounts`: Custom User model (Architecture Doc 3.1) — UUID PK, phone/email (অন্তত একটা বাধ্যতামূলক, DB constraint), role, `preferred_language` (default `mixed`), admin ও প্রথম migration।
+  - বাকি app (`lookups`, `tutors`, ...) তৈরি হলে তবেই `LOCAL_APPS` এ যোগ হবে।
+- **স্ট্যাটাস**: `development.py` এর SyntaxError ও না-থাকা app এর ImportError ঠিক করা হয়েছে; `.env` এখন load হয়। যাচাই: `manage.py check` পরিষ্কার, SQLite এ `migrate` চলে, `/api/v1/health/` ও `/api/schema/` 200। ⚠️ PostgreSQL (Docker) এ এখনো চালানো হয়নি।
 
 ---
 
@@ -74,12 +76,30 @@
 | `dddee1a` | `refactor(frontend): switch from TS to pure JSX` | টাইপস্ক্রিপ্ট সরিয়ে পিওর JSX-এ রূপান্তর |
 | `fd1713f` | `feat(mobile): add native app-like bottom navigation` | বটম বার, বটম শিট ও মোবাইল টাচ লেআউট |
 | `948b443` | `feat(backend): initialize Django 5.1 boilerplate` | ব্যাকএন্ড আর্কিটেকচার, সেটিংস ও ডকারফাইল |
+| `33557d4` | `docs: update DESIGN.md, Architecture Doc, add root README...` | ডকুমেন্ট হালনাগাদ, root README |
+| `a960719` | `chore(backend): streamline settings and env loading` | SyntaxError ঠিক, `.env` load, `LOCAL_APPS` ছাঁটাই |
+| `da66ecd` | `chore: track dockerignores, clean frontend deps, and add accounts scaffold` | `.dockerignore` ট্র্যাক, Windows-only dependency বাদ, User model |
+
+---
+
+## ⏳ Sprint 0 এর বাকি কাজ (Sprint 1 শুরুর আগে / প্রথম দিনে)
+
+- [ ] `docker compose up --build` end-to-end চালিয়ে দেখা (PostgreSQL + Redis + backend + frontend)
+- [ ] `docker-compose.yml` এ `env_file: .env` ব্যবহার; `.env.example` এর সাথে মেলানো
+- [ ] CI: `.github/workflows/backend.yml` (ruff, `makemigrations --check`, pytest) ও `frontend.yml` (oxlint, vitest, `vite build`)
+- [ ] `CODEOWNERS`, `pull_request_template.md`, `.pre-commit-config.yaml`; `main` এ branch protection
+- [ ] Test setup: pytest + pytest-django + `config/settings/test.py`; Vitest + React Testing Library
+- [ ] `production.py`, Redis `CACHES`, CORS শুধু `localhost:5173` (এখন সব origin খোলা)
+- [ ] Health check এ DB ও Redis যাচাই (Architecture Doc 12.6)
+- [ ] Frontend: React Router, `src/api/client.js` (Axios + JWT), `/dev/ui`; অপ্রয়োজনীয় `typescript`/`@types/*` ও Vite টেমপ্লেটের ফাইল বাদ
+- [ ] উপরের "জানা UI সমস্যা" ঠিক করা
+- [ ] Sprint Plan এ SMS স্থগিতের সিদ্ধান্ত লেখা (Sprint 5 এখনো SMS ধরে আছে)
 
 ---
 
 ## 🎯 পরবর্তী লক্ষ্য: Sprint 1 (সপ্তাহ ১)
-1. **Backend Environment Setup**: ভার্চুয়াল এনভায়রনমেন্ট তৈরি ও `requirements.txt` প্যাকেজ ইনস্টল করা।
-2. **Custom User Model**: ফোন ও ইমেইল অথেনটিকেশন (Guardian/Tutor/Admin)।
-3. **Database Migrations & JWT API**: Register, Login, Refresh, Logout, এবং `/auth/me/`।
+1. **Backend Environment Setup**: ভার্চুয়াল এনভায়রনমেন্ট (`.venv`) তৈরি ও `requirements.txt` প্যাকেজ ইনস্টল করা।
+2. **Auth backend**: User model তৈরি আছে; phone অথবা email দিয়ে লগইনের auth backend (Guardian/Tutor/Admin)।
+3. **JWT API**: Register, Login, Refresh, Logout, এবং `/auth/me/` + ১০টা test।
 4. **Lookup Seed Data**: সিলেটের ১৪টি এলাকা, ১২টি বিষয়, শ্রেণি স্তর এবং বিশ্ববিদ্যালয়ের ডেটাবেজ সিড কমান্ড (`seed_data`)।
 5. **Auth Screens**: ফ্রন্টএন্ডে লগইন ও রেজিস্ট্রেশন ইন্টারফেস।

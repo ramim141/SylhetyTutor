@@ -74,7 +74,7 @@
 | --- | --- | --- | --- |
 | `success` | `#15803d` / `#f0fdf4` | `#4ade80` / `#0f2418` | Verified সম্পন্ন, payment সফল, Featured |
 | `warning` | `#b45309` / `#fffbeb` | `#fbbf24` / `#241e0a` | Pending verification, subscription শেষ হচ্ছে |
-| `error` | `#dc2626` / `#fef2f2` | `#f87171` / `#240f0f` | Form error, rejected, failed payment |
+| `error` | `#b91c1c` / `#fef2f2` | `#f87171` / `#240f0f` | Form error, rejected, failed payment |
 | `info` | `#2563eb` / `#eff6ff` | `#60a5fa` / `#0f1a2e` | Verified badge, tip, notice |
 | `on-error` | `#ffffff` | `#0e1117` | Danger button এর লেখা |
 
@@ -103,7 +103,8 @@
 | `success` (`#15803d`) on `success-bg` | 4.8 | ✅ |
 | Dark: `on-orange` (`#0e1117`) on `#f5923f` | 8.2 | ✅ |
 | `on-navy` on `navy` (light / dark) | 13.2 / 12.7 | ✅ |
-| `on-error` on `error` (light / dark) | 4.8 / 6.8 | ✅ |
+| `on-error` on `error` (light / dark) | 6.5 / 6.8 | ✅ |
+| `error` (`#b91c1c`) on `error-bg` / `bg` | 5.9 / 6.5 | ✅ Alert, form error |
 | ~~White on dark-mode `navy` `#c8d4ee`~~ | 1.5 | ❌ তাই `on-navy` |
 | ~~White on `orange` `#f47920`~~ | 2.8 | ❌ ব্যবহার নিষেধ |
 | ~~`orange` `#f47920` লেখা on white~~ | 2.8 | ❌ ব্যবহার নিষেধ |
@@ -309,7 +310,8 @@ States: `disabled` (opacity 50%, cursor not-allowed), `loading` (spinner + ল�
 | Skeleton | `bg-bg-subtle animate-pulse rounded-*`, আসল content এর মাপে |
 | Empty state | ছোট illustration/icon + এক লাইন কারণ + একটা action ("Filter কমিয়ে দেখুন") |
 | Modal / Bottom sheet | Desktop এ মাঝখানে `rounded-lg shadow-lg`, mobile এ নিচ থেকে sheet; Esc ও বাইরে click এ বন্ধ |
-| Toast | নিচে মাঝখানে, ৪ সেকেন্ড, success/error রং |
+| Bottom Nav | শুধু mobile (`md:hidden`), নিচে fixed ৫ ট্যাব, মাঝে একটা orange action বাটন; `pb-[env(safe-area-inset-bottom)]`; page এর নিচে `pb-20` ফাঁকা রাখা যাতে content ঢাকা না পড়ে |
+| Toast | নিচে মাঝখানে, ৪ সেকেন্ড, success/error রং; mobile এ Bottom Nav এর উপরে |
 | Icons | `lucide-react`, 16px (inline) / 20px (button) / 24px (nav), `stroke-width 2` |
 
 ---
@@ -325,7 +327,7 @@ States: `disabled` (opacity 50%, cursor not-allowed), `loading` (spinner + ল�
 | **Form** | এক column, label উপরে, error নিচে, submit button নিচে পুরো width (mobile)। লম্বা form (tutor registration) ধাপে ভাগ + progress bar |
 | **Loading** | List/card এ skeleton; button এ inline spinner; পুরো page spinner এড়ানো |
 | **Error** | সমস্যা + কী করবেন ("Internet সংযোগ দেখে আবার চেষ্টা করুন" + Retry button) |
-| **Navigation** | Header sticky (`top: env(safe-area-inset-top)`); mobile এ hamburger; dashboard এ mobile নিচে tab bar |
+| **Navigation** | Header sticky (`top: env(safe-area-inset-top)`); mobile এ hamburger নয়, নিচে Bottom Nav (6.5); header এ শুধু logo, ভাষা ও theme |
 | **Paywall / upsell** | Blur + কারণ + plan এর সুবিধা + একটা CTA; কখনো ভয় দেখিয়ে নয় |
 | **তিন ভাষা** | কোনো লেখা component এ hard-code নয়; সব `t("key")`। বাংলা লেখা ইংরেজির চেয়ে ~20–30% লম্বা হয়, layout সেই অনুযায়ী জায়গা রাখে |
 | **Background decor** | Hero ও CTA section এ ১–২টা orange circle (`bg-orange/10`), content এর পেছনে |
@@ -378,7 +380,7 @@ Tailwind v4 এ config `tailwind.config.js` এ নয়, CSS এর `@theme` �
   --color-success-bg: #f0fdf4;
   --color-warning: #b45309;
   --color-warning-bg: #fffbeb;
-  --color-error: #dc2626;
+  --color-error: #b91c1c;
   --color-error-bg: #fef2f2;
   --color-info: #2563eb;
   --color-info-bg: #eff6ff;
@@ -577,6 +579,7 @@ export function Button({
 | Dark mode primary button | White on `#f5923f` | `#0e1117` on `#f5923f` | 2.3:1 → 8.2:1 |
 | Dark mode navy/danger button | White text | নতুন `on-navy`, `on-error` token | Dark এ navy `#c8d4ee` এর উপর white 1.5:1 |
 | Featured badge বর্ণনা | "Green bg + white text" | `success-bg` + `success` text + border | Artifact এর আসল CSS এর সাথে মেলানো |
+| `error` text | `#dc2626` | `#b91c1c` | `error-bg` এর উপর (Alert) 4.4:1 → 5.9:1 |
 | ভাষা | "Bilingual, `localStorage('lang')`" | Trilingual EN / BN / Mixed, key `sylhetytutor_lang`, default `mixed` | Architecture Doc 7.5 |
 | Tailwind config | `tailwind.config.js` এ hex | Tailwind v4 `@theme` CSS variable | Dark mode ও এক জায়গা থেকে নিয়ন্ত্রণ |
 
