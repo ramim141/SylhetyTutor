@@ -84,14 +84,14 @@
 
 ## ⏳ Sprint 0 এর বাকি কাজ (Sprint 1 শুরুর আগে / প্রথম দিনে)
 
-- [ ] `docker compose up --build` end-to-end চালিয়ে দেখা (PostgreSQL + Redis + backend + frontend)
-- [ ] `docker-compose.yml` এ `env_file: .env` ব্যবহার; `.env.example` এর সাথে মেলানো
-- [ ] CI: `.github/workflows/backend.yml` (ruff, `makemigrations --check`, pytest) ও `frontend.yml` (oxlint, vitest, `vite build`)
-- [ ] `CODEOWNERS`, `pull_request_template.md`, `.pre-commit-config.yaml`; `main` এ branch protection
-- [ ] Test setup: pytest + pytest-django + `config/settings/test.py`; Vitest + React Testing Library
-- [ ] `production.py`, Redis `CACHES`, CORS শুধু `localhost:5173` (এখন সব origin খোলা)
-- [ ] Health check এ DB ও Redis যাচাই (Architecture Doc 12.6)
-- [ ] Frontend: React Router, `src/api/client.js` (Axios + JWT), `/dev/ui`; অপ্রয়োজনীয় `typescript`/`@types/*` ও Vite টেমপ্লেটের ফাইল বাদ
+- [x] `docker compose up --build` end-to-end চালিয়ে দেখা (PostgreSQL + Redis + backend + frontend)
+- [x] `docker-compose.yml` এ `env_file: .env` ব্যবহার; `.env.example` এর সাথে মেলানো
+- [x] CI: `.github/workflows/backend.yml` (ruff, `makemigrations --check`, pytest) ও `frontend.yml` (oxlint, vitest, `vite build`)
+- [x] `CODEOWNERS`, `pull_request_template.md`, `.pre-commit-config.yaml`; `main` এ branch protection
+- [x] Test setup: pytest + pytest-django + `config/settings/test.py`; Vitest + React Testing Library
+- [x] `production.py`, Redis `CACHES`, CORS শুধু `localhost:5173`
+- [x] Health check এ DB ও Redis যাচাই (Architecture Doc 12.6)
+- [x] Frontend: React Router, `src/api/client.js` (Axios + JWT refresh), `/dev/ui`, 404 page; `typescript` ও Vite টেমপ্লেটের ফাইল বাদ (`@types/*` editor autocomplete এর জন্য রাখা)
 - [ ] উপরের "জানা UI সমস্যা" ঠিক করা
 - [ ] Sprint Plan এ SMS স্থগিতের সিদ্ধান্ত লেখা (Sprint 5 এখনো SMS ধরে আছে)
 

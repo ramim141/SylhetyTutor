@@ -37,4 +37,9 @@ export const en = {
   "theme.light": "Light",
   "theme.dark": "Dark",
   "theme.system": "System",
+
+  // 404
+  "notFound.title": "Page not found",
+  "notFound.body": "The page you are looking for does not exist or has moved.",
+  "notFound.backHome": "Back to Home",
 };

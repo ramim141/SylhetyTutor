@@ -37,4 +37,9 @@ export const bn = {
   "theme.light": "লাইট",
   "theme.dark": "ডার্ক",
   "theme.system": "সিস্টেম",
+
+  // 404
+  "notFound.title": "পেজটি পাওয়া যায়নি",
+  "notFound.body": "আপনি যে পেজটি খুঁজছেন সেটি নেই অথবা সরানো হয়েছে।",
+  "notFound.backHome": "হোমে ফিরে যান",
 };
