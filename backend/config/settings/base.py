@@ -3,6 +3,7 @@ Base settings for SylhetyTutor project.
 """
 
 import os
+import urllib.parse
 from datetime import timedelta
 from pathlib import Path
 
@@ -14,12 +15,33 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # Load .env from the repo root (local runs outside Docker); real env vars take precedence
 load_dotenv(BASE_DIR.parent / ".env")
 
-# Quick-start development settings - unsuitable for production
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key-sylhetytutor-placeholder")
+
+def env_list(name, default=""):
+    """Comma-separated env var -> list, ignoring blanks."""
+    return [item.strip() for item in os.getenv(name, default).split(",") if item.strip()]
+
+
+def database_from_url(url):
+    """postgres://user:pass@host:port/name -> Django DATABASES entry."""
+    parsed = urllib.parse.urlparse(url)
+    return {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": parsed.path.lstrip("/"),
+        "USER": urllib.parse.unquote(parsed.username or ""),
+        "PASSWORD": urllib.parse.unquote(parsed.password or ""),
+        "HOST": parsed.hostname,
+        "PORT": parsed.port or 5432,
+        "CONN_MAX_AGE": 60,
+        "CONN_HEALTH_CHECKS": True,
+    }
+
+
+# Empty here on purpose: development.py supplies a dev-only key, production.py refuses to start
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "")
 
 DEBUG = False
 
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
 
 # Application definition
 DJANGO_APPS = [
@@ -79,6 +101,22 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
+
+# Database: Postgres when DATABASE_URL is set (Docker, CI, production), else SQLite
+DATABASE_URL = os.getenv("DATABASE_URL", "")
+DATABASES = {
+    "default": database_from_url(DATABASE_URL)
+    if DATABASE_URL
+    else {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "db.sqlite3"}
+}
+
+# Cache: Redis when REDIS_URL is set, else per-process memory
+REDIS_URL = os.getenv("REDIS_URL", "")
+CACHES = {
+    "default": {"BACKEND": "django.core.cache.backends.redis.RedisCache", "LOCATION": REDIS_URL}
+    if REDIS_URL
+    else {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}
+}
 
 # Custom Auth Model
 AUTH_USER_MODEL = "accounts.User"
@@ -140,8 +178,10 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
-# CORS settings
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS: only the React app may call the API from a browser
+CORS_ALLOWED_ORIGINS = env_list(
+    "CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"
+)
 CORS_ALLOW_CREDENTIALS = True
 
 # Spectacular (OpenAPI Docs)
