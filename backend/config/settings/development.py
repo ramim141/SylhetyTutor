@@ -1,8 +1,10 @@
 """
 Development settings for SylhetyTutor.
 """
-from .base import *
-import dj_database_url if False else None
+import os
+
+from .base import *  # noqa: F403
+from .base import BASE_DIR
 
 DEBUG = True
 

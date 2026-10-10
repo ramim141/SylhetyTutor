@@ -5,8 +5,13 @@ from pathlib import Path
 from datetime import timedelta
 import os
 
+from dotenv import load_dotenv
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+# Load .env from the repo root (local runs outside Docker); real env vars take precedence
+load_dotenv(BASE_DIR.parent / ".env")
 
 # Quick-start development settings - unsuitable for production
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key-sylhetytutor-placeholder")
@@ -34,14 +39,10 @@ THIRD_PARTY_APPS = [
     "drf_spectacular",
 ]
 
+# Add each app here when its folder is created (Sprint plan order):
+# apps.lookups, apps.tutors, apps.guardians, apps.matching, apps.reviews, apps.payments
 LOCAL_APPS = [
     "apps.accounts",
-    "apps.lookups",
-    "apps.tutors",
-    "apps.guardians",
-    "apps.matching",
-    "apps.reviews",
-    "apps.payments",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
