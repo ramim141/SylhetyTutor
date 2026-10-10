@@ -13,6 +13,7 @@ from config.views import health_check
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/v1/health/", health_check, name="health-check"),
+    path("api/v1/auth/", include("apps.accounts.urls")),
     path("api/v1/lookups/", include("apps.lookups.urls")),
     path("api/v1/tutors/", include("apps.tutors.urls")),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
