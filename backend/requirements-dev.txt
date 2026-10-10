@@ -1,0 +1,6 @@
+# Local development, tests and CI (production installs only requirements.txt)
+-r requirements.txt
+
+pytest>=8.3
+pytest-django>=4.9
+ruff>=0.8
