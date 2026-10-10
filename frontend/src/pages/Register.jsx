@@ -1,17 +1,21 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { GraduationCap, ArrowLeft, UserCheck, BookOpen } from "lucide-react";
+import { GraduationCap, ArrowLeft, UserCheck, BookOpen, Sun, Moon, Laptop, Globe, ShieldCheck } from "lucide-react";
 import { useTranslation } from "../i18n";
 import { useAuthStore } from "../store/authStore";
+import { useThemeStore } from "../store/themeStore";
 import { Input } from "../components/ui/Input";
 import { PasswordInput } from "../components/ui/PasswordInput";
 import { Button } from "../components/ui/Button";
 import { Alert } from "../components/ui/Alert";
 import { getFieldErrors, getFormError } from "../api/errors";
 
+const CURRENT_YEAR = new Date().getFullYear();
+
 export default function Register() {
   const i18n = useTranslation();
-  const { t, lang } = i18n;
+  const { t, lang, setLang } = i18n;
+  const { theme, setTheme } = useThemeStore();
   const navigate = useNavigate();
   const register = useAuthStore((state) => state.register);
 
@@ -24,6 +28,16 @@ export default function Register() {
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const cycleTheme = () => {
+    const next = { light: "dark", dark: "system", system: "light" };
+    setTheme(next[theme] || "light");
+  };
+
+  const cycleLang = () => {
+    const next = { mixed: "bn", bn: "en", en: "mixed" };
+    setLang(next[lang] || "mixed");
+  };
+
   const validate = () => {
     const newErrors = {};
 
@@ -35,7 +49,6 @@ export default function Register() {
     if (!cleanPhone && !email.trim()) {
       newErrors.phone = t("error.phone.required");
     } else if (cleanPhone) {
-      // Basic BD mobile check: either 11 digits starting 01[3-9] or with +880
       const bdPhoneRegex = /^(?:\+?880|0)?1[3-9]\d{8}$/;
       if (!bdPhoneRegex.test(cleanPhone)) {
         newErrors.phone = t("error.phone.invalid");
@@ -76,66 +89,111 @@ export default function Register() {
       navigate("/dashboard", { replace: true });
     } catch (err) {
       setServerError(getFormError(err, i18n) || "");
-      setErrors(getFieldErrors(err, i18n, { full_name: "fullName" }));
+      setErrors(getFieldErrors(err, i18n));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-dvh bg-bg flex flex-col justify-center py-8 sm:py-12 sm:px-6 lg:px-8 px-4 pb-[max(2rem,env(safe-area-inset-bottom))] transition-colors">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex items-center justify-between mb-6">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-1.5 text-xs font-display font-medium text-fg-secondary hover:text-fg transition-colors"
+    <div className="min-h-dvh bg-bg text-fg flex flex-col justify-between py-6 px-4 sm:px-6 relative overflow-hidden transition-colors selection:bg-orange/20 selection:text-orange-text">
+      {/* Subtle ambient lighting */}
+      <div
+        className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-gradient-to-b from-orange/10 via-orange/5 to-transparent blur-3xl rounded-full"
+        aria-hidden="true"
+      />
+
+      {/* Top Bar: Back to Home + Quick Preferences */}
+      <header className="max-w-4xl w-full mx-auto flex items-center justify-between z-10">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-display font-medium text-fg-secondary hover:text-fg bg-bg-subtle/80 hover:bg-bg-subtle border border-border/80 transition-all active:scale-95"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>{t("nav.home")}</span>
+        </Link>
+
+        <div className="flex items-center gap-2">
+          {/* Language Toggle Chip */}
+          <button
+            type="button"
+            onClick={cycleLang}
+            aria-label="Toggle language"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-display font-semibold text-fg-secondary hover:text-fg bg-bg-subtle border border-border/80 transition-all cursor-pointer active:scale-95"
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span>{t("nav.home")}</span>
-          </Link>
-        </div>
+            <Globe className="w-3.5 h-3.5 text-orange" />
+            <span>{lang === "en" ? "EN" : lang === "bn" ? "বাং" : "Mix"}</span>
+          </button>
 
-        <div className="flex items-center justify-center gap-2.5 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-orange flex items-center justify-center text-on-orange shadow-md shadow-orange/20">
-            <GraduationCap className="w-6 h-6 stroke-[2.2]" />
+          {/* Theme Toggle Button */}
+          <button
+            type="button"
+            onClick={cycleTheme}
+            aria-label="Toggle theme"
+            className="p-1.5 rounded-full text-fg-secondary hover:text-fg bg-bg-subtle border border-border/80 transition-all cursor-pointer active:scale-95"
+          >
+            {theme === "light" && <Sun className="w-3.5 h-3.5 text-orange" />}
+            {theme === "dark" && <Moon className="w-3.5 h-3.5 text-info" />}
+            {theme === "system" && <Laptop className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+      </header>
+
+      {/* Main Centered Minimal Card */}
+      <main className="w-full max-w-[460px] mx-auto my-auto z-10 py-6">
+        <div className="bg-bg-card border border-border/80 rounded-2xl shadow-xl shadow-navy/5 p-6 sm:p-8 backdrop-blur-sm transition-all">
+          {/* Brand & Heading */}
+          <div className="flex flex-col items-center text-center mb-6">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1.5 select-none active:scale-98 transition-transform mb-3"
+              aria-label="SylhetyTutor Home"
+            >
+              <span className="font-display font-black text-2xl sm:text-3xl tracking-tight text-navy">
+                Sylhety
+              </span>
+              <div className="relative inline-flex items-center">
+                <GraduationCap
+                  className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-orange absolute -top-3 left-0"
+                  strokeWidth={2.5}
+                />
+                <span className="font-display font-black text-2xl sm:text-3xl tracking-tight text-orange">
+                  Tutor
+                </span>
+              </div>
+            </Link>
+
+            <h1 className="text-xl sm:text-2xl font-display font-extrabold text-fg tracking-tight">
+              {t("auth.register.title")}
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm font-body text-fg-secondary max-w-xs">
+              {t("auth.register.subtitle")}
+            </p>
           </div>
-          <span className="font-display font-black text-2xl tracking-tight text-fg">
-            Sylhety<span className="text-orange">Tutor</span>
-          </span>
-        </div>
 
-        <h1 className="mt-3 text-center text-2xl font-display font-extrabold text-fg tracking-tight">
-          {t("auth.register.title")}
-        </h1>
-        <p className="mt-1 text-center text-sm font-body text-fg-secondary">
-          {t("auth.register.subtitle")}
-        </p>
-      </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-bg-card py-8 px-6 shadow-xl border border-border rounded-2xl sm:px-10">
+          {/* Server Error Alert */}
           {serverError && (
-            <Alert variant="error" className="mb-6" onClose={() => setServerError("")}>
+            <Alert variant="error" className="mb-5" onClose={() => setServerError("")}>
               {serverError}
             </Alert>
           )}
 
-          {/* Role selection switcher */}
-          <div className="mb-6">
-            <label className="block text-xs font-display font-bold text-fg mb-2">
+          {/* Role selector switcher */}
+          <div className="mb-5">
+            <label className="block text-xs font-display font-bold text-fg mb-1.5">
               {t("auth.role.label")}
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2.5">
               <button
                 type="button"
                 onClick={() => setRole("guardian")}
-                className={`p-3.5 rounded-xl border flex flex-col items-start gap-1.5 transition-all text-left cursor-pointer ${
+                className={`p-3 rounded-xl border flex flex-col items-start gap-1 transition-all text-left cursor-pointer active:scale-98 ${
                   role === "guardian"
-                    ? "border-orange bg-orange/5 ring-2 ring-orange/20"
-                    : "border-border hover:border-fg-muted/40 bg-bg-subtle"
+                    ? "border-orange bg-orange/5 ring-2 ring-orange/20 shadow-xs"
+                    : "border-border/80 hover:border-fg-muted/40 bg-bg-subtle/50"
                 }`}
               >
-                <div className="flex items-center gap-1.5 font-display font-bold text-sm text-fg">
+                <div className="flex items-center gap-1.5 font-display font-bold text-xs sm:text-sm text-fg">
                   <UserCheck
                     className={`w-4 h-4 ${role === "guardian" ? "text-orange" : "text-fg-secondary"}`}
                   />
@@ -149,13 +207,13 @@ export default function Register() {
               <button
                 type="button"
                 onClick={() => setRole("tutor")}
-                className={`p-3.5 rounded-xl border flex flex-col items-start gap-1.5 transition-all text-left cursor-pointer ${
+                className={`p-3 rounded-xl border flex flex-col items-start gap-1 transition-all text-left cursor-pointer active:scale-98 ${
                   role === "tutor"
-                    ? "border-orange bg-orange/5 ring-2 ring-orange/20"
-                    : "border-border hover:border-fg-muted/40 bg-bg-subtle"
+                    ? "border-orange bg-orange/5 ring-2 ring-orange/20 shadow-xs"
+                    : "border-border/80 hover:border-fg-muted/40 bg-bg-subtle/50"
                 }`}
               >
-                <div className="flex items-center gap-1.5 font-display font-bold text-sm text-fg">
+                <div className="flex items-center gap-1.5 font-display font-bold text-xs sm:text-sm text-fg">
                   <BookOpen
                     className={`w-4 h-4 ${role === "tutor" ? "text-orange" : "text-fg-secondary"}`}
                   />
@@ -168,7 +226,7 @@ export default function Register() {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          <form onSubmit={handleSubmit} className="space-y-3.5" noValidate>
             <Input
               id="fullName"
               label={t("auth.fullName.label")}
@@ -184,6 +242,7 @@ export default function Register() {
               enterKeyHint="next"
               required
               disabled={loading}
+              className="space-y-1"
             />
 
             <Input
@@ -202,6 +261,7 @@ export default function Register() {
               autoComplete="tel-national"
               enterKeyHint="next"
               disabled={loading}
+              className="space-y-1"
             />
 
             <Input
@@ -221,6 +281,7 @@ export default function Register() {
               spellCheck={false}
               enterKeyHint="next"
               disabled={loading}
+              className="space-y-1"
             />
 
             <PasswordInput
@@ -237,31 +298,44 @@ export default function Register() {
               enterKeyHint="go"
               required
               disabled={loading}
+              className="space-y-1"
             />
 
             <Button
               type="submit"
               variant="primary"
               size="lg"
-              className="w-full mt-2 font-display font-bold text-base shadow-lg shadow-orange/20"
+              className="w-full mt-2 font-display font-semibold text-sm tracking-wide shadow-sm hover:shadow-md hover:shadow-orange/20 transition-all"
               loading={loading}
             >
               {t("auth.submit.register")}
             </Button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-border text-center">
-            <p className="text-sm font-body text-fg-secondary">
+          {/* Footer Divider & Login link */}
+          <div className="mt-6 pt-5 border-t border-border/80 text-center">
+            <p className="text-xs sm:text-sm font-body text-fg-secondary">
               <Link
                 to="/login"
-                className="font-display font-semibold text-orange-text hover:underline"
+                className="font-display font-semibold text-orange-text hover:text-orange transition-colors inline-flex items-center gap-1"
               >
-                {t("auth.haveAccount")}
+                <span>{t("auth.haveAccount")}</span>
               </Link>
             </p>
           </div>
         </div>
-      </div>
+
+        {/* Security badge at bottom */}
+        <div className="mt-6 flex items-center justify-center gap-1.5 text-xs text-fg-muted font-display select-none">
+          <ShieldCheck className="w-3.5 h-3.5 text-success" />
+          <span>SylhetyTutor &middot; 100% NID &amp; University ID Verified</span>
+        </div>
+      </main>
+
+      {/* Footer copyright */}
+      <footer className="text-center text-[11px] text-fg-muted/70 font-display py-2">
+        &copy; {CURRENT_YEAR} SylhetyTutor. All rights reserved.
+      </footer>
     </div>
   );
 }

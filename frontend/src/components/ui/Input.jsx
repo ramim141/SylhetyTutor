@@ -54,10 +54,10 @@ export const Input = forwardRef(function Input(
           required={required}
           aria-invalid={hasError}
           aria-describedby={describedBy}
-          className={`w-full min-h-[44px] px-3.5 py-2.5 rounded-lg text-base md:text-sm font-body bg-bg-card border transition-all placeholder:text-fg-muted/60 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-hidden ${
+          className={`w-full min-h-[44px] px-3.5 py-2.5 rounded-xl text-base md:text-sm font-body bg-bg-card border transition-all placeholder:text-fg-muted/50 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-hidden ${
             hasError
-              ? "border-error focus:border-error focus:ring-2 focus:ring-error/20 text-fg"
-              : "border-border hover:border-fg-muted/50 focus:border-orange focus:ring-2 focus:ring-orange/20 text-fg"
+              ? "border-error focus:border-error focus:ring-3 focus:ring-error/15 text-fg"
+              : "border-border hover:border-fg-muted/40 focus:border-orange focus:ring-3 focus:ring-orange/15 text-fg"
           } ${inputClassName}`}
           {...props}
         />
