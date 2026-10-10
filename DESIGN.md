@@ -4,7 +4,7 @@
 > নতুন page বা component বানানোর আগে এটা দেখে নিন। এখানে যা নেই, সেটা নিজে বানানোর আগে দুজনে আলোচনা করে এখানে যোগ করুন।
 
 **Brand**: SylhetyTutor by Webnify IT Solution
-**Stack**: React + Vite + TypeScript + Tailwind CSS v4
+**Stack**: React 19 + Vite + JavaScript (JSX) + Tailwind CSS v4
 **Source of truth**: এই file + `frontend/src/styles/theme.css`। Component এর ভেতরে কখনো hex code লেখা যাবে না।
 
 ---
@@ -492,8 +492,8 @@ Tailwind v4 এ config `tailwind.config.js` এ নয়, CSS এর `@theme` �
 
 Variant এর জন্য একটা map, class জোড়া দিতে `clsx` + `tailwind-merge`:
 
-```tsx
-// src/components/ui/Button.tsx
+```jsx
+// src/components/ui/Button.jsx
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -503,27 +503,31 @@ const variants = {
   outline: "border-2 border-orange text-orange-text hover:bg-orange-pale",
   ghost: "border border-border text-fg-secondary hover:bg-bg-subtle",
   danger: "bg-error text-on-error hover:opacity-90",
-} as const;
+};
 
 const sizes = {
   sm: "min-h-9 px-4 text-xs",
   md: "min-h-11 px-6 text-sm",
   lg: "min-h-13 px-8 text-base",
-} as const;
-
-type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: keyof typeof variants;
-  size?: keyof typeof sizes;
-  loading?: boolean;
 };
 
-export function Button({ variant = "primary", size = "md", loading, className, children, disabled, ...rest }: Props) {
+export function Button({
+  variant = "primary",
+  size = "md",
+  loading = false,
+  className = "",
+  children,
+  disabled = false,
+  ...rest
+}) {
   return (
     <button
       className={twMerge(clsx(
         "inline-flex items-center justify-center gap-2 rounded-md font-display font-semibold transition-colors duration-200",
         "focus-visible:ring-2 focus-visible:ring-orange focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-        variants[variant], sizes[size], className,
+        variants[variant] || variants.primary,
+        sizes[size] || sizes.md,
+        className,
       ))}
       disabled={disabled || loading}
       aria-busy={loading || undefined}

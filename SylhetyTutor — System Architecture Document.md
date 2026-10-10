@@ -34,15 +34,15 @@ A production-ready tutoring platform connecting university students in Sylhet wi
 
 | Technology | Purpose | Version |
 | --- | --- | --- |
-| React 18 | UI library | ^18.3 |
-| Vite | Build tool & dev server | ^5.x |
-| TypeScript | Type safety | ^5.x |
-| React Router v6 | Client-side routing | ^6.x |
+| React 19 | UI library | ^19.x |
+| Vite | Build tool & dev server | ^6.x |
+| JavaScript (JSX) | Frontend language & structure | ES2024+ |
+| React Router v6 / v7 | Client-side routing | ^7.x |
 | Axios | HTTP client | ^1.x |
 | React Hook Form | Form handling & validation | ^7.x |
-| Zustand | Lightweight state management | ^4.x |
+| Zustand | Lightweight state management | ^5.x |
 | TanStack Query | Server state & caching | ^5.x |
-| Tailwind CSS | Utility-first styling | ^3.x |
+| Tailwind CSS v4 | Utility-first styling via CSS variables | ^4.x |
 | Plus Jakarta Sans | Heading font (English) | Google Fonts |
 | Hind Siliguri | Body font (Bengali) | Google Fonts |
 
@@ -75,7 +75,7 @@ A production-ready tutoring platform connecting university students in Sylhet wi
 
 | Tool | Purpose |
 | --- | --- |
-| ESLint + Prettier | Frontend linting & formatting |
+| oxlint + Prettier | Frontend fast linting & formatting |
 | Ruff | Python linting & formatting |
 | pytest + Django TestCase | Backend testing |
 | Vitest + React Testing Library | Frontend testing |
@@ -536,88 +536,87 @@ backend/
 └── static/                  # Collected static files
 ```
 
-### Frontend (React + Vite + TypeScript)
+### Frontend (React + Vite + JSX)
 
 ```
 frontend/
 ├── package.json
-├── vite.config.ts
-├── tailwind.config.ts
-├── tsconfig.json
+├── vite.config.js
 ├── index.html
 ├── public/
 │   └── favicon.svg
 └── src/
-    ├── main.tsx
-    ├── App.tsx              # Router + layout
+    ├── main.jsx
+    ├── App.jsx              # Router + layout
     ├── api/
-    │   ├── client.ts        # Axios instance with JWT interceptor
-    │   ├── auth.ts          # Auth API calls
-    │   ├── tutors.ts        # Tutor API calls
-    │   ├── guardians.ts
-    │   ├── requirements.ts
-    │   ├── reviews.ts
-    │   └── lookups.ts       # Subjects, areas, etc.
+    │   ├── client.js        # Axios instance with JWT interceptor
+    │   ├── auth.js          # Auth API calls
+    │   ├── tutors.js        # Tutor API calls
+    │   ├── guardians.js
+    │   ├── requirements.js
+    │   ├── reviews.js
+    │   └── lookups.js       # Subjects, areas, etc.
     ├── components/
     │   ├── layout/
-    │   │   ├── Header.tsx
-    │   │   ├── Footer.tsx
-    │   │   └── DashboardLayout.tsx
+    │   │   ├── Header.jsx
+    │   │   ├── BottomNav.jsx    # Native mobile bottom navigation
+    │   │   ├── Footer.jsx
+    │   │   └── DashboardLayout.jsx
     │   ├── ui/              # Reusable UI components
-    │   │   ├── Button.tsx
-    │   │   ├── Input.tsx
-    │   │   ├── Modal.tsx
-    │   │   ├── Badge.tsx
-    │   │   ├── Card.tsx
-    │   │   └── RangeSlider.tsx
+    │   │   ├── Button.jsx
+    │   │   ├── Input.jsx
+    │   │   ├── Modal.jsx
+    │   │   ├── BottomSheet.jsx  # Mobile slide-up drawer
+    │   │   ├── Badge.jsx
+    │   │   └── Card.jsx
     │   ├── tutor/
-    │   │   ├── TutorCard.tsx
-    │   │   ├── TutorFilters.tsx
-    │   │   └── AvailabilityGrid.tsx
+    │   │   ├── TutorCard.jsx
+    │   │   ├── TutorFilters.jsx
+    │   │   └── AvailabilityGrid.jsx
     │   └── forms/
-    │       ├── LoginForm.tsx
-    │       ├── RegistrationStepper.tsx
-    │       └── RequirementForm.tsx
+    │       ├── LoginForm.jsx
+    │       ├── RegistrationStepper.jsx
+    │       └── RequirementForm.jsx
     ├── pages/
-    │   ├── Home.tsx
-    │   ├── Login.tsx
-    │   ├── Search.tsx
-    │   ├── TutorProfile.tsx
-    │   ├── TutorRegistration.tsx
-    │   ├── PostRequirement.tsx
-    │   ├── GetFeatured.tsx
-    │   ├── About.tsx
-    │   ├── Blog.tsx
-    │   ├── BlogArticle.tsx
+    │   ├── Home.jsx
+    │   ├── Login.jsx
+    │   ├── Search.jsx
+    │   ├── TutorProfile.jsx
+    │   ├── TutorRegistration.jsx
+    │   ├── PostRequirement.jsx
+    │   ├── GetFeatured.jsx
+    │   ├── About.jsx
+    │   ├── Blog.jsx
+    │   ├── BlogArticle.jsx
     │   ├── guardian/
-    │   │   └── Dashboard.tsx
+    │   │   └── Dashboard.jsx
     │   ├── tutor/
-    │   │   └── Dashboard.tsx
+    │   │   └── Dashboard.jsx
     │   └── admin/
-    │       ├── Dashboard.tsx
-    │       ├── Approvals.tsx
-    │       ├── Requirements.tsx
-    │       ├── Matches.tsx
-    │       └── Users.tsx
+    │       ├── Dashboard.jsx
+    │       ├── Approvals.jsx
+    │       ├── Requirements.jsx
+    │       ├── Matches.jsx
+    │       └── Users.jsx
     ├── hooks/
-    │   ├── useAuth.ts       # Auth state + JWT management
-    │   ├── useLanguage.ts   # Bilingual switching
-    │   └── useDebounce.ts
+    │   ├── useAuth.js       # Auth state + JWT management
+    │   ├── useLanguage.js   # Bilingual / trilingual switching
+    │   └── useDebounce.js
     ├── store/
-    │   ├── authStore.ts     # Zustand auth store
-    │   └── languageStore.ts # Language preference
+    │   ├── authStore.js     # Zustand auth store
+    │   ├── themeStore.js    # Theme store (light/dark/system)
+    │   └── languageStore.js # Language preference
     ├── i18n/
-    │   ├── en.ts            # English strings
-    │   └── bn.ts            # Bengali strings
-    ├── types/
-    │   ├── api.ts           # API response types
-    │   ├── models.ts        # Domain model types
-    │   └── forms.ts         # Form schema types
+    │   ├── en.js            # English strings
+    │   ├── bn.js            # Bengali strings
+    │   ├── mixed.js         # Banglish strings (default)
+    │   └── index.js         # useTranslation hook
     ├── utils/
-    │   ├── formatters.ts    # Currency, date formatting
-    │   └── validators.ts    # Phone, email validation
+    │   ├── formatters.js    # Currency, date formatting
+    │   └── validators.js    # Phone, email validation
     └── styles/
-        └── globals.css      # Tailwind imports + CSS variables
+        ├── theme.css        # Tailwind v4 @theme tokens + dark mode
+        └── base.css         # Typography & base layer
 ```
 
 ## 7. Key Features Breakdown
@@ -2367,14 +2366,15 @@ Roadmap (Section 16) এ chatbot Phase A যাবে core platform launch এ�
 **API Contract — কেউ কারো জন্য আটকে থাকবে না**
 
 1. নতুন feature এর শুরুতে দুজন ৬০–১৫ মিনিট বসে endpoint ঠিক করবে: URL, request, response (Issue এ লিখে রাখা)
-2. Dev A আগে serializer + empty view merge করবে → `drf-spectacular` থেকে OpenAPI schema তৈরি হবে
-3. Dev B `openapi-typescript` দিয়ে schema থেকে TypeScript type generate করবে — backend field বদলালে frontend build এই error দেখাবে
-4. Endpoint তৈরি হওয়া পর্যন্ত Dev B MSW (Mock Service Worker) দিয়ে fake response দিয়ে page বানাবে
+2. Dev A আগে serializer + empty view merge করবে → `drf-spectacular` থেকে OpenAPI Swagger UI (`/api/docs/`) এবং schema (`/api/schema/`) সরাসরি লাইভ পাওয়া যাবে
+3. Dev B Swagger UI বা Postman দিয়ে response structure দেখে `src/api/*.js` এ API client ফাংশন ও ফিল্ড ম্যাপিং লিখবে
+4. Endpoint পুরোপুরি তৈরি হওয়া পর্যন্ত Dev B MSW (Mock Service Worker) বা local mock data দিয়ে JSX page বানাবে
 5. API ভাঙবে এমন change (field বাদ/rename) এর PR এ `api-change` label, আর একই PR এ frontend fix
 
 ```bash
-# Dev B — schema থেকে types
-npx openapi-typescript http://localhost:8000/api/schema/ -o frontend/src/api/schema.d.ts
+# Swagger UI ও OpenAPI Schema ব্রাউজার ও টেস্টিং
+GET http://localhost:8000/api/docs/    # Interactive Swagger UI
+GET http://localhost:8000/api/schema/  # Raw OpenAPI 3.0 Schema
 ```
 
 ### 15.2 Repo, Branching & Pull Requests

@@ -1,32 +1,62 @@
-# React + TypeScript + Vite
+# SylhetyTutor — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+The modern, mobile-first frontend client for the **SylhetyTutor** platform.
 
-Currently, two official plugins are available:
+Built with **React 19**, **JavaScript (JSX)**, **Vite 6**, and **Tailwind CSS v4**.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## 🚀 Key Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+* **Mobile App-First UI**: Native feel with fixed bottom navigation bar (`BottomNav.jsx`), slide-up bottom sheets (`BottomSheet.jsx`), and touch-friendly horizontal snap-scrolling for Sylhet area chips.
+* **Tailwind CSS v4 `@theme` Architecture**: No separate `tailwind.config.js`; all brand color tokens and radii are configured via CSS variables in `src/styles/theme.css`.
+* **Zero-Flash Dark / Light Theme**: High-contrast, WCAG AA compliant theme switching with zero layout shifts or theme flashes on page load.
+* **Trilingual i18n Engine**: Seamless support for **English**, **বাংলা**, and default **Mixed (Banglish)** mode via reactive Zustand state.
+* **Clean Pure JSX**: Lightweight, readable JavaScript without build-time TypeScript compilation friction.
 
-## Expanding the Oxlint configuration
+---
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## 📁 Folder Structure
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```
+frontend/
+├── public/                  # Static assets & favicons
+├── src/
+│   ├── assets/              # App images & icons
+│   ├── components/
+│   │   ├── layout/          # Header, BottomNav, Footer
+│   │   ├── tutor/           # TutorCard, TutorFilters
+│   │   └── ui/              # Button, Badge, BottomSheet
+│   ├── i18n/                # Language dictionaries (en, bn, mixed, index)
+│   ├── store/               # Zustand stores (themeStore, languageStore)
+│   ├── styles/              # theme.css (@theme tokens), base.css
+│   ├── App.jsx              # Main home layout
+│   └── main.jsx             # React DOM entry point
+├── index.html               # Fonts & zero-flash theme bootstrap
+├── package.json
+└── vite.config.js
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+---
+
+## 🛠️ Scripts
+
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Start development server (with HMR)
+npm run dev
+
+# 3. Build for production (outputs to /dist)
+npm run build
+
+# 4. Preview production build locally
+npm run preview
+```
+
+---
+
+## 🎨 Design System
+
+All styling strictly adheres to [`../DESIGN.md`](../DESIGN.md). Always use semantic tokens (`bg-navy`, `bg-orange`, `text-on-orange`, `text-orange-text`) rather than arbitrary hex values.
