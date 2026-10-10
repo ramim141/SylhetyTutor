@@ -66,6 +66,7 @@ THIRD_PARTY_APPS = [
 # apps.lookups, apps.tutors, apps.guardians, apps.matching, apps.reviews, apps.payments
 LOCAL_APPS = [
     "apps.accounts",
+    "apps.lookups",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
