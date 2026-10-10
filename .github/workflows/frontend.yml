@@ -1,11 +1,11 @@
 name: frontend
 
+# Runs on every PR (no path filter) so it can be a required check in the
+# main branch ruleset without leaving unrelated PRs stuck on "Expected".
 on:
   pull_request:
-    paths: ["frontend/**", ".github/workflows/frontend.yml"]
   push:
     branches: [main]
-    paths: ["frontend/**", ".github/workflows/frontend.yml"]
 
 concurrency:
   group: frontend-${{ github.ref }}

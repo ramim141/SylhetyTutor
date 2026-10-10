@@ -1,11 +1,11 @@
 name: backend
 
+# Runs on every PR (no path filter) so it can be a required check in the
+# main branch ruleset without leaving unrelated PRs stuck on "Expected".
 on:
   pull_request:
-    paths: ["backend/**", ".github/workflows/backend.yml"]
   push:
     branches: [main]
-    paths: ["backend/**", ".github/workflows/backend.yml"]
 
 concurrency:
   group: backend-${{ github.ref }}
