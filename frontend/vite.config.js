@@ -9,4 +9,10 @@ export default defineConfig({
     // Inside Docker, file events from the Windows host don't arrive, so poll (set in docker-compose.yml)
     watch: { usePolling: process.env.CHOKIDAR_USEPOLLING === "true" },
   },
+  test: {
+    environment: "jsdom",
+    globals: true,
+    setupFiles: "./src/test/setup.js",
+    css: false,
+  },
 });

@@ -5,8 +5,6 @@ import {
   ShieldCheck,
   ArrowRight,
   Filter,
-  Sparkles,
-  PhoneCall,
   GraduationCap,
 } from "lucide-react";
 import { Header } from "./components/layout/Header";
