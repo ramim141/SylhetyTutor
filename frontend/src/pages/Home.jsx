@@ -7,12 +7,12 @@ import {
   Filter,
   GraduationCap,
 } from "lucide-react";
-import { Header } from "./components/layout/Header";
-import { BottomNav } from "./components/layout/BottomNav";
-import { Button } from "./components/ui/Button";
-import { TutorCard } from "./components/tutor/TutorCard";
-import { BottomSheet } from "./components/ui/BottomSheet";
-import { useTranslation } from "./i18n";
+import { Header } from "../components/layout/Header";
+import { BottomNav } from "../components/layout/BottomNav";
+import { Button } from "../components/ui/Button";
+import { TutorCard } from "../components/tutor/TutorCard";
+import { BottomSheet } from "../components/ui/BottomSheet";
+import { useTranslation } from "../i18n";
 
 const SAMPLE_TUTORS = [
   {
@@ -94,7 +94,7 @@ const POPULAR_AREAS = [
   "Modina Market",
 ];
 
-export default function App() {
+export default function Home() {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("home");

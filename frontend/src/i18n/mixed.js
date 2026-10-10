@@ -37,4 +37,9 @@ export const mixed = {
   "theme.light": "Light",
   "theme.dark": "Dark",
   "theme.system": "System",
+
+  // 404
+  "notFound.title": "Page পাওয়া যায়নি",
+  "notFound.body": "আপনি যে page খুঁজছেন সেটা নেই বা সরানো হয়েছে।",
+  "notFound.backHome": "Home এ ফিরে যান",
 };
