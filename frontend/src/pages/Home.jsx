@@ -14,6 +14,8 @@ import { TutorCard } from "../components/tutor/TutorCard";
 import { BottomSheet } from "../components/ui/BottomSheet";
 import { useTranslation } from "../i18n";
 
+const CURRENT_YEAR = new Date().getFullYear();
+
 const SAMPLE_TUTORS = [
   {
     id: "1",
@@ -342,13 +344,13 @@ export default function Home() {
         {/* Mobile Tutor Registration Banner */}
         <section className="py-12 md:py-16 bg-navy text-on-navy relative overflow-hidden px-4">
           <div className="max-w-[1200px] mx-auto text-center relative z-10">
-            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-4">
+            <div className="w-12 h-12 rounded-full bg-on-navy/10 flex items-center justify-center mx-auto mb-4">
               <GraduationCap className="w-6 h-6 text-orange" />
             </div>
-            <h2 className="text-xl sm:text-3xl font-display font-extrabold text-white mb-2">
+            <h2 className="text-xl sm:text-3xl font-display font-extrabold text-on-navy mb-2">
               আপনি কি সিলেটে টিউশনি খুঁজছেন?
             </h2>
-            <p className="text-xs sm:text-base text-gray-300 max-w-md mx-auto mb-6">
+            <p className="text-xs sm:text-base text-on-navy/80 max-w-md mx-auto mb-6">
               SUST, Metropolitan ও Leading University শিক্ষার্থীদের জন্য ১০০% ফ্রি রেজিস্ট্রেশন।
             </p>
             <Button variant="primary" size="lg" className="w-full sm:w-auto">
@@ -359,24 +361,24 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-navy-deep text-gray-400 py-8 md:py-12 border-t border-border/20 text-xs">
+      <footer className="bg-navy-deep text-on-navy/70 py-8 md:py-12 border-t border-border/20 text-xs">
         <div className="max-w-[1200px] mx-auto px-4 md:px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
           <div>
             <div className="flex items-center justify-center md:justify-start gap-1 mb-1">
-              <span className="font-display font-bold text-lg text-white">Sylhety</span>
-              <span className="font-display font-bold text-lg text-orange">Tutor</span>
+              <span className="font-display font-bold text-lg text-on-navy">Sylhety</span>
+              <span className="font-display font-bold text-lg text-orange-text">Tutor</span>
             </div>
-            <p className="text-[11px] text-gray-400">
+            <p className="text-[11px] text-on-navy/60">
               Webnify IT Solution, Sylhet.
             </p>
           </div>
-          <div className="flex gap-4 text-gray-300">
-            <a href="#about" className="hover:text-white">আমাদের সম্পর্কে</a>
-            <a href="#privacy" className="hover:text-white">প্রাইভেসি</a>
-            <a href="#terms" className="hover:text-white">শর্তাবলী</a>
+          <div className="flex gap-4 text-on-navy/80">
+            <a href="#about" className="hover:text-on-navy transition-colors">আমাদের সম্পর্কে</a>
+            <a href="#privacy" className="hover:text-on-navy transition-colors">প্রাইভেসি</a>
+            <a href="#terms" className="hover:text-on-navy transition-colors">শর্তাবলী</a>
           </div>
-          <p className="text-[10px] text-gray-500">
-            © {new Date().getFullYear()} SylhetyTutor.
+          <p className="text-[10px] text-on-navy/50">
+            © {CURRENT_YEAR} SylhetyTutor.
           </p>
         </div>
       </footer>

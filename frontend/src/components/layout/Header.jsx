@@ -111,9 +111,11 @@ export function Header() {
 
             {/* Theme Toggle */}
             <button
+              type="button"
               onClick={cycleTheme}
+              aria-label={`Current theme: ${theme}. Click to switch theme.`}
               title={`Theme: ${theme}`}
-              className="p-2 text-fg-secondary hover:text-fg bg-bg-subtle border border-border rounded-md transition-colors cursor-pointer"
+              className="p-2 text-fg-secondary hover:text-fg bg-bg-subtle border border-border rounded-md transition-colors cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-orange/30"
             >
               {theme === "light" && <Sun className="w-4 h-4 text-orange" />}
               {theme === "dark" && <Moon className="w-4 h-4 text-info" />}
@@ -132,7 +134,9 @@ export function Header() {
           <div className="flex md:hidden items-center gap-2">
             {/* Quick Language Chip */}
             <button
+              type="button"
               onClick={() => setLangSheetOpen(true)}
+              aria-label="Select language"
               className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-bg-subtle border border-border text-xs font-display font-bold text-fg cursor-pointer active:scale-95 transition-transform"
             >
               <Globe className="w-3.5 h-3.5 text-orange" />
@@ -141,7 +145,9 @@ export function Header() {
 
             {/* Quick Theme Toggle */}
             <button
+              type="button"
               onClick={cycleTheme}
+              aria-label={`Current theme: ${theme}. Click to switch theme.`}
               className="p-2 text-fg-secondary bg-bg-subtle border border-border rounded-full cursor-pointer active:scale-95 transition-transform"
             >
               {theme === "light" ? (

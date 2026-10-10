@@ -2,6 +2,9 @@ import { CheckCircle, Star } from "lucide-react";
 import { Header } from "../components/layout/Header";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import { PasswordInput } from "../components/ui/PasswordInput";
+import { Alert } from "../components/ui/Alert";
 import { TutorCard } from "../components/tutor/TutorCard";
 
 // Development-only gallery (DESIGN.md Section 6). Labels are English on purpose:
@@ -86,6 +89,57 @@ export default function DevUI() {
             <Badge variant="free">Free</Badge>
             <Badge variant="founding">Founding Tutor</Badge>
             <Badge variant="tag">Class 9–10</Badge>
+          </div>
+        </Section>
+
+        <Section title="Form Controls & Inputs">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl bg-bg-card p-6 rounded-2xl border border-border">
+            <Input
+              label="Full Name"
+              placeholder="e.g. Rahim Uddin"
+              helperText="As printed on your NID or student ID"
+              required
+            />
+            <Input
+              label="Phone Number"
+              placeholder="01712345678"
+              inputMode="tel"
+              error="A user with this phone already exists."
+              defaultValue="01712345678"
+            />
+            <PasswordInput
+              label="Password"
+              placeholder="Enter your password"
+              helperText="Must be at least 8 characters"
+              required
+            />
+            <PasswordInput
+              label="Weak Password"
+              placeholder="Enter your password"
+              error="Password is too common and easily guessed."
+              defaultValue="12345678"
+            />
+          </div>
+        </Section>
+
+        <Section title="Alerts">
+          <div className="flex flex-col gap-3 max-w-2xl">
+            <Alert variant="info" title="System Notice">
+              SylhetyTutor is currently in private beta testing across Sylhet city areas.
+            </Alert>
+            <Alert variant="success" title="Success">
+              Registration completed successfully! Welcome to SylhetyTutor.
+            </Alert>
+            <Alert variant="warning" title="Verification Pending">
+              Please submit your university student ID photo to earn the Verified badge.
+            </Alert>
+            <Alert
+              variant="error"
+              title="Invalid Credentials"
+              onClose={() => alert("Alert dismissed")}
+            >
+              Phone/email or password is incorrect. Please try again.
+            </Alert>
           </div>
         </Section>
 

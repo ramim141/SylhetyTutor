@@ -32,13 +32,15 @@ export function BottomNav({ activeTab = "home", onTabChange }) {
             return (
               <button
                 key={tab.id}
+                type="button"
                 onClick={() => onTabChange && onTabChange(tab.id)}
+                aria-label={tab.label}
                 className="flex flex-col items-center justify-center -mt-5 group cursor-pointer focus:outline-hidden"
               >
                 <div className="w-12 h-12 rounded-full bg-orange text-on-orange flex items-center justify-center shadow-md shadow-orange/30 group-active:scale-95 transition-all">
                   <Icon className="w-6 h-6 stroke-[2.5]" />
                 </div>
-                <span className="text-[10px] font-display font-bold text-orange mt-1">
+                <span className="text-[10px] font-display font-bold text-orange-text mt-1">
                   {tab.label}
                 </span>
               </button>
@@ -48,10 +50,13 @@ export function BottomNav({ activeTab = "home", onTabChange }) {
           return (
             <button
               key={tab.id}
+              type="button"
               onClick={() => onTabChange && onTabChange(tab.id)}
+              aria-label={tab.label}
+              aria-current={isActive ? "page" : undefined}
               className={`flex flex-col items-center justify-center py-1 px-3 rounded-lg min-w-14 cursor-pointer select-none transition-all active:scale-95 focus:outline-hidden ${
                 isActive
-                  ? "text-orange font-bold"
+                  ? "text-orange-text font-bold"
                   : "text-fg-secondary hover:text-fg font-medium"
               }`}
             >
