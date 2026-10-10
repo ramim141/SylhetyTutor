@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { GraduationCap, ArrowLeft, Sun, Moon, Laptop, Globe, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, User, Lock, Sun, Moon, Laptop, Globe, ShieldCheck } from "lucide-react";
 import { useTranslation } from "../i18n";
 import { useAuthStore } from "../store/authStore";
 import { useThemeStore } from "../store/themeStore";
@@ -8,6 +8,7 @@ import { Input } from "../components/ui/Input";
 import { PasswordInput } from "../components/ui/PasswordInput";
 import { Button } from "../components/ui/Button";
 import { Alert } from "../components/ui/Alert";
+import { Logo } from "../components/ui/Logo";
 import { getFieldErrors, getFormError } from "../api/errors";
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -126,21 +127,10 @@ export default function Login() {
           <div className="flex flex-col items-center text-center mb-6">
             <Link
               to="/"
-              className="inline-flex items-center gap-1.5 select-none active:scale-98 transition-transform mb-3"
-              aria-label="SylhetyTutor Home"
+              className="inline-flex items-center select-none active:scale-98 transition-transform mb-4"
+              aria-label={t("brand.name")}
             >
-              <span className="font-display font-black text-2xl sm:text-3xl tracking-tight text-navy">
-                Sylhety
-              </span>
-              <div className="relative inline-flex items-center">
-                <GraduationCap
-                  className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-orange absolute -top-3 left-0"
-                  strokeWidth={2.5}
-                />
-                <span className="font-display font-black text-2xl sm:text-3xl tracking-tight text-orange">
-                  Tutor
-                </span>
-              </div>
+              <Logo className="h-10 sm:h-11" />
             </Link>
 
             <h1 className="text-xl sm:text-2xl font-display font-extrabold text-fg tracking-tight">
@@ -170,6 +160,7 @@ export default function Login() {
                 if (errors.identifier) setErrors((prev) => ({ ...prev, identifier: null }));
               }}
               error={errors.identifier}
+              leftIcon={User}
               autoComplete="username"
               autoCapitalize="none"
               autoCorrect="off"
@@ -190,6 +181,7 @@ export default function Login() {
                 if (errors.password) setErrors((prev) => ({ ...prev, password: null }));
               }}
               error={errors.password}
+              leftIcon={Lock}
               autoComplete="current-password"
               enterKeyHint="go"
               required
@@ -201,10 +193,11 @@ export default function Login() {
               type="submit"
               variant="primary"
               size="lg"
-              className="w-full mt-2 font-display font-semibold text-sm tracking-wide shadow-md shadow-orange/25 hover:shadow-lg hover:shadow-orange/30 transition-all"
+              className="w-full mt-2 font-display font-semibold text-sm tracking-wide bg-gradient-to-r from-orange via-orange to-orange-hover shadow-md shadow-orange/25 hover:shadow-lg hover:shadow-orange/30 hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer flex items-center justify-center gap-2"
               loading={loading}
             >
-              {t("auth.submit.login")}
+              <span>{t("auth.submit.login")}</span>
+              <ArrowRight className="w-4 h-4 ml-0.5" />
             </Button>
           </form>
 

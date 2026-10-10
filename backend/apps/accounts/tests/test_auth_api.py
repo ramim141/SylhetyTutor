@@ -2,6 +2,8 @@ import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 
+from apps.lookups.models import Area
+
 User = get_user_model()
 pytestmark = pytest.mark.django_db
 
@@ -221,3 +223,37 @@ def test_me_endpoint_get_and_patch(client):
     assert data["preferred_language"] == "en"
     assert data["role"] == "guardian"  # unchanged
     assert data["phone"] == "01733445566"  # unchanged
+
+
+def test_register_saves_home_area_and_returns_it(client):
+    Area.objects.create(name_en="Amberkhana", name_bn="আম্বরখানা", slug="amberkhana")
+
+    response = client.post(
+        "/api/v1/auth/register/",
+        {
+            "full_name": "Area Guardian",
+            "phone": "01711000222",
+            "password": "Sylhet-Strong-2026!",
+            "area": "amberkhana",
+        },
+        format="json",
+    )
+
+    assert response.status_code == 201
+    assert response.json()["user"]["area"] == "amberkhana"
+
+
+def test_register_rejects_unknown_area(client):
+    response = client.post(
+        "/api/v1/auth/register/",
+        {
+            "full_name": "Area Guardian",
+            "phone": "01711000333",
+            "password": "Sylhet-Strong-2026!",
+            "area": "atlantis",
+        },
+        format="json",
+    )
+
+    assert response.status_code == 400
+    assert response.json()["fields"]["area"][0]["code"] == "does_not_exist"

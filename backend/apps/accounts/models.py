@@ -29,6 +29,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     full_name = models.CharField(max_length=150)
     role = models.CharField(max_length=10, choices=Role.choices, default=Role.GUARDIAN)
     avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)
+    # Home area in Sylhet, asked at registration; used later to match guardians and tutors
+    area = models.ForeignKey(
+        "lookups.Area", on_delete=models.SET_NULL, null=True, blank=True, related_name="users"
+    )
     preferred_language = models.CharField(
         max_length=5, choices=Language.choices, default=Language.MIXED
     )

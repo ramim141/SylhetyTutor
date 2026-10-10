@@ -8,6 +8,8 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 
+from apps.lookups.models import Area
+
 from .validators import normalize_email_address, validate_bd_phone
 
 User = get_user_model()
@@ -18,6 +20,8 @@ class UserSerializer(serializers.ModelSerializer):
     Standard user representation across all auth endpoints.
     """
 
+    area = serializers.SlugRelatedField(slug_field="slug", read_only=True)
+
     class Meta:
         model = User
         fields = [
@@ -27,6 +31,7 @@ class UserSerializer(serializers.ModelSerializer):
             "email",
             "role",
             "preferred_language",
+            "area",
             "avatar",
             "date_joined",
         ]
@@ -44,6 +49,12 @@ class RegisterSerializer(serializers.Serializer):
     )
     preferred_language = serializers.ChoiceField(
         choices=User.Language.choices, default=User.Language.MIXED
+    )
+    area = serializers.SlugRelatedField(
+        slug_field="slug",
+        queryset=Area.objects.filter(is_active=True),
+        required=False,
+        allow_null=True,
     )
 
     def validate_phone(self, value):
@@ -88,6 +99,7 @@ class RegisterSerializer(serializers.Serializer):
             password=validated_data["password"],
             role=validated_data.get("role", User.Role.GUARDIAN),
             preferred_language=validated_data.get("preferred_language", User.Language.MIXED),
+            area=validated_data.get("area"),
         )
 
 

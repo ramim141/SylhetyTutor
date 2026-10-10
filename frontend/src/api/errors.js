@@ -24,6 +24,8 @@ const CODE_ALIASES = {
   "fullName.blank": "fullName.short",
   "email.blank": "email.invalid",
   "password.blank": "password.required",
+  "area.does_not_exist": "area.required",
+  "area.invalid": "area.required",
 };
 
 /**

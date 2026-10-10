@@ -4,6 +4,10 @@ import App from "./App";
 import { mixed } from "./i18n";
 import { useAuthStore } from "./store/authStore";
 
+// Pages fetch lookups/tutors on mount; routing tests must not hit a real server
+vi.mock("./api/lookups", () => ({ getLookups: vi.fn().mockResolvedValue({ areas: [], subjects: [], universities: [] }) }));
+vi.mock("./api/tutors", () => ({ getTutors: vi.fn().mockResolvedValue([]) }));
+
 function renderAt(path) {
   return render(
     <MemoryRouter initialEntries={[path]}>
@@ -28,7 +32,7 @@ describe("routes", () => {
   it("renders the register page at /register", () => {
     renderAt("/register");
 
-    expect(screen.getByRole("heading", { level: 1, name: mixed["auth.register.title"] })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: mixed["reg.title"] })).toBeInTheDocument();
   });
 
   it("redirects unauthenticated users visiting /dashboard to /login", () => {

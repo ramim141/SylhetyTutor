@@ -42,10 +42,19 @@
   --color-badge-pro: #7c3aed;
   --color-badge-premium: #b44d0c;
 
+  /* Ink: always-dark brand surface (auth side panel). Not redefined in dark mode,
+     unlike navy which turns light there. */
+  --color-ink: #0c1427;
+  --color-ink-soft: #16213d;
+  --color-ink-border: #26324f;
+  --color-on-ink: #ffffff;
+  --color-on-ink-muted: #c8d4ee;
+
   /* Fonts */
   --font-display: "Plus Jakarta Sans", "Hind Siliguri", system-ui, sans-serif;
   --font-body: "Hind Siliguri", "Plus Jakarta Sans", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-script: "Caveat", "Segoe Script", cursive; /* tagline only */
 
   /* Radius */
   --radius-sm: 6px;

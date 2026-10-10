@@ -12,6 +12,7 @@ export const PasswordInput = forwardRef(function PasswordInput(
     className = "",
     inputClassName = "",
     disabled = false,
+    leftIcon: LeftIcon,
     ...props
   },
   ref
@@ -36,7 +37,7 @@ export const PasswordInput = forwardRef(function PasswordInput(
       {label && (
         <label
           htmlFor={inputId}
-          className="block text-xs font-display font-bold text-fg mb-1.5 select-none"
+          className="block text-xs font-display font-bold text-fg mb-1 select-none"
         >
           {label}
           {required && (
@@ -48,6 +49,11 @@ export const PasswordInput = forwardRef(function PasswordInput(
       )}
 
       <div className="relative">
+        {LeftIcon && (
+          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-fg-muted/60 transition-colors">
+            <LeftIcon className="w-4 h-4" aria-hidden="true" />
+          </div>
+        )}
         <input
           ref={ref}
           id={inputId}
@@ -56,7 +62,9 @@ export const PasswordInput = forwardRef(function PasswordInput(
           required={required}
           aria-invalid={hasError}
           aria-describedby={describedBy}
-          className={`w-full min-h-[44px] pl-3.5 pr-11 py-2.5 rounded-xl text-base md:text-sm font-body bg-bg-card border transition-all placeholder:text-fg-muted/50 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-hidden ${
+          className={`w-full min-h-[42px] sm:min-h-[44px] ${
+            LeftIcon ? "pl-10" : "pl-3.5"
+          } pr-11 py-2 sm:py-2.5 rounded-xl text-base md:text-sm font-body bg-bg-card border transition-all placeholder:text-fg-muted/50 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-hidden ${
             hasError
               ? "border-error focus:border-error focus:ring-3 focus:ring-error/15 text-fg"
               : "border-border hover:border-fg-muted/40 focus:border-orange focus:ring-3 focus:ring-orange/15 text-fg"
