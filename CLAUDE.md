@@ -74,7 +74,7 @@ Library; mock `api/*` modules in page/route tests (no real network). Prefer fixi
   `feat/12-tutor-search`, `fix/…`, `chore/…`. Keep PRs focused (~300–400 lines); fill the PR template checklist.
 - Conventional Commits (`feat(tutors): …`). pre-commit runs ruff + oxlint locally; CI repeats them on Postgres 16.
 - Migrations are committed; one developer changes models of an app at a time (conflicts). Rebase before PR.
-- Cloud/headless sessions have no Docker or browser: rely on tests, lint and build. Setup:
+- Cloud/headless sessions have no Docker. A Chromium may exist at `/opt/pw-browsers/chromium-*/chrome-linux/chrome`: if so, `npm i playwright-core` in a scratch dir (never in the repo), run backend (`seed_demo`) + `npm run dev`, open `http://localhost:5173` (CORS allows only `localhost`) and look at 360px and desktop, light and dark. Otherwise rely on tests, lint and build. Setup:
   `pip install -r backend/requirements-dev.txt && cd frontend && npm ci` (Node 24).
 - Windows dev machines print "LF will be replaced by CRLF" warnings; harmless.
 

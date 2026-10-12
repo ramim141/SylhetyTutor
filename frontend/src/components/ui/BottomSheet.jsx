@@ -37,7 +37,8 @@ export function BottomSheet({ isOpen, onClose, title, children, footer, hideAt =
       role="dialog"
       aria-modal="true"
       aria-label={title || "Bottom sheet dialog"}
-      className={`fixed inset-0 z-50 ${HIDE_AT[hideAt] ?? HIDE_AT.md} flex flex-col justify-end`}
+      // z-60: above the phone tab bar (z-50), or the sheet's own buttons would sit behind it
+      className={`fixed inset-0 z-60 ${HIDE_AT[hideAt] ?? HIDE_AT.md} flex flex-col justify-end`}
     >
       {/* Backdrop */}
       <div

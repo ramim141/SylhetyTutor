@@ -17,6 +17,7 @@
 | Filter sidebar (desktop `lg+`) ও bottom sheet (ফোন), active-filter chip | ✅ |
 | Home ↔ Search: Home এ সেরা ৬ জন preview + "সব tutor দেখুন"; hero search, area chip ও ফোনের area sheet `/tutors?…` এ নিয়ে যায় (Home নিজে filter করে না) | ✅ |
 | Tutor profile page (card এর "View Profile") | Sprint 3 |
+| ব্রাউজারে যাচাই (Chromium, আসল backend + `seed_demo`): 360px ও 1280px, light ও dark, আড়াআড়ি scroll নেই, console error নেই | ✅ |
 
 ---
 
