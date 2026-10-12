@@ -5,6 +5,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Search from "./pages/Search";
 import TutorProfile from "./pages/TutorProfile";
+import TutorRegistration from "./pages/TutorRegistration";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -27,6 +28,14 @@ export default function App() {
       <Route path="/tutors/:slug" element={<TutorProfile />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route
+        path="/tutor/profile"
+        element={
+          <ProtectedRoute>
+            <TutorRegistration />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/dashboard"
         element={

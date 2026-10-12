@@ -336,3 +336,30 @@ def test_the_model_refuses_to_approve_an_incomplete_profile(tutor):
 
     with pytest.raises(ValidationError, match="incomplete"):
         profile.full_clean()
+
+
+def test_the_public_address_appears_once_approved(tutor):
+    client, user = tutor
+    complete(client)
+    assert client.get(ME).json()["slug"] is None
+
+    client.post(SUBMIT)
+    assert client.get(ME).json()["slug"] is None  # pending: nothing public yet
+
+    profile = TutorProfile.objects.get(user=user)
+    profile.verification_status = "approved"
+    profile.save()
+
+    assert client.get(ME).json()["slug"] == "nusrat-jahan-math-physics"  # equal sort order: by slug
+
+
+def test_progress_can_be_worked_out_from_missing_and_required_total(tutor):
+    client, _ = tutor
+    first = client.get(ME).json()
+    assert first["required_total"] == 13 and len(first["missing"]) == 13
+
+    client.patch(ME, {"gender": "female", "subjects": ["physics"]})
+    after = client.get(ME).json()
+
+    assert after["required_total"] == 13
+    assert after["required_total"] - len(after["missing"]) == 2

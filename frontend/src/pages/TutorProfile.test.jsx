@@ -72,11 +72,18 @@ describe("TutorProfile page", () => {
     expect(getTutor).toHaveBeenCalledWith("rahim-uddin-physics-math", expect.any(Object));
   });
 
+  it("shows the year of study in the chosen language", async () => {
+    useLanguageStore.setState({ lang: "bn" });
+    renderPage();
+
+    expect(await screen.findByText(/৩য় বর্ষ/)).toBeInTheDocument();
+  });
+
   it("shows who the tutor is: university, department, year, verified, fee", async () => {
     renderPage();
 
     await screen.findByText("Rahim Uddin");
-    expect(screen.getByText("সাস্ট · Physics · 3rd Year")).toBeInTheDocument(); // Mixed uses the Bangla name
+    expect(screen.getByText("সাস্ট · Physics · 3rd Year")).toBeInTheDocument(); // Mixed keeps the English year // Mixed uses the Bangla name
     expect(screen.getAllByText(mixed["card.verifiedTitle"]).length).toBeGreaterThan(0);
     expect(screen.getByText("৳3,000–5,000")).toBeInTheDocument();
   });

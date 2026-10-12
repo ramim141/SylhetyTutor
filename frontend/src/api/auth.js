@@ -57,6 +57,31 @@ export const authApi = {
   },
 
   /**
+   * Set my profile photo (stored on imgBB, a public host: photos only, never documents).
+   * @param {File} file
+   * @returns {Promise<Object>} the updated user (`avatar` is the public URL)
+   */
+  async uploadAvatar(file, { onProgress, signal } = {}) {
+    const body = new FormData();
+    body.append("file", file);
+    const { data } = await api.put("/auth/me/avatar/", body, {
+      headers: { "Content-Type": "multipart/form-data" }, // see api/tutors.js
+      signal,
+      timeout: 60000,
+      onUploadProgress: (event) => {
+        if (onProgress && event.total) onProgress(Math.round((event.loaded / event.total) * 100));
+      },
+    });
+    return data;
+  },
+
+  /** Remove my profile photo. @returns {Promise<Object>} the updated user */
+  async deleteAvatar() {
+    const { data } = await api.delete("/auth/me/avatar/");
+    return data;
+  },
+
+  /**
    * Update authenticated user profile (name, email, preferred_language).
    * @param {Object} payload
    * @returns {Promise<Object>}

@@ -11,7 +11,7 @@
 | NID ও Student ID upload (private storage, ৫ MB, আসল ছবি কি না যাচাই, EXIF মোছা) | ✅ |
 | Profile photo (avatar): 512px বর্গ, imgBB তে | ✅ |
 | `GET /tutors/{slug}/` public profile, slug; কার্ড ক্লিক করলে profile; profile page (`/tutors/:slug`) | ✅ |
-| Frontend: ৬-ধাপের form, upload component, profile page, dashboard status card | ⏳ |
+| Frontend: ৬-ধাপের form (`/tutor/profile`), ছবি ও NID/ID upload, review ও জমা, dashboard status card; profile page | ✅ |
 
 ## 📝 Contract — নিজের profile (শুধু `role=tutor`; অন্যরা 403, ছাড়া 401)
 
@@ -23,7 +23,7 @@
 | PATCH | `/tutors/me/` | যেকোনো অংশ save (শুধু যা পাঠালেন তা বদলায়) |
 | POST | `/tutors/me/submit/` | সম্পূর্ণ profile `pending` এ পাঠানো |
 
-**GET response**: `id, status, rejection_reason, submitted_at, verified_at, gender, university (slug), department, year, student_id_number, bio, fee_min, fee_max, subjects[slug], class_levels[slug], areas[slug], availability[{day, slot}], missing[…], can_edit`। `missing` = জমা দিতে আর কী বাকি (form কোন ধাপে যাবে তা এ থেকে বোঝা যায়); `can_edit` = `pending` ছাড়া `true`।
+**GET response**: `id, slug (approved হলে), status, rejection_reason, submitted_at, verified_at, gender, university (slug), department, year, student_id_number, bio, fee_min, fee_max, subjects[slug], class_levels[slug], areas[slug], availability[{day, slot}], documents{nid,student_id}, missing[…], required_total, can_edit`। `missing` = জমা দিতে আর কী বাকি (form কোন ধাপে যাবে তা এ থেকে বোঝা যায়); `can_edit` = `pending` ছাড়া `true`।
 
 **PATCH body** (সবই ঐচ্ছিক): `gender` (`male`/`female`), `university`, `subjects`, `class_levels`, `areas` (slug; list টা **বদলে** যায়, মেশে না), `department`, `year`, `student_id_number`, `bio` (≤৪০০), `fee_min`, `fee_max` (১–১,০০০,০০০; min ≤ max), `availability` (`day`: `sat…fri`, `slot`: `morning`/`afternoon`/`evening`; একই slot দুবার দিলে একবার)। `status`, `is_featured`, rating ইত্যাদি এখান থেকে বদলানো যায় না (চুপচাপ উপেক্ষা)।
 
@@ -91,3 +91,20 @@
 - **Search card** এ এখন `slug` আছে; কার্ডের পুরোটাই একটা লিঙ্ক (নামের উপর stretched link, screen reader এ একটাই link)।
 - **Frontend `/tutors/:slug`**: header (ছবি/আদ্যক্ষর, নাম, ✓, university · department · বর্ষ, "New" বা আসল rating, fee), পরিচিতি, বিষয়/শ্রেণি/এলাকা, সাপ্তাহিক সময়সূচি (শনি থেকে শুক্র × সকাল/দুপুর/সন্ধ্যা; ✓ ও – চিহ্ন, শুধু রঙ নয়), review (খালি, সৎ বার্তা), "ফোন নম্বর গোপন থাকে" নোট। ফাঁকা অংশ (bio, subject…) দেখানো হয় না। অজানা ঠিকানায় বন্ধুত্বপূর্ণ পাতা, নেটওয়ার্ক সমস্যায় retry। Back লিঙ্ক আগের search (filter সহ) এ ফেরে।
 - **এখনো নেই**: যোগাযোগ/আবেদন বাটন (Sprint 4–5), review (Sprint 7), পাতার SEO meta/JSON-LD (Sprint 7)।
+
+## 🧭 Tutor registration — frontend (`/tutor/profile`, শুধু signed-in tutor)
+
+- **প্রবাহ**: ধাপ ১ আপনার সম্পর্কে (লিঙ্গ, প্রোফাইল ছবি) → ২ পরিচয়পত্র (NID, Student ID) → ৩ পড়াশোনা (university, department, বর্ষ, student ID নম্বর) → ৪ কী পড়ান (বিষয়, শ্রেণি) → ৫ কোথায় ও কখন (এলাকা, সাপ্তাহিক সময়সূচি) → ৬ bio ও fee → **review ও জমা**। শীর্ষে "Step n / 7" ও progress bar।
+- **প্রতি ধাপে save**: "Save করে continue" চাপলে ওই ধাপের field `PATCH /tutors/me/` এ যায়। আপলোড তৎক্ষণাৎ save হয়। **মাঝপথে বন্ধ করে খুললে** প্রথম যে ধাপে কিছু বাকি সেখান থেকে শুরু (`missing` থেকে); কিছু বাকি না থাকলে সরাসরি review।
+- **আগে নিজে যাচাই**: লিঙ্গ আছে কি, দুটো ছবি আছে কি, university/department/বর্ষ/ID আছে কি, প্রতি তালিকায় অন্তত একটা, fee ≥ ১ ও min ≤ max, bio ≤ ৪০০। সার্ভার আবার যাচাই করে; তার error (`fields`) সংশ্লিষ্ট field এর নিচে তিন ভাষায় আসে।
+- **Review**: সব তথ্য এক জায়গায়, প্রতিটার পাশে "Edit"; বাকি থাকলে হলুদ তালিকা ও "Fix" বাটন (ঠিক ধাপে নিয়ে যায়) এবং জমা বাটন বন্ধ। জমা ব্যর্থ হলে কারণ দেখায় ও `missing` নতুন করে আনে।
+- **ছবির আপলোড** (`useImageUpload`): ধরন (JPEG/PNG/WebP) ও ৫ MB তৎক্ষণাৎ ক্লায়েন্টে ধরে; progress bar; সার্ভারের কোড (`not_an_image`, `file_too_large`, `profile_locked`, `uploads_unavailable`, throttle…) তিন ভাষার বার্তা। NID/ID এর preview token দিয়ে আনা (`GET /tutors/documents/…` → object URL); কোনো public ঠিকানা নেই। **প্রোফাইল ছবি imgBB তে** (public; ধাপ ১ এ স্পষ্ট লেখা "এখানে কখনো NID/ID দেবেন না")।
+- **অবস্থা অনুযায়ী**: `pending` এ ফর্ম খোলে না (dashboard এ ফেরে); `rejected` এ কারণ দেখায় ও ঠিক করে আবার জমা; `approved` এ শুধু ধাপ ৪–৬ ("পড়ানোর তথ্য বদলান"), শেষে "Changes save করুন"।
+- **Dashboard status কার্ড** (tutor): `draft` — "১৩টার মধ্যে ৫টা হয়েছে" + bar + Start/Continue; `pending` — "যাচাই হচ্ছে" + জমার তারিখ, কোনো বাটন নয়; `rejected` — টিমের কারণ + "ঠিক করে আবার জমা দিন"; `approved` — "profile live" + public পাতার লিঙ্ক + সম্পাদনা।
+- **ব্রাউজারে যাচাই** (আসল backend): নতুন tutor → ৬ ধাপ → আসল multipart আপলোড → জমা → `pending` → admin approve → live কার্ড → public পাতা → approved এ ৩ ধাপ; ফোনে overflow নেই।
+
+## ⚠️ এখনো যা বাকি
+
+- **imgBB তে আসল key দিয়ে প্রোফাইল ছবি**: এখানে key ছিল না, তাই শুধু "আপলোড এখন সম্ভব না" বার্তা যাচাই হয়েছে (আসল upload নয়)।
+- **Admin এর দিক** (verification queue, approve/reject React পাতা): Sprint 4। এখন Django admin।
+- **ইমেইল/notification**: জমা/approve/reject এর খবর tutor কে দেওয়া Sprint 4–5।

@@ -4,11 +4,19 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import Dashboard from "./Dashboard";
 import { bn, mixed } from "../i18n";
 import { authApi } from "../api/auth";
+import { getMyProfile } from "../api/tutors";
 import { useAuthStore } from "../store/authStore";
 import { useLanguageStore } from "../store/languageStore";
 
+vi.mock("../api/tutors", () => ({ getMyProfile: vi.fn() }));
 vi.mock("../api/auth", () => ({
-  authApi: { updateMe: vi.fn(), logout: vi.fn(), getMe: vi.fn(), login: vi.fn(), register: vi.fn() },
+  authApi: {
+    updateMe: vi.fn(),
+    logout: vi.fn(),
+    getMe: vi.fn(),
+    login: vi.fn(),
+    register: vi.fn(),
+  },
 }));
 
 const guardian = {
@@ -31,7 +39,7 @@ function renderDashboard(user = guardian) {
         <Route path="/tutors" element={<div>Search Page</div>} />
         <Route path="/login" element={<div>Login Page</div>} />
       </Routes>
-    </MemoryRouter>
+    </MemoryRouter>,
   );
 }
 
@@ -46,17 +54,31 @@ describe("Dashboard", () => {
 
     expect(screen.getByRole("heading", { name: "Rahim Uddin" })).toBeInTheDocument();
     expect(screen.getByText("01712345678")).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: mixed["dashboard.guardian.nextCta"] }));
+    await userEvent.click(
+      screen.getByRole("button", { name: mixed["dashboard.guardian.nextCta"] }),
+    );
     expect(screen.getByText("Search Page")).toBeInTheDocument();
   });
 
-  it("tells a tutor to prepare documents for verification", () => {
+  it("shows a tutor where their profile stands instead of the guardian's search prompt", async () => {
+    getMyProfile.mockResolvedValue({
+      status: "draft",
+      missing: ["gender", "nid_photo"],
+      required_total: 13,
+      documents: {},
+    });
     renderDashboard({ ...guardian, role: "tutor" });
 
-    expect(screen.getByText(mixed["dashboard.tutor.nextTitle"])).toBeInTheDocument();
+    expect(await screen.findByText(mixed["tr.status.draft.title"])).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: mixed["dashboard.guardian.nextCta"] })
+      screen.queryByRole("button", { name: mixed["dashboard.guardian.nextCta"] }),
     ).not.toBeInTheDocument();
+  });
+
+  it("does not ask a guardian for a tutor profile", () => {
+    renderDashboard();
+
+    expect(getMyProfile).not.toHaveBeenCalled();
   });
 
   it("saves the chosen language to the account", async () => {

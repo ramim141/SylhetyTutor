@@ -1,4 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { vi } from "vitest";
 import { beforeEach, describe, expect, it } from "vitest";
 import { AvailabilityGrid } from "./AvailabilityGrid";
 import { en, mixed } from "../../i18n";
@@ -50,5 +52,46 @@ describe("AvailabilityGrid", () => {
 
     expect(screen.getByRole("rowheader", { name: en["profile.day.thu"] })).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: en["profile.slot.afternoon"] })).toBeInTheDocument();
+  });
+
+  describe("when it can be edited", () => {
+    it("makes every cell a button named by its day and time", () => {
+      render(<AvailabilityGrid availability={[{ day: "sat", slot: "evening" }]} onToggle={() => {}} />);
+
+      const buttons = screen.getAllByRole("button");
+      expect(buttons).toHaveLength(21);
+      const name = mixed["tr.availability.slot"]
+        .replace("{day}", mixed["profile.day.sat"])
+        .replace("{slot}", mixed["profile.slot.evening"]);
+      expect(screen.getByRole("button", { name })).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getAllByRole("button", { pressed: true })).toHaveLength(1);
+    });
+
+    it("reports which day and slot was tapped", async () => {
+      const onToggle = vi.fn();
+      render(<AvailabilityGrid availability={[]} onToggle={onToggle} />);
+
+      const name = mixed["tr.availability.slot"]
+        .replace("{day}", mixed["profile.day.mon"])
+        .replace("{slot}", mixed["profile.slot.morning"]);
+      await userEvent.click(screen.getByRole("button", { name }));
+
+      expect(onToggle).toHaveBeenCalledWith("mon", "morning");
+    });
+
+    it("cannot be tapped when disabled", async () => {
+      const onToggle = vi.fn();
+      render(<AvailabilityGrid availability={[]} onToggle={onToggle} disabled />);
+
+      await userEvent.click(screen.getAllByRole("button")[0]);
+
+      expect(onToggle).not.toHaveBeenCalled();
+    });
+
+    it("stays read-only (no buttons) without onToggle", () => {
+      render(<AvailabilityGrid availability={[]} />);
+
+      expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    });
   });
 });

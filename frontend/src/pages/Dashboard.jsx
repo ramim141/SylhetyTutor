@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Calendar, FileCheck, LogOut, Mail, Phone, Search } from "lucide-react";
+import { ArrowLeft, Calendar, LogOut, Mail, Phone, Search } from "lucide-react";
 import { useTranslation } from "../i18n";
 import { useAuthStore } from "../store/authStore";
 import { authApi } from "../api/auth";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { ChangePasswordForm } from "../components/auth/ChangePasswordForm";
+import { TutorStatusCard } from "../components/tutor/TutorStatusCard";
 import { BottomNav } from "../components/layout/BottomNav";
 
 const LANGUAGES = ["en", "bn", "mixed"];
@@ -24,18 +25,6 @@ function DetailRow({ icon: Icon, label, value }) {
 }
 
 function NextStep({ role, t, onBrowse }) {
-  if (role === "tutor") {
-    return (
-      <section className="bg-info-bg border border-info/20 rounded-lg p-5 flex gap-3">
-        <FileCheck className="w-6 h-6 text-info shrink-0" aria-hidden />
-        <div className="flex flex-col gap-1">
-          <p className="text-xs font-display font-semibold text-info">{t("dashboard.nextStep")}</p>
-          <h2 className="font-display font-bold text-fg">{t("dashboard.tutor.nextTitle")}</h2>
-          <p className="text-sm text-fg-secondary">{t("dashboard.tutor.nextBody")}</p>
-        </div>
-      </section>
-    );
-  }
   if (role === "guardian") {
     return (
       <section className="bg-orange-pale border border-orange/20 rounded-lg p-5 flex flex-col gap-4">
@@ -132,11 +121,11 @@ export default function Dashboard() {
           </div>
         </section>
 
-        <NextStep
-          role={user?.role}
-          t={t}
-          onBrowse={() => navigate("/tutors")}
-        />
+        {user?.role === "tutor" ? (
+          <TutorStatusCard />
+        ) : (
+          <NextStep role={user?.role} t={t} onBrowse={() => navigate("/tutors")} />
+        )}
 
         {/* Account details */}
         <section className="bg-bg-card border border-border rounded-lg px-5 shadow-card">

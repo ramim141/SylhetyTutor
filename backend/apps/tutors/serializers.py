@@ -87,12 +87,14 @@ class TutorMeSerializer(serializers.ModelSerializer):
     availability = serializers.SerializerMethodField()
     documents = serializers.SerializerMethodField()
     missing = serializers.SerializerMethodField()
+    required_total = serializers.SerializerMethodField()
     can_edit = serializers.SerializerMethodField()
 
     class Meta:
         model = TutorProfile
         fields = [
             "id",
+            "slug",
             "status",
             "rejection_reason",
             "submitted_at",
@@ -111,6 +113,7 @@ class TutorMeSerializer(serializers.ModelSerializer):
             "availability",
             "documents",
             "missing",
+            "required_total",
             "can_edit",
         ]
         read_only_fields = fields
@@ -125,6 +128,10 @@ class TutorMeSerializer(serializers.ModelSerializer):
 
     def get_missing(self, obj):
         return obj.missing_fields()
+
+    def get_required_total(self, obj):
+        # so "5 of 13 done" needs no number hard-coded in the frontend
+        return len(TutorProfile.FORM_ORDER)
 
     def get_can_edit(self, obj):
         return obj.verification_status != TutorProfile.VerificationStatus.PENDING

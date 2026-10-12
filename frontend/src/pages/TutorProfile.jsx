@@ -4,6 +4,7 @@ import { ArrowLeft, CheckCircle, GraduationCap, Lock, RefreshCw, Star } from "lu
 import { useTranslation } from "../i18n";
 import { getTutor } from "../api/tutors";
 import { labelOf } from "../utils/lookups";
+import { yearKey } from "../components/tutor/registration/steps";
 import { Header } from "../components/layout/Header";
 import { BottomNav } from "../components/layout/BottomNav";
 import { AvailabilityGrid } from "../components/tutor/AvailabilityGrid";
@@ -176,7 +177,11 @@ export default function TutorProfile() {
                   )}
                 </div>
                 <p className="text-sm text-fg-secondary">
-                  {[labelOf(tutor.university, lang), tutor.department, tutor.year]
+                  {[
+                    labelOf(tutor.university, lang),
+                    tutor.department,
+                    yearKey(tutor.year) ? t(yearKey(tutor.year)) : tutor.year,
+                  ]
                     .filter(Boolean)
                     .join(" · ")}
                 </p>

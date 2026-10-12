@@ -5,8 +5,11 @@ import { DAYS, SLOTS, toSlotSet } from "../../utils/availability";
 /**
  * The tutor's free times: a row per day, a column per slot. "Free" is shown by an icon and
  * text for screen readers, not by colour alone (DESIGN.md 2.5).
+ *
+ * Give it `onToggle(day, slot)` and every cell becomes a button (the registration form);
+ * without it the grid is read-only (the public profile).
  */
-export function AvailabilityGrid({ availability = [] }) {
+export function AvailabilityGrid({ availability = [], onToggle, disabled = false }) {
   const { t } = useTranslation();
   const free = toSlotSet(availability);
 
@@ -41,6 +44,11 @@ export function AvailabilityGrid({ availability = [] }) {
               </th>
               {SLOTS.map((slot) => {
                 const isFree = free.has(`${day}:${slot}`);
+                const mark = isFree ? (
+                  <Check className="w-5 h-5 mx-auto" aria-hidden />
+                ) : (
+                  <Minus className="w-4 h-4 mx-auto" aria-hidden />
+                );
                 return (
                   <td
                     key={slot}
@@ -49,14 +57,30 @@ export function AvailabilityGrid({ availability = [] }) {
                       isFree ? "bg-success-bg text-success" : "bg-bg-subtle text-fg-muted"
                     }`}
                   >
-                    {isFree ? (
-                      <Check className="w-5 h-5 mx-auto" aria-hidden />
+                    {onToggle ? (
+                      <button
+                        type="button"
+                        disabled={disabled}
+                        aria-pressed={isFree}
+                        onClick={() => onToggle(day, slot)}
+                        className="w-full h-full min-h-11 rounded-md cursor-pointer disabled:cursor-not-allowed focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-orange"
+                      >
+                        {mark}
+                        <span className="sr-only">
+                          {t("tr.availability.slot", {
+                            day: t(`profile.day.${day}`),
+                            slot: t(`profile.slot.${slot}`),
+                          })}
+                        </span>
+                      </button>
                     ) : (
-                      <Minus className="w-4 h-4 mx-auto" aria-hidden />
+                      <>
+                        {mark}
+                        <span className="sr-only">
+                          {isFree ? t("profile.free") : t("profile.busy")}
+                        </span>
+                      </>
                     )}
-                    <span className="sr-only">
-                      {isFree ? t("profile.free") : t("profile.busy")}
-                    </span>
                   </td>
                 );
               })}

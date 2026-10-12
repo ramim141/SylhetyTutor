@@ -2,7 +2,7 @@
 // { detail, code, fields: { phone: [{ code, message }] }, retry_after }
 
 /** Message for the whole form: network, throttling, wrong credentials, or generic. */
-export function getFormError(err, { t }) {
+export function getFormError(err, { t, has }) {
   const response = err?.response;
   if (!response) return t("error.network");
 
@@ -13,6 +13,8 @@ export function getFormError(err, { t }) {
       : t("error.throttled");
   }
   if (data.code === "invalid_credentials") return t("error.invalid_credentials");
+  // Other named errors (upload_failed, profile_locked …) that we have a translation for
+  if (has && data.code && has(`error.${data.code}`)) return t(`error.${data.code}`);
   if (data.fields) return null; // shown next to each field instead
   return t("error.generic");
 }

@@ -9,3 +9,8 @@ export function labelOf(item, lang) {
 export function findBySlug(list = [], slug) {
   return list.find((item) => item.slug === slug);
 }
+
+/** Lookup rows -> `{ value: slug, label }` options for selects and chip pickers. */
+export function toOptions(list = [], lang) {
+  return list.map((item) => ({ value: item.slug, label: labelOf(item, lang) }));
+}
