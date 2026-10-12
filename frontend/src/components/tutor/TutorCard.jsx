@@ -13,8 +13,8 @@ export function TutorCard({
   classes = [],
   rating = 0,
   reviewCount = 0,
-  feeMin = 0,
-  feeMax = 0,
+  feeMin = null,
+  feeMax = null,
   isFeatured = false,
   isVerified = true,
 }) {
@@ -104,14 +104,16 @@ export function TutorCard({
           </div>
         </div>
 
-        {/* Fee range */}
-        <div className="text-xs text-fg-muted mb-4">
-          {t("card.salary")}:{" "}
-          <span className="font-display font-bold text-sm text-fg tabular-nums">
-            ৳{feeMin.toLocaleString("en-IN")}–{feeMax.toLocaleString("en-IN")}
-          </span>
-          <span className="text-fg-muted">{t("card.perMonth")}</span>
-        </div>
+        {/* Fee range (an incomplete profile may not have one yet: show nothing, never ৳0) */}
+        {feeMin != null && feeMax != null && (
+          <div className="text-xs text-fg-muted mb-4">
+            {t("card.salary")}:{" "}
+            <span className="font-display font-bold text-sm text-fg tabular-nums">
+              ৳{feeMin.toLocaleString("en-IN")}–{feeMax.toLocaleString("en-IN")}
+            </span>
+            <span className="text-fg-muted">{t("card.perMonth")}</span>
+          </div>
+        )}
       </div>
 
       {/* Action Button */}

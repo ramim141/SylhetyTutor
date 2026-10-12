@@ -1,6 +1,11 @@
 from django.contrib import admin
 
-from .models import TutorProfile
+from .models import TutorAvailability, TutorProfile
+
+
+class TutorAvailabilityInline(admin.TabularInline):
+    model = TutorAvailability
+    extra = 0
 
 
 @admin.register(TutorProfile)
@@ -27,6 +32,8 @@ class TutorProfileAdmin(admin.ModelAdmin):
         "department",
     )
     filter_horizontal = ("subjects", "class_levels", "areas")
+    inlines = [TutorAvailabilityInline]
+    readonly_fields = ("submitted_at", "verified_at", "verified_by")
     fieldsets = (
         ("User Association", {"fields": ("user", "gender")}),
         (
@@ -36,6 +43,7 @@ class TutorProfileAdmin(admin.ModelAdmin):
                     "university",
                     "department",
                     "year",
+                    "student_id_number",
                     "bio",
                 )
             },
@@ -57,6 +65,10 @@ class TutorProfileAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "verification_status",
+                    "rejection_reason",
+                    "submitted_at",
+                    "verified_at",
+                    "verified_by",
                     "is_featured",
                     "rating_avg",
                     "review_count",
@@ -71,6 +83,8 @@ class TutorProfileAdmin(admin.ModelAdmin):
 
     @admin.display(description="Monthly Fee (BDT)")
     def fee_range_display(self, obj):
+        if obj.fee_min is None or obj.fee_max is None:
+            return "—"
         return f"৳{obj.fee_min:,} - ৳{obj.fee_max:,}"
 
     @admin.display(description="Rating")

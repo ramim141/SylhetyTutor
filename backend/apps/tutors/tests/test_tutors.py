@@ -78,10 +78,11 @@ def test_create_and_fetch_tutor(api_client):
     assert tutor_data["isVerified"] is True
 
 
-def test_new_tutor_profile_is_hidden_until_verified_and_has_no_fake_rating(api_client):
+def test_new_tutor_profile_is_a_hidden_draft_with_no_fake_rating_or_fee(api_client):
     user = User.objects.create_user("New Tutor", phone="01912345678", role="tutor")
     profile = TutorProfile.objects.create(user=user)
 
-    assert profile.verification_status == TutorProfile.VerificationStatus.PENDING
+    assert profile.verification_status == TutorProfile.VerificationStatus.DRAFT
+    assert profile.gender == "" and profile.fee_min is None and profile.fee_max is None
     assert profile.rating_avg == 0
     assert api_client.get("/api/v1/tutors/").json()["results"] == []

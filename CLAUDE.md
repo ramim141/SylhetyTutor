@@ -59,7 +59,7 @@ Breaking an endpoint's shape means updating `Sprint_1.md`/Swagger and the fronte
 
 **Data and safety rules.**
 - Phones are stored as `01XXXXXXXXX` (accepts `+880…`/`880…`/spaces); emails lowercase. Use `apps/accounts/validators.py`.
-- `admin` role is never assignable through the API. New `TutorProfile` is `pending` until an admin approves.
+- `admin` role is never assignable through the API. A `TutorProfile` starts as `draft` (invisible to admins and search), becomes `pending` when the tutor submits, and is public only once an admin sets `approved`; an approved profile must have its required fields filled (`TutorProfile.missing_fields`).
 - Tutor/guardian phone, address and documents never appear in public or list responses (commission model:
   contact opens only after a booked demo, Architecture Doc §8.8). NID/Student-ID files must be private storage.
 - No invented numbers: no fake ratings, counts or testimonials. No review → show "New", not 0.0 or 5.0.

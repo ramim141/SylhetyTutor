@@ -17,7 +17,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 from apps.accounts.models import User
 from apps.lookups.models import Area, ClassLevel, Subject, University
-from apps.tutors.models import TutorProfile
+from apps.tutors.models import TutorAvailability, TutorProfile
 
 PHONE_PREFIX = "0190000"
 DEMO_BIO = "Demo profile for testing — not a real tutor."
@@ -85,6 +85,15 @@ def _pick(slugs, start, count):
     return [slugs[(start + offset) % len(slugs)] for offset in range(count)]
 
 
+DAYS = [day for day, _ in TutorAvailability.Day.choices]
+SLOTS = [slot for slot, _ in TutorAvailability.Slot.choices]
+
+
+def _slots(index):
+    """Three or four free slots, different for every tutor but always the same for one tutor."""
+    return sorted({(DAYS[(index + step * 2) % 7], SLOTS[(index + step) % 3]) for step in range(4)})
+
+
 def demo_spec(index):
     """Deterministic profile data for the index-th demo tutor."""
     name, gender = PEOPLE[index]
@@ -107,6 +116,8 @@ def demo_spec(index):
         "areas": _pick(AREA_SLUGS, index * 2, 3 if index % 4 == 0 else 2),
         "subjects": _pick(SUBJECT_SLUGS, index * 3, 3 if index % 3 == 0 else 2),
         "classes": CLASS_PATTERNS[index % len(CLASS_PATTERNS)],
+        "student_id_number": f"DEMO-{index + 1:04d}",
+        "availability": _slots(index),
         "is_featured": index in FEATURED and status == TutorProfile.VerificationStatus.APPROVED,
         "status": status,
     }
@@ -179,6 +190,7 @@ class Command(BaseCommand):
                 "university": University.objects.get(slug=spec["university"]),
                 "department": spec["department"],
                 "year": spec["year"],
+                "student_id_number": spec["student_id_number"],
                 "bio": DEMO_BIO,
                 "fee_min": spec["fee_min"],
                 "fee_max": spec["fee_max"],
@@ -191,3 +203,8 @@ class Command(BaseCommand):
         profile.areas.set(Area.objects.filter(slug__in=spec["areas"]))
         profile.subjects.set(Subject.objects.filter(slug__in=spec["subjects"]))
         profile.class_levels.set(ClassLevel.objects.filter(slug__in=spec["classes"]))
+        profile.availability.all().delete()
+        TutorAvailability.objects.bulk_create(
+            TutorAvailability(tutor=profile, day=day, slot=slot)
+            for day, slot in spec["availability"]
+        )
