@@ -80,7 +80,7 @@ Library; mock `api/*` modules in page/route tests (no real network). Prefer fixi
 
 ## Decisions already made (don't reopen)
 
-JavaScript not TypeScript · Mixed language default · manual bKash Send-Money + TrxID before any gateway ·
+JavaScript not TypeScript · SQLite for day-to-day local work, Postgres 16 in Docker/CI/production (`production.py` requires it) · Mixed language default · manual bKash Send-Money + TrxID before any gateway ·
 SMS postponed (email + WhatsApp link for now) · Founding-tutor and commission model per Architecture Doc §8.8 ·
 Sprint order per the Sprint Plan (Sprint 2 = tutor search: filters, URL-synced, shareable).
 
