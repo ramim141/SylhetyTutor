@@ -30,3 +30,5 @@ class UserAdminChangeForm(BlankToNullMixin, UserChangeForm):
     class Meta:
         model = User
         fields = "__all__"
+        # imgBB links are shown read-only in the admin, never edited by hand
+        exclude = ["avatar_url", "avatar_delete_url"]
