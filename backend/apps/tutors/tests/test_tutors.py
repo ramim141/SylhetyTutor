@@ -70,10 +70,11 @@ def test_create_and_fetch_tutor(api_client):
     tutor_data = data["results"][0]
     assert tutor_data["name"] == "Mahdi Hasan"
     assert tutor_data["initials"] == "MH"
-    assert "SUST" in tutor_data["university"]
-    assert tutor_data["area"] == "Amberkhana"
-    assert "Physics" in tutor_data["subjects"]
-    assert "HSC" in tutor_data["classes"]
+    assert tutor_data["university"]["short_name"] == "SUST"
+    assert tutor_data["department"] == "Physics"
+    assert tutor_data["area"]["name_en"] == "Amberkhana"
+    assert [x["name_en"] for x in tutor_data["subjects"]] == ["Physics"]
+    assert [x["name_en"] for x in tutor_data["classes"]] == ["HSC"]
     assert tutor_data["isFeatured"] is True
     assert tutor_data["isVerified"] is True
 
@@ -86,3 +87,36 @@ def test_new_tutor_profile_is_a_hidden_draft_with_no_fake_rating_or_fee(api_clie
     assert profile.gender == "" and profile.fee_min is None and profile.fee_max is None
     assert profile.rating_avg == 0
     assert api_client.get("/api/v1/tutors/").json()["results"] == []
+
+
+def test_card_names_come_in_both_languages_for_every_lookup(api_client):
+    user = User.objects.create_user("Bangla Tutor", phone="01711000111", role="tutor")
+    profile = TutorProfile.objects.create(
+        user=user,
+        verification_status="approved",
+        university=University.objects.create(
+            name_en="Shahjalal", name_bn="শাহজালাল", short_name="SUST", slug="sust2"
+        ),
+    )
+    profile.subjects.add(Subject.objects.create(name_en="Math", name_bn="গণিত", slug="m2"))
+    profile.class_levels.add(ClassLevel.objects.create(name_en="HSC", name_bn="এইচএসসি", slug="h2"))
+    profile.areas.add(Area.objects.create(name_en="Zindabazar", name_bn="জিন্দাবাজার", slug="z2"))
+
+    card = api_client.get("/api/v1/tutors/").json()["results"][0]
+
+    assert card["university"]["name_bn"] == "শাহজালাল"
+    assert card["area"]["name_bn"] == "জিন্দাবাজার"
+    assert card["subjects"][0]["name_bn"] == "গণিত"
+    assert card["classes"][0]["name_bn"] == "এইচএসসি"
+
+
+def test_a_card_never_invents_a_university_or_area_when_there_is_none(api_client):
+    user = User.objects.create_user("Bare Tutor", phone="01711000222", role="tutor")
+    TutorProfile.objects.create(user=user, verification_status="approved")
+
+    card = api_client.get("/api/v1/tutors/").json()["results"][0]
+
+    assert card["university"] is None and card["area"] is None
+    assert card["subjects"] == [] and card["classes"] == []
+    assert card["department"] == "" and card["feeMin"] is None
+    assert "Sylhet University" not in str(card) and "Sylhet City" not in str(card)
