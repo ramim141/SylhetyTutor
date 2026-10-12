@@ -49,6 +49,7 @@ Sprint Plan এর Sprint 1 টেবিলের অর্ধেকের ব�
 | POST | `/auth/logout/` | Auth | Refresh token blacklist |
 | GET | `/auth/me/` | Auth | নিজের profile |
 | PATCH | `/auth/me/` | Auth | নাম, ভাষা, email বদল |
+| POST | `/auth/password/change/` | Auth | `{old_password, new_password}` → পাসওয়ার্ড বদল, অন্য সব device এর refresh token বাতিল, এই device এর জন্য নতুন `{access, refresh}`। ভুল পুরোনো পাসওয়ার্ড → `fields.old_password[wrong_password]`; একই পাসওয়ার্ড → `same_password`; মিনিটে ৫ বার (account প্রতি) |
 
 **এই sprint এ নয়**: `/auth/password/reset/` ও `/confirm/` — email/SMS পাঠানোর ব্যবস্থা লাগবে (SMS স্থগিত)। Sprint 4–5 এ email দিয়ে। আপাতত admin হাতে password বদলাবে।
 

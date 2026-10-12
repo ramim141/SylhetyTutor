@@ -132,6 +132,8 @@ AUTHENTICATION_BACKENDS = [
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        # Our User has full_name/phone, not Django's default username/first_name/last_name
+        "OPTIONS": {"user_attributes": ("full_name", "phone", "email")},
     },
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
@@ -181,6 +183,7 @@ REST_FRAMEWORK = {
         "login_identifier": "5/minute",
         "login_ip": "60/minute",
         "register_ip": "30/hour",
+        "password_change": "5/minute",
     },
 }
 

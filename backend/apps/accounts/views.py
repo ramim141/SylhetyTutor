@@ -11,17 +11,25 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from .serializers import (
+    ChangePasswordSerializer,
     CustomTokenRefreshSerializer,
     LoginSerializer,
     RegisterSerializer,
+    TokenPairSerializer,
     UserSerializer,
     UserUpdateSerializer,
 )
-from .throttles import LoginIdentifierThrottle, LoginIPThrottle, RegisterIPThrottle
+from .throttles import (
+    LoginIdentifierThrottle,
+    LoginIPThrottle,
+    PasswordChangeThrottle,
+    RegisterIPThrottle,
+)
 
 
 def get_tokens_for_user(user):
@@ -139,6 +147,34 @@ class LogoutView(APIView):
             except TokenError:
                 pass
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [PasswordChangeThrottle]
+
+    @extend_schema(
+        tags=["auth"],
+        summary="Change password (signed in)",
+        description=(
+            "Every refresh token of this account is revoked, so other devices are signed out. "
+            "The response carries a fresh token pair for the current device."
+        ),
+        request=ChangePasswordSerializer,
+        responses={200: TokenPairSerializer},
+    )
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user
+        user.set_password(serializer.validated_data["new_password"])
+        user.save(update_fields=["password"])
+
+        for outstanding in OutstandingToken.objects.filter(user=user):
+            BlacklistedToken.objects.get_or_create(token=outstanding)
+
+        return Response(get_tokens_for_user(user), status=status.HTTP_200_OK)
 
 
 class CustomTokenRefreshView(TokenRefreshView):

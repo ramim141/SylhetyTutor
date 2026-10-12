@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Login from "./Login";
 import { useAuthStore } from "../store/authStore";
@@ -93,5 +93,53 @@ describe("Login Page", () => {
 
     expect(await screen.findByRole("alert")).toBeInTheDocument();
     expect(screen.getByText(mixed["error.invalid_credentials"])).toBeInTheDocument();
+  });
+
+  describe("returning to the page that needed a login", () => {
+    const Landing = () => {
+      const { pathname, search, hash } = useLocation();
+      return <div>{`landed:${pathname}${search}${hash}`}</div>;
+    };
+
+    const renderFrom = (from) =>
+      render(
+        <MemoryRouter initialEntries={[{ pathname: "/login", state: from ? { from } : null }]}>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="*" element={<Landing />} />
+          </Routes>
+        </MemoryRouter>
+      );
+
+    const signIn = async () => {
+      const user = userEvent.setup();
+      await user.type(screen.getByLabelText(new RegExp(mixed["auth.identifier.label"])), "01712345678");
+      await user.type(screen.getByPlaceholderText(mixed["auth.password.placeholder"]), "Secret123!");
+      await user.click(screen.getByRole("button", { name: mixed["auth.submit.login"] }));
+    };
+
+    it("goes back to that page with its query string after signing in", async () => {
+      useAuthStore.setState({ login: vi.fn().mockResolvedValue({ id: "1" }) });
+      renderFrom({ pathname: "/tutors", search: "?area=amberkhana&subject=physics" });
+
+      await signIn();
+
+      expect(await screen.findByText("landed:/tutors?area=amberkhana&subject=physics")).toBeInTheDocument();
+    });
+
+    it("falls back to the dashboard when nobody asked for a page", async () => {
+      useAuthStore.setState({ login: vi.fn().mockResolvedValue({ id: "1" }) });
+      renderFrom(null);
+
+      await signIn();
+
+      expect(await screen.findByText("landed:/dashboard")).toBeInTheDocument();
+    });
+
+    it("keeps the destination on the link to Register", () => {
+      renderFrom({ pathname: "/tutors", search: "?q=math" });
+
+      expect(screen.getByRole("link", { name: mixed["auth.noAccount"] })).toHaveAttribute("href", "/register");
+    });
   });
 });

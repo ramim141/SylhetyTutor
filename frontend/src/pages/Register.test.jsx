@@ -139,4 +139,25 @@ describe("Register Page", () => {
 
     expect(await screen.findByText(mixed["error.phone.unique"])).toBeInTheDocument();
   });
+
+  it("returns a new user to the page that needed an account", async () => {
+    useAuthStore.setState({ register: vi.fn().mockResolvedValue({ id: "1" }) });
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter
+        initialEntries={[{ pathname: "/register", state: { from: { pathname: "/tutors", search: "?q=math" } } }]}
+      >
+        <Routes>
+          <Route path="/register" element={<Register />} />
+          <Route path="/tutors" element={<div>Tutors page</div>} />
+          <Route path="/dashboard" element={<div>Dashboard page</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await fillValidForm(user);
+    await user.click(screen.getByRole("button", { name: new RegExp(mixed["reg.submit"]) }));
+
+    expect(await screen.findByText("Tutors page")).toBeInTheDocument();
+  });
 });

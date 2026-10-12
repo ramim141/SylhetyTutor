@@ -10,6 +10,7 @@ import { Button } from "../components/ui/Button";
 import { Alert } from "../components/ui/Alert";
 import { Logo } from "../components/ui/Logo";
 import { getFieldErrors, getFormError } from "../api/errors";
+import { getReturnTo, keepReturnTo } from "../utils/returnTo";
 
 const CURRENT_YEAR = new Date().getFullYear();
 
@@ -27,7 +28,7 @@ export default function Login() {
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const from = location.state?.from?.pathname || "/dashboard";
+  const returnTo = getReturnTo(location);
 
   const cycleTheme = () => {
     const next = { light: "dark", dark: "system", system: "light" };
@@ -67,7 +68,7 @@ export default function Login() {
         identifier: identifier.trim(),
         password,
       });
-      navigate(from, { replace: true });
+      navigate(returnTo, { replace: true });
     } catch (err) {
       setServerError(getFormError(err, i18n) || "");
       setErrors(getFieldErrors(err, i18n));
@@ -206,6 +207,7 @@ export default function Login() {
             <p className="text-xs sm:text-sm font-body text-fg-secondary">
               <Link
                 to="/register"
+                state={keepReturnTo(location)}
                 className="font-display font-semibold text-orange-text hover:text-orange transition-colors inline-flex items-center gap-1 group"
               >
                 <span>{t("auth.noAccount")}</span>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   ArrowRight,
@@ -22,6 +22,7 @@ import { useThemeStore } from "../store/themeStore";
 import { getLookups } from "../api/lookups";
 import { getFieldErrors, getFormError } from "../api/errors";
 import { toLocalBdPhone } from "../utils/phone";
+import { getReturnTo, keepReturnTo } from "../utils/returnTo";
 import { Input } from "../components/ui/Input";
 import { PasswordInput } from "../components/ui/PasswordInput";
 import { Button } from "../components/ui/Button";
@@ -136,6 +137,7 @@ export default function Register() {
   const { t, lang, setLang } = i18n;
   const { theme, setTheme } = useThemeStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const register = useAuthStore((state) => state.register);
 
   const cycleTheme = () => {
@@ -200,7 +202,7 @@ export default function Register() {
         role,
         preferred_language: lang,
       });
-      navigate("/dashboard", { replace: true });
+      navigate(getReturnTo(location), { replace: true });
     } catch (err) {
       setServerError(getFormError(err, i18n) || "");
       setErrors(getFieldErrors(err, i18n, { full_name: "fullName" }));
@@ -502,7 +504,7 @@ export default function Register() {
 
             <p className="text-center text-sm text-fg-secondary pt-5 xl:pt-3 border-t border-border">
               {t("reg.haveAccount")}{" "}
-              <Link to="/login" className="inline-flex items-center min-h-11 xl:min-h-9 font-display font-bold text-orange-text hover:underline">
+              <Link to="/login" state={keepReturnTo(location)} className="inline-flex items-center min-h-11 xl:min-h-9 font-display font-bold text-orange-text hover:underline">
                 {t("reg.signIn")}
               </Link>
             </p>

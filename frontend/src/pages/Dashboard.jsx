@@ -6,6 +6,7 @@ import { useAuthStore } from "../store/authStore";
 import { authApi } from "../api/auth";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
+import { ChangePasswordForm } from "../components/auth/ChangePasswordForm";
 import { BottomNav } from "../components/layout/BottomNav";
 
 const LANGUAGES = ["en", "bn", "mixed"];
@@ -187,6 +188,8 @@ export default function Dashboard() {
             {langStatus === "failed" && t("dashboard.languageSaveFailed")}
           </p>
         </section>
+
+        <ChangePasswordForm />
 
         <Button variant="ghost" size="lg" onClick={handleLogout} className="w-full bg-bg-card">
           <LogOut className="w-5 h-5" aria-hidden />

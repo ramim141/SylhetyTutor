@@ -37,6 +37,17 @@ export const authApi = {
   },
 
   /**
+   * Change password. The server signs out every other device and returns a fresh
+   * token pair for this one, which replaces the stored tokens.
+   * @param {{ old_password: string, new_password: string }} payload
+   */
+  async changePassword(payload) {
+    const { data } = await api.post("/auth/password/change/", payload);
+    tokens.set(data);
+    return data;
+  },
+
+  /**
    * Fetch currently authenticated user profile.
    * @returns {Promise<Object>}
    */
