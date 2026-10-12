@@ -8,6 +8,8 @@ from apps.accounts.models import User
 from apps.lookups.models import Area, ClassLevel, Subject, University
 from apps.tutors.models import TutorProfile
 
+from .helpers import upload_both
+
 pytestmark = pytest.mark.django_db
 
 ME = "/api/v1/tutors/me/"
@@ -38,6 +40,12 @@ def lookups():
         Subject.objects.create(name_en=en, name_bn=bn, slug=slug)
     ClassLevel.objects.create(name_en="HSC", name_bn="এইচএসসি", slug="hsc")
     Area.objects.create(name_en="Amberkhana", name_bn="আম্বরখানা", slug="amberkhana")
+
+
+def complete(client):
+    """Everything the form asks for: the six steps, documents included."""
+    assert client.patch(ME, COMPLETE).status_code == 200
+    upload_both(client)
 
 
 def sign_in(role="tutor", phone="01712345678"):
@@ -84,9 +92,11 @@ def test_first_visit_creates_an_empty_draft_that_lists_what_is_missing(tutor):
     assert data["can_edit"] is True
     assert data["gender"] == "" and data["fee_min"] is None and data["university"] is None
     assert data["subjects"] == [] and data["availability"] == []
+    assert data["documents"] == {"nid": False, "student_id": False}
     assert data["missing"] == [
-        "gender", "university", "department", "year", "student_id_number",
-        "fee_min", "fee_max", "subjects", "class_levels", "areas", "availability",
+        "gender", "nid_photo", "student_id_photo", "university", "department", "year",
+        "student_id_number", "subjects", "class_levels", "areas", "availability",
+        "fee_min", "fee_max",
     ]  # fmt: skip
     assert TutorProfile.objects.filter(user=user).count() == 1
 
@@ -214,8 +224,8 @@ def test_submit_lists_every_missing_field_and_changes_nothing(tutor):
     assert response.status_code == 400
     fields = response.json()["fields"]
     assert set(fields) == {
-        "university", "department", "year", "student_id_number", "fee_min", "fee_max",
-        "class_levels", "areas", "availability",
+        "nid_photo", "student_id_photo", "university", "department", "year",
+        "student_id_number", "fee_min", "fee_max", "class_levels", "areas", "availability",
     }  # fmt: skip
     assert all(errors[0]["code"] == "required" for errors in fields.values())
     assert TutorProfile.objects.get(user=user).verification_status == "draft"
@@ -223,7 +233,7 @@ def test_submit_lists_every_missing_field_and_changes_nothing(tutor):
 
 def test_submit_moves_a_complete_profile_to_pending(tutor):
     client, user = tutor
-    client.patch(ME, COMPLETE)
+    complete(client)
 
     response = client.post(SUBMIT)
 
@@ -236,7 +246,7 @@ def test_submit_moves_a_complete_profile_to_pending(tutor):
 
 def test_a_pending_profile_is_locked_and_cannot_be_submitted_again(tutor):
     client, user = tutor
-    client.patch(ME, COMPLETE)
+    complete(client)
     client.post(SUBMIT)
 
     edit = client.patch(ME, {"bio": "sneaky change"})
@@ -249,7 +259,7 @@ def test_a_pending_profile_is_locked_and_cannot_be_submitted_again(tutor):
 
 def test_pending_and_draft_tutors_stay_out_of_search(tutor):
     client, _ = tutor
-    client.patch(ME, COMPLETE)
+    complete(client)
     assert APIClient().get("/api/v1/tutors/").json()["count"] == 0
 
     client.post(SUBMIT)
@@ -258,7 +268,7 @@ def test_pending_and_draft_tutors_stay_out_of_search(tutor):
 
 def test_a_rejected_tutor_sees_the_reason_fixes_it_and_resubmits(tutor):
     client, user = tutor
-    client.patch(ME, COMPLETE)
+    complete(client)
     client.post(SUBMIT)
     TutorProfile.objects.filter(user=user).update(
         verification_status="rejected", rejection_reason="Student ID is unreadable"
@@ -285,7 +295,7 @@ def approve(user):
 
 def test_approved_tutor_can_change_bio_fees_and_teaching_but_not_identity(tutor):
     client, user = tutor
-    client.patch(ME, COMPLETE)
+    complete(client)
     client.post(SUBMIT)
     approve(user)
 
@@ -308,7 +318,7 @@ def test_approved_tutor_can_change_bio_fees_and_teaching_but_not_identity(tutor)
 
 def test_an_approved_tutor_cannot_submit_again(tutor):
     client, user = tutor
-    client.patch(ME, COMPLETE)
+    complete(client)
     client.post(SUBMIT)
     approve(user)
 

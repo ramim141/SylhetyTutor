@@ -1,5 +1,10 @@
 from django.contrib import admin
+from django.core.exceptions import PermissionDenied
+from django.http import Http404
+from django.urls import path, reverse
+from django.utils.html import format_html, format_html_join
 
+from .documents import document_response
 from .models import TutorAvailability, TutorProfile
 
 
@@ -33,7 +38,7 @@ class TutorProfileAdmin(admin.ModelAdmin):
     )
     filter_horizontal = ("subjects", "class_levels", "areas")
     inlines = [TutorAvailabilityInline]
-    readonly_fields = ("submitted_at", "verified_at", "verified_by")
+    readonly_fields = ("submitted_at", "verified_at", "verified_by", "document_links")
     fieldsets = (
         ("User Association", {"fields": ("user", "gender")}),
         (
@@ -44,6 +49,7 @@ class TutorProfileAdmin(admin.ModelAdmin):
                     "department",
                     "year",
                     "student_id_number",
+                    "document_links",
                     "bio",
                 )
             },
@@ -90,3 +96,39 @@ class TutorProfileAdmin(admin.ModelAdmin):
     @admin.display(description="Rating")
     def rating_display(self, obj):
         return f"★ {obj.rating_avg} ({obj.review_count})"
+
+    # The scans are never shown through a file widget (private storage has no URL); admins open
+    # them through this session-protected view instead.
+    def get_urls(self):
+        custom = [
+            path(
+                "<uuid:pk>/document/<str:kind>/",
+                self.admin_site.admin_view(self.document_view),
+                name="tutors_tutorprofile_document",
+            )
+        ]
+        return custom + super().get_urls()
+
+    def document_view(self, request, pk, kind):
+        if not self.has_view_permission(request):
+            raise PermissionDenied
+        profile = self.get_object(request, str(pk))
+        if profile is None:
+            raise Http404
+        return document_response(profile, kind)
+
+    @admin.display(description="NID / Student ID scans")
+    def document_links(self, obj):
+        if not obj.pk:
+            return "—"
+        parts = []
+        for kind, label, stored in (
+            ("nid", "NID", obj.nid_photo),
+            ("student_id", "Student ID", obj.student_id_photo),
+        ):
+            if stored:
+                url = reverse("admin:tutors_tutorprofile_document", args=[obj.pk, kind])
+                parts.append(format_html('<a href="{}" target="_blank">{}: view</a>', url, label))
+            else:
+                parts.append(format_html("{}: missing", label))
+        return format_html_join(" · ", "{}", ((part,) for part in parts))

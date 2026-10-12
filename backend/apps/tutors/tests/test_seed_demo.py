@@ -118,3 +118,19 @@ def test_staging_can_opt_in_even_with_production_settings(monkeypatch):
     seed()
 
     assert TutorProfile.objects.count() == 30
+
+
+def test_demo_tutors_have_clearly_fake_placeholder_documents_and_reset_removes_them(settings):
+    from pathlib import Path
+
+    seed()
+    files = list(Path(settings.PRIVATE_MEDIA_ROOT).rglob("*.jpg"))
+    assert len(files) == 60  # a NID and a student-ID card for each of the 30
+    approved = TutorProfile.objects.filter(verification_status="approved")
+    assert all(not profile.missing_fields() for profile in approved)
+
+    seed()  # rerun adds nothing
+    assert len(list(Path(settings.PRIVATE_MEDIA_ROOT).rglob("*.jpg"))) == 60
+
+    seed("--reset")
+    assert list(Path(settings.PRIVATE_MEDIA_ROOT).rglob("*.jpg")) == []

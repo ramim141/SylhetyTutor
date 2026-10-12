@@ -160,6 +160,11 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# NID and student-ID scans live here, outside MEDIA_ROOT, and are never mapped to a URL:
+# they are only ever streamed by an authenticated view (see apps/tutors/documents.py).
+# Production needs a persistent volume (or a private bucket, Sprint 8).
+PRIVATE_MEDIA_ROOT = Path(os.getenv("PRIVATE_MEDIA_ROOT", BASE_DIR / "private_media"))
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Django REST Framework
@@ -184,6 +189,7 @@ REST_FRAMEWORK = {
         "login_ip": "60/minute",
         "register_ip": "30/hour",
         "password_change": "5/minute",
+        "document_upload": "5/minute",
     },
 }
 

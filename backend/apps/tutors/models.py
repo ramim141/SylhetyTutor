@@ -10,6 +10,8 @@ from django.db import models
 
 from apps.lookups.models import Area, ClassLevel, Subject, University
 
+from .documents import document_upload_to, private_storage
+
 
 class TutorProfile(models.Model):
     class Gender(models.TextChoices):
@@ -42,6 +44,13 @@ class TutorProfile(models.Model):
     department = models.CharField(max_length=150, blank=True)
     year = models.CharField(max_length=50, blank=True, help_text="e.g. 3rd Year")
     student_id_number = models.CharField(max_length=50, blank=True)
+    # Identity documents: private storage, no URL (see documents.py)
+    nid_photo = models.FileField(
+        upload_to=document_upload_to, storage=private_storage, blank=True, max_length=255
+    )
+    student_id_photo = models.FileField(
+        upload_to=document_upload_to, storage=private_storage, blank=True, max_length=255
+    )
     bio = models.TextField(max_length=400, blank=True)
     # Null until the tutor sets them; an approved profile always has both
     fee_min = models.PositiveIntegerField(
@@ -86,9 +95,11 @@ class TutorProfile(models.Model):
         uni = self.university.short_name if self.university else "Tutor"
         return f"{self.user.full_name} ({uni})"
 
-    # Scalar fields a tutor must fill in before submitting (and an admin before approving)
+    # Fields an approved profile must have (checked in clean(), so Django admin cannot skip them)
     REQUIRED_FIELDS = (
         "gender",
+        "nid_photo",
+        "student_id_photo",
         "university",
         "department",
         "year",
@@ -96,18 +107,35 @@ class TutorProfile(models.Model):
         "fee_min",
         "fee_max",
     )
+    # Everything needed to submit, in the order the 6-step form asks for it
+    FORM_ORDER = (
+        "gender",
+        "nid_photo",
+        "student_id_photo",
+        "university",
+        "department",
+        "year",
+        "student_id_number",
+        "subjects",
+        "class_levels",
+        "areas",
+        "availability",
+        "fee_min",
+        "fee_max",
+    )
+    RELATIONS = ("subjects", "class_levels", "areas", "availability")
 
     def missing_fields(self):
         """Names of required things still empty, in the order the form asks for them."""
-        missing = [name for name in self.REQUIRED_FIELDS if self._is_blank(name)]
-        for relation in ("subjects", "class_levels", "areas", "availability"):
-            if not self.pk or not getattr(self, relation).exists():
-                missing.append(relation)
-        return missing
+        return [name for name in self.FORM_ORDER if self._is_blank(name)]
 
     def _is_blank(self, name):
+        if name in self.RELATIONS:
+            return not self.pk or not getattr(self, name).exists()
         if name == "university":
             return self.university_id is None
+        if name in ("nid_photo", "student_id_photo"):
+            return not getattr(self, name)
         return getattr(self, name) in (None, "")
 
     def clean(self):

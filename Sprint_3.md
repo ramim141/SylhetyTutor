@@ -8,7 +8,7 @@
 | --- | --- |
 | Profile model: `draft` অবস্থা, student ID নম্বর, availability, review এর তথ্য | ✅ |
 | `GET/PATCH /tutors/me/` (ধাপে ধাপে draft save) ও `POST /tutors/me/submit/` | ✅ |
-| NID ও Student ID upload (private storage, ৫ MB, file type check) | ⏳ পরের অংশ |
+| NID ও Student ID upload (private storage, ৫ MB, আসল ছবি কি না যাচাই, EXIF মোছা) | ✅ |
 | Avatar resize | ⏳ |
 | `GET /tutors/{slug}/` public profile, slug | ⏳ |
 | Frontend: ৬-ধাপের form, upload component, profile page, dashboard status card | ⏳ |
@@ -41,4 +41,28 @@
 - **নতুন অবস্থা `draft`**: আগে নতুন profile `pending` ছিল, ফলে অর্ধেক ভরা profile ও admin এর queue তে ঢুকে যেত। এখন জমা না দেওয়া পর্যন্ত admin দেখে না।
 - **`gender`, `fee_min`, `fee_max` ফাঁকা থেকে শুরু** (আগে `male`, ৳3000–7000 ধরা ছিল) — না ভরলে "ভরা" দেখাত না। `approved` হতে হলে model এই field গুলো ভরা চায় (Django admin এও আটকায়)।
 - Frontend এ nested list (`availability`) পাঠাতে JSON লাগে; test settings এ ডিফল্ট JSON।
-- Document upload আসলে `submit` এ NID ও Student ID বাধ্যতামূলক হবে — এখনকার submit তা চায় না।
+
+## 🔒 NID ও Student ID (সবচেয়ে সংবেদনশীল অংশ)
+
+| Method | Endpoint | কাজ |
+| --- | --- | --- |
+| PUT | `/tutors/me/documents/{kind}/` | আপলোড/বদল। `kind` = `nid` বা `student_id`। multipart, একটাই `file` |
+| DELETE | `/tutors/me/documents/{kind}/` | নিজের document মোছা |
+| GET | `/tutors/documents/{profile_id}/{kind}/` | ছবি দেখা — **শুধু মালিক ও admin** |
+
+- **Upload এর নিয়ম**: JPEG/PNG/WebP, সর্বোচ্চ ৫ MB। file এর নাম বা `Content-Type` বিশ্বাস না করে ছবিটা আসলেই decode করে যাচাই হয়। ভুল হলে 400, `fields.file[].code` = `required` · `file_too_large` · `not_an_image` · `unsupported_format` (যেমন GIF) · `image_too_large` (৪০ মেগাপিক্সেলের বেশি)।
+- **রাখা হয় যেভাবে**: ছবিটা নতুন করে JPEG হিসেবে encode হয় (EXIF, যেমন GPS অবস্থান, মুছে যায়; ফোনে কাত করা ছবি সোজা হয়; লম্বা দিক সর্বোচ্চ ২০০০px)। নাম এলোমেলো (`documents/<profile>/<random>.jpg`), কোনো URL নেই।
+- **কোথায়**: `PRIVATE_MEDIA_ROOT` (default `backend/private_media/`, git ও docker ignore এ)। `MEDIA_ROOT` এর বাইরে, তাই `/media/…` দিয়ে পাওয়া যায় না; `storage.url()` ইচ্ছা করেই error দেয়।
+- **কে দেখতে পারে**: মালিক ও admin। অন্য সবার (অন্য tutor, guardian, অজানা id) একই `404` — ফাইল আছে কি না বোঝা যায় না। Response এ `Cache-Control: private, no-store`, `X-Content-Type-Options: nosniff`। `GET /tutors/me/` এ শুধু `documents: {nid, student_id}` (আছে/নেই) আসে, কোনো path বা URL নয়।
+- **কখন বদলানো যায়**: `draft`/`rejected` এ। `pending` এ 409 `profile_locked`; `approved` এ 400 `locked`।
+- **Throttle**: প্রতি account এ মিনিটে ৫টা (ব্যর্থ ও আটকানো অনুরোধও গোনা হয়)।
+- **Submit**: `nid_photo` ও `student_id_photo` ছাড়া জমা হয় না (`missing` এ আসে)। Django admin ও এই দুটো ছাড়া `approved` করতে দেয় না।
+- **Profile মুছলে ফাইলও মোছে** (signal)। `seed_demo --reset` ও তাই।
+- **Django admin**: ফাইলের widget দেখানো হয় না (URL নেই বলে); profile পাতায় "NID: view · Student ID: view" লিঙ্ক, যা staff session দিয়ে খোলে।
+- **`seed_demo`**: প্রতিটা demo tutor এর দুটো ছবি আছে, কিন্তু সেগুলো ধূসর কার্ডে স্পষ্ট লেখা "DEMO … Not a real document"।
+
+## ⚠️ Production এর আগে
+
+- `PRIVATE_MEDIA_ROOT` অবশ্যই **persistent volume** এ (container মুছলে ফাইল হারাবে), অথবা Sprint 8 এ private bucket (S3/Spaces, signed URL নয় — আমাদের endpoint দিয়েই stream)। Backup এও এই ফোল্ডার ধরতে হবে।
+- Nginx এ কখনো এই ফোল্ডার `location` হিসেবে খুলবেন না।
+- এই অংশের PR এ দুজনের security review লাগবে (Sprint Plan)।

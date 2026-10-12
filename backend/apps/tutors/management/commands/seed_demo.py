@@ -10,10 +10,13 @@ and say so in their bio.
     python manage.py seed_demo --reset    # remove the demo tutors
 """
 
+import io
 import os
 
+from django.core.files.base import ContentFile
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
+from PIL import Image, ImageDraw
 
 from apps.accounts.models import User
 from apps.lookups.models import Area, ClassLevel, Subject, University
@@ -79,6 +82,18 @@ SUBJECT_SLUGS = [
 FEATURED = {0, 5, 11}
 PENDING = {26, 27}
 REJECTED = {28, 29}
+
+
+def demo_document(label):
+    """A grey card that says in plain letters it is not a real document."""
+    image = Image.new("RGB", (640, 400), (226, 229, 235))
+    draw = ImageDraw.Draw(image)
+    draw.rectangle((16, 16, 623, 383), outline=(120, 126, 140), width=3)
+    draw.text((40, 150), f"DEMO {label}", fill=(60, 66, 80))
+    draw.text((40, 190), "Not a real document", fill=(60, 66, 80))
+    buffer = io.BytesIO()
+    image.save(buffer, format="JPEG", quality=85)
+    return ContentFile(buffer.getvalue())
 
 
 def _pick(slugs, start, count):
@@ -200,6 +215,10 @@ class Command(BaseCommand):
                 "review_count": 0,
             },
         )
+        if not profile.nid_photo:
+            profile.nid_photo.save("demo.jpg", demo_document("NID"), save=True)
+        if not profile.student_id_photo:
+            profile.student_id_photo.save("demo.jpg", demo_document("STUDENT ID"), save=True)
         profile.areas.set(Area.objects.filter(slug__in=spec["areas"]))
         profile.subjects.set(Subject.objects.filter(slug__in=spec["subjects"]))
         profile.class_levels.set(ClassLevel.objects.filter(slug__in=spec["classes"]))

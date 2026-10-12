@@ -89,6 +89,7 @@ class TutorMeSerializer(serializers.ModelSerializer):
     class_levels = serializers.SlugRelatedField(many=True, slug_field="slug", read_only=True)
     areas = serializers.SlugRelatedField(many=True, slug_field="slug", read_only=True)
     availability = serializers.SerializerMethodField()
+    documents = serializers.SerializerMethodField()
     missing = serializers.SerializerMethodField()
     can_edit = serializers.SerializerMethodField()
 
@@ -112,6 +113,7 @@ class TutorMeSerializer(serializers.ModelSerializer):
             "class_levels",
             "areas",
             "availability",
+            "documents",
             "missing",
             "can_edit",
         ]
@@ -120,6 +122,10 @@ class TutorMeSerializer(serializers.ModelSerializer):
     def get_availability(self, obj):
         slots = sorted(obj.availability.all(), key=lambda a: (DAY_ORDER[a.day], SLOT_ORDER[a.slot]))
         return [{"day": a.day, "slot": a.slot} for a in slots]
+
+    def get_documents(self, obj):
+        # Only whether each file exists; the file itself is streamed by its own endpoint
+        return {"nid": bool(obj.nid_photo), "student_id": bool(obj.student_id_photo)}
 
     def get_missing(self, obj):
         return obj.missing_fields()

@@ -8,3 +8,9 @@ def _clear_cache():
     cache.clear()
     yield
     cache.clear()
+
+
+@pytest.fixture(autouse=True)
+def _private_media_in_tmp(settings, tmp_path):
+    """NID / student-ID test uploads go to a throwaway folder, never into the project."""
+    settings.PRIVATE_MEDIA_ROOT = tmp_path / "private_media"

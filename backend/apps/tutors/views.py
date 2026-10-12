@@ -1,3 +1,5 @@
+from django.db import transaction
+from django.http import Http404
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -5,12 +7,15 @@ from rest_framework import serializers, status
 from rest_framework.exceptions import ErrorDetail
 from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import AllowAny
+from rest_framework.parsers import MultiPartParser
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.accounts.permissions import IsTutor
+from apps.accounts.throttles import DocumentUploadThrottle
 
+from .documents import DOCUMENT_FIELDS, clean_document_image, document_response, private_storage
 from .exceptions import AlreadySubmitted, ProfileLocked
 from .filters import SORT_ORDERINGS, TutorFilterSet
 from .models import TutorProfile
@@ -175,3 +180,96 @@ class TutorSubmitView(APIView):
         profile.rejection_reason = ""
         profile.save(update_fields=["verification_status", "submitted_at", "rejection_reason"])
         return Response(TutorMeSerializer(profile).data, status=status.HTTP_200_OK)
+
+
+def _editable_documents(profile):
+    """Documents change only while the profile is a draft or was rejected."""
+    if profile.verification_status == TutorProfile.VerificationStatus.PENDING:
+        raise ProfileLocked()
+    if profile.verification_status == TutorProfile.VerificationStatus.APPROVED:
+        raise _locked("file")
+
+
+class TutorDocumentView(APIView):
+    """Upload (or remove) my NID or student-ID photo."""
+
+    permission_classes = [IsTutor]
+    throttle_classes = [DocumentUploadThrottle]
+    parser_classes = [MultiPartParser]
+
+    def _field(self, kind):
+        field = DOCUMENT_FIELDS.get(kind)
+        if not field:
+            raise Http404
+        return field
+
+    @extend_schema(
+        tags=["tutors"],
+        summary="Upload my NID or student-ID photo",
+        description=(
+            "`kind` is `nid` or `student_id`. Multipart form with one `file` (JPEG, PNG or "
+            "WebP, at most 5 MB). The stored copy is re-encoded as JPEG without EXIF. Replaces "
+            "an earlier upload. Locked while pending (409) and after approval (400 `locked`). "
+            "Errors on `file`: `required`, `file_too_large`, `not_an_image`, "
+            "`unsupported_format`, `image_too_large`."
+        ),
+        request={
+            "multipart/form-data": {
+                "type": "object",
+                "properties": {"file": {"type": "string", "format": "binary"}},
+            }
+        },
+        responses={200: TutorMeSerializer},
+    )
+    def put(self, request, kind):
+        field = self._field(kind)
+        profile = own_profile(request.user)
+        _editable_documents(profile)
+        content = clean_document_image(request.FILES.get("file"))
+
+        old_name = getattr(profile, field).name
+        with transaction.atomic():
+            getattr(profile, field).save("document.jpg", content, save=False)
+            profile.save(update_fields=[field, "updated_at"])
+        if old_name:
+            private_storage.delete(old_name)
+        return Response(TutorMeSerializer(profile).data)
+
+    @extend_schema(
+        tags=["tutors"],
+        summary="Remove my NID or student-ID photo",
+        responses={200: TutorMeSerializer},
+    )
+    def delete(self, request, kind):
+        field = self._field(kind)
+        profile = own_profile(request.user)
+        _editable_documents(profile)
+
+        old_name = getattr(profile, field).name
+        setattr(profile, field, "")
+        profile.save(update_fields=[field, "updated_at"])
+        if old_name:
+            private_storage.delete(old_name)
+        return Response(TutorMeSerializer(profile).data)
+
+
+class DocumentDownloadView(APIView):
+    """
+    One document, to its owner or an admin and nobody else. Anyone else gets the same 404
+    as for a file that does not exist, so the endpoint reveals nothing about who has uploaded.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        tags=["tutors"],
+        summary="Read a stored NID / student-ID photo (owner or admin)",
+        responses={(200, "image/jpeg"): bytes},
+    )
+    def get(self, request, profile_id, kind):
+        user = request.user
+        is_admin = user.role == "admin" or user.is_staff
+        profile = TutorProfile.objects.filter(pk=profile_id).select_related("user").first()
+        if profile is None or not (is_admin or profile.user_id == user.pk):
+            raise Http404
+        return document_response(profile, kind)
