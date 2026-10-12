@@ -6,7 +6,7 @@ import { useAuthStore } from "./store/authStore";
 
 // Pages fetch lookups/tutors on mount; routing tests must not hit a real server
 vi.mock("./api/lookups", () => ({ getLookups: vi.fn().mockResolvedValue({ areas: [], subjects: [], universities: [] }) }));
-vi.mock("./api/tutors", () => ({ getTutors: vi.fn().mockResolvedValue([]) }));
+vi.mock("./api/tutors", () => ({ getTutors: vi.fn().mockResolvedValue({ results: [] }) }));
 
 function renderAt(path) {
   return render(

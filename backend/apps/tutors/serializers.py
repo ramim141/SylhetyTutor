@@ -55,7 +55,7 @@ class TutorCardSerializer(serializers.ModelSerializer):
         return f"{uni_name}{dept_str}"
 
     def get_area(self, obj):
-        primary_area = obj.areas.first()
+        primary_area = next(iter(obj.areas.all()), None)
         return primary_area.name_en if primary_area else "Sylhet City"
 
     def get_subjects(self, obj):

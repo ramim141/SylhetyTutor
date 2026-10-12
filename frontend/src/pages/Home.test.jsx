@@ -34,7 +34,7 @@ describe("Home", () => {
   });
 
   it("shows an honest empty state for visitors when no tutors are verified yet", async () => {
-    getTutors.mockResolvedValue([]);
+    getTutors.mockResolvedValue({ results: [] });
     renderHome();
 
     expect(await screen.findByText(mixed["home.empty.title"])).toBeInTheDocument();
@@ -43,7 +43,7 @@ describe("Home", () => {
   });
 
   it("offers a retry when tutors fail to load", async () => {
-    getTutors.mockRejectedValueOnce(new Error("Network Error")).mockResolvedValueOnce([]);
+    getTutors.mockRejectedValueOnce(new Error("Network Error")).mockResolvedValueOnce({ results: [] });
     renderHome();
 
     await userEvent.click(await screen.findByRole("button", { name: mixed["common.retry"] }));
@@ -53,7 +53,7 @@ describe("Home", () => {
   });
 
   it("filters by area from the bottom sheet", async () => {
-    getTutors.mockResolvedValue([]);
+    getTutors.mockResolvedValue({ results: [] });
     renderHome();
 
     await userEvent.click(screen.getByRole("button", { name: mixed["home.filter"] }));
@@ -67,7 +67,7 @@ describe("Home", () => {
   });
 
   it("post sheet explains posting is coming instead of pretending to save", async () => {
-    getTutors.mockResolvedValue([]);
+    getTutors.mockResolvedValue({ results: [] });
     renderHome();
 
     await userEvent.click(screen.getByRole("button", { name: mixed["nav.post"] }));

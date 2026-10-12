@@ -100,11 +100,11 @@ export default function Home() {
     const timer = setTimeout(async () => {
       try {
         const params = {};
-        if (searchQuery.trim()) params.search = searchQuery.trim();
+        if (searchQuery.trim()) params.q = searchQuery.trim();
         if (selectedArea) params.area = selectedArea;
         const data = await getTutors(params);
         if (active) {
-          setTutors(data || []);
+          setTutors(data?.results ?? []);
           setTutorsState("ready");
         }
       } catch {

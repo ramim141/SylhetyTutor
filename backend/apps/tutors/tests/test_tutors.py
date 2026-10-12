@@ -17,7 +17,7 @@ def api_client():
 def test_tutor_list_api_empty(api_client):
     response = api_client.get("/api/v1/tutors/")
     assert response.status_code == 200
-    assert response.json() == []
+    assert response.json() == {"count": 0, "next": None, "previous": None, "results": []}
 
 
 def test_create_and_fetch_tutor(api_client):
@@ -66,8 +66,8 @@ def test_create_and_fetch_tutor(api_client):
     assert response.status_code == 200
     data = response.json()
 
-    assert len(data) == 1
-    tutor_data = data[0]
+    assert data["count"] == 1
+    tutor_data = data["results"][0]
     assert tutor_data["name"] == "Mahdi Hasan"
     assert tutor_data["initials"] == "MH"
     assert "SUST" in tutor_data["university"]
@@ -84,4 +84,4 @@ def test_new_tutor_profile_is_hidden_until_verified_and_has_no_fake_rating(api_c
 
     assert profile.verification_status == TutorProfile.VerificationStatus.PENDING
     assert profile.rating_avg == 0
-    assert api_client.get("/api/v1/tutors/").json() == []
+    assert api_client.get("/api/v1/tutors/").json()["results"] == []
