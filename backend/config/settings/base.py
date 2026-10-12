@@ -171,9 +171,6 @@ IMGBB_API_KEY = os.getenv("IMGBB_API_KEY", "")
 IMGBB_API_URL = os.getenv("IMGBB_API_URL", "https://api.imgbb.com/1/upload")
 IMGBB_TIMEOUT = int(os.getenv("IMGBB_TIMEOUT", "15"))
 
-# Django 6 will assume https:// for URL fields typed without a scheme; opt in now
-FORMS_URLFIELD_ASSUME_HTTPS = True
-
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Django REST Framework
