@@ -16,7 +16,13 @@ export function BottomNav({ activeTab, onTabChange }) {
   const { pathname } = useLocation();
   const { user, status } = useAuthStore();
 
-  const current = activeTab ?? (ACCOUNT_PATHS.includes(pathname) ? "account" : "home");
+  const current =
+    activeTab ??
+    (ACCOUNT_PATHS.includes(pathname)
+      ? "account"
+      : pathname.startsWith("/tutors")
+        ? "tutors"
+        : "home");
 
   const accountLabel =
     status === "authenticated" && user
@@ -34,6 +40,7 @@ export function BottomNav({ activeTab, onTabChange }) {
   const handleTab = (id) => {
     if (onTabChange) return onTabChange(id);
     if (id === "account") return navigate(status === "authenticated" ? "/dashboard" : "/login");
+    if (id === "tutors") return navigate("/tutors");
     navigate("/", id === "home" ? undefined : { state: { tab: id } });
   };
 

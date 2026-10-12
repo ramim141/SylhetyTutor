@@ -46,4 +46,10 @@ describe("Header", () => {
 
     expect(useLanguageStore.getState().lang).toBe("en");
   });
+
+  it("links Find Tutors to the search page without a full reload", () => {
+    renderHeader();
+
+    expect(screen.getByRole("link", { name: mixed["nav.findTutors"] })).toHaveAttribute("href", "/tutors");
+  });
 });

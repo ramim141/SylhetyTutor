@@ -48,12 +48,12 @@ export function Header() {
           >
             {t("nav.home")}
           </Link>
-          <a
-            href="/tutors"
+          <Link
+            to="/tutors"
             className="text-sm font-display font-semibold text-fg-secondary hover:text-fg transition-colors"
           >
             {t("nav.findTutors")}
-          </a>
+          </Link>
           <a
             href="/post-requirement"
             className="text-sm font-display font-semibold text-fg-secondary hover:text-fg transition-colors"
