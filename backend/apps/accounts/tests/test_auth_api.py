@@ -257,3 +257,54 @@ def test_register_rejects_unknown_area(client):
 
     assert response.status_code == 400
     assert response.json()["fields"]["area"][0]["code"] == "does_not_exist"
+
+
+# --- a password may not just be the person's own details -------------------------------------
+
+
+def register_with(client, **overrides):
+    payload = {
+        "full_name": "Rahim Uddin",
+        "phone": "01712345678",
+        "email": "rahim@example.com",
+        "password": "Surma-River-Fresh-9",
+        "role": "guardian",
+    }
+    payload.update(overrides)
+    return client.post("/api/v1/auth/register/", payload)
+
+
+def password_codes(response):
+    return [e["code"] for e in response.json()["fields"]["password"]]
+
+
+@pytest.mark.parametrize(
+    "password",
+    ["01712345678a", "rahimuddin1", "Rahim Uddin 9", "rahim@example.com1"],
+    ids=["phone", "name-joined", "name", "email"],
+)
+def test_register_refuses_a_password_that_copies_the_persons_details(client, password):
+    response = register_with(client, password=password)
+
+    assert response.status_code == 400
+    assert "password_too_similar" in password_codes(response)
+    assert not User.objects.filter(phone="01712345678").exists()
+
+
+def test_register_accepts_a_strong_password_unrelated_to_the_person(client):
+    assert register_with(client).status_code == 201
+
+
+def test_a_weak_password_gets_its_own_reason_once_not_twice(client):
+    response = register_with(client, password="abc")
+
+    codes = password_codes(response)
+    assert "password_too_short" in codes
+    assert codes.count("password_too_short") == 1
+    assert "password_too_similar" not in codes
+
+
+def test_similarity_to_the_phone_is_checked_when_only_a_phone_is_given(client):
+    response = register_with(client, email="", password="01712345678x")
+
+    assert "password_too_similar" in password_codes(response)

@@ -237,7 +237,7 @@ export default function Register() {
               <button
                 type="button"
                 onClick={cycleLang}
-                aria-label="Toggle language"
+                aria-label={`${t("nav.langSelect")} (${lang === "en" ? "EN" : lang === "bn" ? "বাং" : "Mix"})`}
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-display font-semibold text-fg-secondary hover:text-fg bg-bg-card border border-border/80 shadow-xs transition-all cursor-pointer active:scale-95"
               >
                 <Globe className="w-3.5 h-3.5 text-orange" />
@@ -248,7 +248,7 @@ export default function Register() {
               <button
                 type="button"
                 onClick={cycleTheme}
-                aria-label="Toggle theme"
+                aria-label={t("nav.themeCurrent", { name: t(`theme.${theme}`) })}
                 className="p-1.5 rounded-full text-fg-secondary hover:text-fg bg-bg-card border border-border/80 shadow-xs transition-all cursor-pointer active:scale-95"
               >
                 {theme === "light" && <Sun className="w-3.5 h-3.5 text-orange" />}

@@ -2,14 +2,16 @@ import { Star, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "../ui/Badge";
 import { useTranslation } from "../../i18n";
+import { labelOf } from "../../utils/lookups";
 
 export function TutorCard({
   slug,
   name,
   initials,
   avatarUrl,
-  university,
-  area,
+  university = null,
+  department = "",
+  area = null,
   subjects = [],
   classes = [],
   rating = 0,
@@ -19,7 +21,14 @@ export function TutorCard({
   isFeatured = false,
   isVerified = true,
 }) {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
+
+  // Names come in both languages; show the visitor's. Nothing is invented when a tutor has not
+  // filled something in: the line simply has fewer parts.
+  const universityLine = university
+    ? `${labelOf(university, lang)}${department ? ` (${department})` : ""}`
+    : department;
+  const placeLine = [universityLine, area && labelOf(area, lang)].filter(Boolean);
 
   return (
     <div
@@ -80,13 +89,24 @@ export function TutorCard({
 
             {/* Subjects highlighted with orange-text token */}
             <p className="text-sm font-semibold text-orange-text truncate mt-0.5">
-              {subjects.join(", ")}
+              {subjects.map((subject) => labelOf(subject, lang)).join(", ")}
             </p>
 
             {/* University & Area */}
-            <p className="text-xs text-fg-muted mt-0.5 truncate">
-              {university} · <span className="text-fg-secondary font-medium">{area}</span>
-            </p>
+            {placeLine.length > 0 && (
+              <p className="text-xs text-fg-muted mt-0.5 truncate">
+                {placeLine.map((part, index) => (
+                  <span key={part}>
+                    {index > 0 && " · "}
+                    {index === placeLine.length - 1 && placeLine.length > 1 ? (
+                      <span className="text-fg-secondary font-medium">{part}</span>
+                    ) : (
+                      part
+                    )}
+                  </span>
+                ))}
+              </p>
+            )}
           </div>
         </div>
 
@@ -108,8 +128,8 @@ export function TutorCard({
 
           <div className="flex gap-1 flex-wrap justify-end">
             {classes.slice(0, 2).map((c) => (
-              <Badge key={c} variant="tag" className="text-[11px] py-0">
-                {c}
+              <Badge key={c.slug} variant="tag" className="text-[11px] py-0">
+                {labelOf(c, lang)}
               </Badge>
             ))}
           </div>

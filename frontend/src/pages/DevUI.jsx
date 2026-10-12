@@ -19,10 +19,19 @@ const COLOR_TOKENS = [
 const SAMPLE_TUTOR = {
   name: "Rahim Uddin",
   initials: "RU",
-  university: "SUST (CSE, 3rd Year)",
-  area: "Amberkhana",
-  subjects: ["Physics", "Higher Math"],
-  classes: ["SSC 9–10"],
+  university: {
+    slug: "sust",
+    name_en: "Shahjalal University",
+    name_bn: "শাহজালাল বিশ্ববিদ্যালয়",
+    short_name: "SUST",
+  },
+  department: "CSE",
+  area: { slug: "amberkhana", name_en: "Amberkhana", name_bn: "আম্বরখানা" },
+  subjects: [
+    { slug: "physics", name_en: "Physics", name_bn: "পদার্থবিজ্ঞান" },
+    { slug: "math", name_en: "Higher Math", name_bn: "উচ্চতর গণিত" },
+  ],
+  classes: [{ slug: "ssc", name_en: "SSC 9–10", name_bn: "এসএসসি ৯–১০" }],
   rating: 4.8,
   reviewCount: 24,
   feeMin: 5000,

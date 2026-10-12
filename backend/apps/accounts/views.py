@@ -24,6 +24,7 @@ from .serializers import (
     ChangePasswordSerializer,
     CustomTokenRefreshSerializer,
     LoginSerializer,
+    LogoutSerializer,
     RegisterSerializer,
     TokenPairSerializer,
     UserSerializer,
@@ -196,6 +197,7 @@ class LogoutView(APIView):
     @extend_schema(
         tags=["auth"],
         summary="Logout and blacklist refresh token",
+        request=LogoutSerializer,
         responses={204: None},
     )
     def post(self, request):
