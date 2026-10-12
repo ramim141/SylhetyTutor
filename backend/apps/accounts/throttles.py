@@ -62,3 +62,14 @@ class DocumentUploadThrottle(SimpleRateThrottle):
         if not request.user or not request.user.is_authenticated:
             return None
         return self.cache_format % {"scope": self.scope, "ident": request.user.pk}
+
+
+class AvatarUploadThrottle(SimpleRateThrottle):
+    """5 profile-photo uploads per minute per account."""
+
+    scope = "avatar_upload"
+
+    def get_cache_key(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return None
+        return self.cache_format % {"scope": self.scope, "ident": request.user.pk}

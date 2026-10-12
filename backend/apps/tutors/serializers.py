@@ -41,12 +41,7 @@ class TutorCardSerializer(serializers.ModelSerializer):
         ]
 
     def get_avatarUrl(self, obj):
-        if obj.user.avatar:
-            request = self.context.get("request")
-            if request:
-                return request.build_absolute_uri(obj.user.avatar.url)
-            return obj.user.avatar.url
-        return None
+        return obj.user.avatar_url or None
 
     def get_university(self, obj):
         uni_name = (

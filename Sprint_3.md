@@ -9,7 +9,7 @@
 | Profile model: `draft` অবস্থা, student ID নম্বর, availability, review এর তথ্য | ✅ |
 | `GET/PATCH /tutors/me/` (ধাপে ধাপে draft save) ও `POST /tutors/me/submit/` | ✅ |
 | NID ও Student ID upload (private storage, ৫ MB, আসল ছবি কি না যাচাই, EXIF মোছা) | ✅ |
-| Avatar resize | ⏳ |
+| Profile photo (avatar): 512px বর্গ, imgBB তে | ✅ |
 | `GET /tutors/{slug}/` public profile, slug | ⏳ |
 | Frontend: ৬-ধাপের form, upload component, profile page, dashboard status card | ⏳ |
 
@@ -66,3 +66,18 @@
 - `PRIVATE_MEDIA_ROOT` অবশ্যই **persistent volume** এ (container মুছলে ফাইল হারাবে), অথবা Sprint 8 এ private bucket (S3/Spaces, signed URL নয় — আমাদের endpoint দিয়েই stream)। Backup এও এই ফোল্ডার ধরতে হবে।
 - Nginx এ কখনো এই ফোল্ডার `location` হিসেবে খুলবেন না।
 - এই অংশের PR এ দুজনের security review লাগবে (Sprint Plan)।
+
+## 🖼️ Profile photo (avatar) — imgBB তে
+
+| Method | Endpoint | কাজ |
+| --- | --- | --- |
+| PUT | `/auth/me/avatar/` | ছবি দেওয়া/বদলানো (যেকোনো signed-in user)। multipart, একটাই `file` |
+| DELETE | `/auth/me/avatar/` | ছবি সরানো |
+
+- **কেন imgBB**: server এর ডিস্ক বাঁচে। কিন্তু imgBB **public host** — লিঙ্ক জানা যে কেউ ছবি খুলতে পারে। তাই শুধু profile photo (যা site এ এমনিতেই public)। **NID/Student ID কখনো imgBB তে নয়**; সেগুলো আগের মতো private storage এ (উপরের অংশ)।
+- **Env**: `IMGBB_API_KEY` (বাধ্যতামূলক), `IMGBB_API_URL`, `IMGBB_TIMEOUT` (`.env.example` দেখুন)। key নেই → 503 `uploads_unavailable`।
+- **যা পাঠানো হয়**: যাচাই (JPEG/PNG/WebP, ৫ MB, আসল ছবি কি না) → মাঝখান থেকে ৫১২px বর্গে কাটা (ছোট ছবি বড় করা হয় না), EXIF মুছে JPEG। key থাকে POST body তে, URL এ নয়; ফাইলের নাম এলোমেলো।
+- **Response**: `avatar` = ছবির public URL (না থাকলে `null`)। `delete_url` কখনো কাউকে পাঠানো হয় না (যার কাছে থাকবে সে ছবি মুছতে পারবে), DB তে রাখা হয়।
+- **ব্যর্থতা**: imgBB ডাউন/অস্বীকার/ভুল উত্তর/`https` ছাড়া URL → 502 `upload_failed`, আগের ছবি অক্ষত; উত্তরে key বা imgBB এর কাঁচা লেখা থাকে না। Throttle: মিনিটে ৫টা।
+- **সীমা (সৎভাবে)**: ছবি সরালে বা বদলালে সাইট সাথে সাথে নতুনটা দেখায়, কিন্তু **imgBB তে পুরোনো কপি থেকে যায়** (স্বয়ংক্রিয় মোছা নেই)। দরকারে `avatar_delete_url` (Django admin এ দেখা যায়) দিয়ে হাতে মুছতে হবে।
+- **যাচাই বাকি**: আসল imgBB key দিয়ে একবার চালানো। এখনকার test সব imgBB mock করে।

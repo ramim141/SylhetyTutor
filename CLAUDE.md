@@ -62,6 +62,7 @@ Breaking an endpoint's shape means updating `Sprint_1.md`/Swagger and the fronte
 - `admin` role is never assignable through the API. A `TutorProfile` starts as `draft` (invisible to admins and search), becomes `pending` when the tutor submits, and is public only once an admin sets `approved`; an approved profile must have its required fields filled (`TutorProfile.missing_fields`).
 - Tutor/guardian phone, address and documents never appear in public or list responses (commission model:
   contact opens only after a booked demo, Architecture Doc §8.8). NID/Student-ID files must be private storage.
+- imgBB (profile photos, `IMGBB_API_KEY`) is a **public** host: never send NID, student-ID or any identity document there. Those stay in `PRIVATE_MEDIA_ROOT`.
 - No invented numbers: no fake ratings, counts or testimonials. No review → show "New", not 0.0 or 5.0.
 - Login is throttled per account (5/min), not per IP: mobile carriers share IPs (CGNAT).
 

@@ -13,4 +13,5 @@ redis>=5.0.8
 # Utilities & Media
 Pillow>=10.4.0
 python-dotenv>=1.0.1
+requests>=2.32.0  # imgBB profile-photo upload
 gunicorn>=22.0.0

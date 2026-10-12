@@ -21,6 +21,7 @@ class UserSerializer(serializers.ModelSerializer):
     """
 
     area = serializers.SlugRelatedField(slug_field="slug", read_only=True)
+    avatar = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -36,6 +37,9 @@ class UserSerializer(serializers.ModelSerializer):
             "date_joined",
         ]
         read_only_fields = ["id", "role", "date_joined"]
+
+    def get_avatar(self, obj):
+        return obj.avatar_url or None
 
 
 class RegisterSerializer(serializers.Serializer):

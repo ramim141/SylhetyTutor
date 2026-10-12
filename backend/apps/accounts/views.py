@@ -3,10 +3,13 @@ Authentication views for SylhetyTutor.
 Sprint 1 — Architecture Doc Section 3.1 & Sprint_1.md.
 """
 
+import uuid
+
 from django.contrib.auth import authenticate
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -15,6 +18,8 @@ from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, Ou
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 
+from .imaging import clean_image
+from .imgbb import ensure_configured, upload_image
 from .serializers import (
     ChangePasswordSerializer,
     CustomTokenRefreshSerializer,
@@ -25,6 +30,7 @@ from .serializers import (
     UserUpdateSerializer,
 )
 from .throttles import (
+    AvatarUploadThrottle,
     LoginIdentifierThrottle,
     LoginIPThrottle,
     PasswordChangeThrottle,
@@ -126,6 +132,62 @@ class MeView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(UserSerializer(request.user).data)
+
+
+AVATAR_SIDE = 512
+
+
+class AvatarView(APIView):
+    """My profile photo: stored on imgBB (a public host), shown on the public site."""
+
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [AvatarUploadThrottle]
+    parser_classes = [MultiPartParser]
+
+    @extend_schema(
+        tags=["auth"],
+        summary="Upload my profile photo",
+        description=(
+            "Multipart form with one `file` (JPEG, PNG or WebP, at most 5 MB). It is cropped to "
+            "a 512px square, re-encoded as JPEG without EXIF and sent to imgBB; `avatar` in the "
+            "answer is its public URL. Errors on `file`: `required`, `file_too_large`, "
+            "`not_an_image`, `unsupported_format`, `image_too_large`. 503 `uploads_unavailable` "
+            "when imgBB is not configured, 502 `upload_failed` when imgBB refuses. Never use "
+            "this for identity documents."
+        ),
+        request={
+            "multipart/form-data": {
+                "type": "object",
+                "properties": {"file": {"type": "string", "format": "binary"}},
+            }
+        },
+        responses={200: UserSerializer},
+    )
+    def put(self, request):
+        ensure_configured()
+        photo = clean_image(request.FILES.get("file"), max_side=AVATAR_SIDE, square=True)
+        url, delete_url = upload_image(photo.read(), name=uuid.uuid4().hex)
+
+        user = request.user
+        user.avatar_url = url
+        user.avatar_delete_url = delete_url
+        user.save(update_fields=["avatar_url", "avatar_delete_url", "updated_at"])
+        return Response(UserSerializer(user).data)
+
+    @extend_schema(
+        tags=["auth"],
+        summary="Remove my profile photo",
+        description=(
+            "The site stops showing it at once. The copy on imgBB is not deleted automatically."
+        ),
+        responses={200: UserSerializer},
+    )
+    def delete(self, request):
+        user = request.user
+        user.avatar_url = ""
+        user.avatar_delete_url = ""
+        user.save(update_fields=["avatar_url", "avatar_delete_url", "updated_at"])
+        return Response(UserSerializer(user).data)
 
 
 class LogoutView(APIView):

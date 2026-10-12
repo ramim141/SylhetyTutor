@@ -165,6 +165,15 @@ MEDIA_ROOT = BASE_DIR / "media"
 # Production needs a persistent volume (or a private bucket, Sprint 8).
 PRIVATE_MEDIA_ROOT = Path(os.getenv("PRIVATE_MEDIA_ROOT", BASE_DIR / "private_media"))
 
+# Profile photos go to imgBB (a public host: never send identity documents there).
+# Without a key the avatar endpoint answers 503 `uploads_unavailable`.
+IMGBB_API_KEY = os.getenv("IMGBB_API_KEY", "")
+IMGBB_API_URL = os.getenv("IMGBB_API_URL", "https://api.imgbb.com/1/upload")
+IMGBB_TIMEOUT = int(os.getenv("IMGBB_TIMEOUT", "15"))
+
+# Django 6 will assume https:// for URL fields typed without a scheme; opt in now
+FORMS_URLFIELD_ASSUME_HTTPS = True
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Django REST Framework
@@ -190,6 +199,7 @@ REST_FRAMEWORK = {
         "register_ip": "30/hour",
         "password_change": "5/minute",
         "document_upload": "5/minute",
+        "avatar_upload": "5/minute",
     },
 }
 
