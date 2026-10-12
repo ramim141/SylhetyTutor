@@ -6,6 +6,7 @@ import { useAuthStore } from "../../store/authStore";
 import { Button } from "../ui/Button";
 import { LanguageMenu } from "../ui/LanguageMenu";
 import { Logo } from "../ui/Logo";
+import { NotificationBell } from "./NotificationBell";
 
 export function Header() {
   const { t, lang, setLang } = useTranslation();
@@ -26,7 +27,7 @@ export function Header() {
     setTheme(next[theme] || "light");
   };
 
-  const themeLabel = `${t("theme." + theme)}`;
+  const themeLabel = t("nav.themeCurrent", { name: t(`theme.${theme}`) });
 
   return (
     <header className="sticky top-0 z-40 bg-bg/95 backdrop-blur-md border-b border-border transition-colors">
@@ -65,6 +66,8 @@ export function Header() {
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-3">
           <LanguageMenu />
+
+          <NotificationBell />
 
           {/* Theme Toggle */}
           <button
@@ -114,15 +117,8 @@ export function Header() {
 
         {/* Mobile App Top Right Quick Actions */}
         <div className="flex md:hidden items-center gap-2 shrink-0">
-          {status === "authenticated" && (
-            <Link
-              to="/dashboard"
-              aria-label={t("dashboard.title")}
-              className="p-1.5 text-fg-secondary bg-bg-card border border-border/80 rounded-full cursor-pointer active:scale-95 transition-transform"
-            >
-              <UserIcon className="w-3.5 h-3.5 text-orange" />
-            </Link>
-          )}
+          {/* Account is the last tab of the bottom bar, so the bell takes this spot */}
+          <NotificationBell />
 
           {/* Language Toggle Chip */}
           <button
