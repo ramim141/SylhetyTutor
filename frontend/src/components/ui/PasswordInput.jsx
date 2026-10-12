@@ -62,9 +62,9 @@ export const PasswordInput = forwardRef(function PasswordInput(
           required={required}
           aria-invalid={hasError}
           aria-describedby={describedBy}
-          className={`w-full min-h-[42px] sm:min-h-[44px] ${
+          className={`w-full min-h-11 ${
             LeftIcon ? "pl-10" : "pl-3.5"
-          } pr-11 py-2 sm:py-2.5 rounded-xl text-base md:text-sm font-body bg-bg-card border transition-all placeholder:text-fg-muted/50 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-hidden ${
+          } pr-11 py-2.5 rounded-xl text-base font-body bg-bg-card border transition-all placeholder:text-fg-muted/50 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-hidden ${
             hasError
               ? "border-error focus:border-error focus:ring-3 focus:ring-error/15 text-fg"
               : "border-border hover:border-fg-muted/40 focus:border-orange focus:ring-3 focus:ring-orange/15 text-fg"
