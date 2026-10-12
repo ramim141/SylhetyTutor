@@ -28,6 +28,7 @@ function renderDashboard(user = guardian) {
       <Routes>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/" element={<div>Home Page</div>} />
+        <Route path="/tutors" element={<div>Search Page</div>} />
         <Route path="/login" element={<div>Login Page</div>} />
       </Routes>
     </MemoryRouter>
@@ -46,7 +47,7 @@ describe("Dashboard", () => {
     expect(screen.getByRole("heading", { name: "Rahim Uddin" })).toBeInTheDocument();
     expect(screen.getByText("01712345678")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: mixed["dashboard.guardian.nextCta"] }));
-    expect(screen.getByText("Home Page")).toBeInTheDocument();
+    expect(screen.getByText("Search Page")).toBeInTheDocument();
   });
 
   it("tells a tutor to prepare documents for verification", () => {

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
+  ArrowRight,
   BadgeCheck,
   CalendarCheck,
   GraduationCap,
@@ -22,9 +23,11 @@ import { useTranslation } from "../i18n";
 import { useAuthStore } from "../store/authStore";
 import { getLookups } from "../api/lookups";
 import { getTutors } from "../api/tutors";
+import { searchPath } from "../utils/searchParams";
 
 const CURRENT_YEAR = new Date().getFullYear();
 const CONTAINER = "max-w-[1200px] mx-auto px-4 md:px-6";
+const PREVIEW_SIZE = 6; // the home page shows the top tutors; /tutors is the full search
 
 const HOW_IT_WORKS = [
   { n: 1, icon: Search, tone: "bg-orange-light text-orange-text" },
@@ -32,20 +35,15 @@ const HOW_IT_WORKS = [
   { n: 3, icon: CalendarCheck, tone: "bg-success-bg text-success" },
 ];
 
-function AreaChip({ selected, onClick, children, className = "" }) {
+// Choosing an area opens the search page for it (the home page does not filter on its own)
+function AreaChip({ to, children }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={selected}
-      className={`shrink-0 min-h-10 px-4 rounded-full border text-sm font-medium cursor-pointer active:scale-95 transition ${
-        selected
-          ? "bg-navy text-on-navy border-navy font-semibold"
-          : "bg-bg-card text-fg border-border hover:bg-orange-light hover:text-orange-text"
-      } ${className}`}
+    <Link
+      to={to}
+      className="shrink-0 inline-flex items-center min-h-10 px-4 rounded-full border border-border bg-bg-card text-fg text-sm font-medium active:scale-95 transition hover:bg-orange-light hover:text-orange-text"
     >
       {children}
-    </button>
+    </Link>
   );
 }
 
@@ -56,7 +54,6 @@ export default function Home() {
   const { status } = useAuthStore();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedArea, setSelectedArea] = useState("");
   const [activeTab, setActiveTab] = useState("home");
   const [postSheetOpen, setPostSheetOpen] = useState(false);
   const [areaSheetOpen, setAreaSheetOpen] = useState(false);
@@ -64,6 +61,7 @@ export default function Home() {
   const [lookups, setLookups] = useState({ areas: [], subjects: [], universities: [] });
   const [loadingLookups, setLoadingLookups] = useState(true);
   const [tutors, setTutors] = useState([]);
+  const [tutorCount, setTutorCount] = useState(0);
   const [tutorsState, setTutorsState] = useState("loading"); // loading | ready | error
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -81,36 +79,24 @@ export default function Home() {
   useEffect(() => {
     let active = true;
     setTutorsState("loading");
-    const timer = setTimeout(async () => {
-      try {
-        const params = {};
-        if (searchQuery.trim()) params.q = searchQuery.trim();
-        if (selectedArea) params.area = selectedArea;
-        const data = await getTutors(params);
-        if (active) {
-          setTutors(data?.results ?? []);
-          setTutorsState("ready");
-        }
-      } catch {
-        if (active) setTutorsState("error");
-      }
-    }, 300); // debounce typing
+    getTutors({ page_size: PREVIEW_SIZE })
+      .then((data) => {
+        if (!active) return;
+        setTutors(data?.results ?? []);
+        setTutorCount(data?.count ?? 0);
+        setTutorsState("ready");
+      })
+      .catch(() => active && setTutorsState("error"));
     return () => {
       active = false;
-      clearTimeout(timer);
     };
-  }, [searchQuery, selectedArea, reloadKey]);
+  }, [reloadKey]);
 
-  const scrollToTutors = (behavior = "smooth") =>
-    document.getElementById("tutors")?.scrollIntoView({ behavior, block: "start" });
-
-  const handleTabChange = (tabId, { instant = false } = {}) => {
+  const handleTabChange = (tabId) => {
     setActiveTab(tabId);
     if (tabId === "post") setPostSheetOpen(true);
-    else if (tabId === "tutors") {
-      scrollToTutors(instant ? "auto" : "smooth");
-      document.getElementById("searchInput")?.focus({ preventScroll: true });
-    } else if (tabId === "areas") setAreaSheetOpen(true);
+    else if (tabId === "tutors") navigate(searchPath());
+    else if (tabId === "areas") setAreaSheetOpen(true);
     else if (tabId === "account") navigate(status === "authenticated" ? "/dashboard" : "/login");
     else window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -123,17 +109,16 @@ export default function Home() {
     // Jump (not smooth-scroll) after first paint: content loading in would cancel a smooth
     // scroll. No cleanup on purpose — clearing state above re-runs this effect, and a cleanup
     // would cancel the timer before it fires.
-    setTimeout(() => handleTabChange(tab, { instant: true }), 50);
+    setTimeout(() => handleTabChange(tab), 50);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
 
   const areas = lookups.areas || [];
   const areaName = (area) => (lang === "en" ? area.name_en : area.name_bn);
-  const selectedAreaObj = areas.find((a) => a.slug === selectedArea);
 
   const stats = [
-    tutors.length > 0 && !selectedArea && !searchQuery
-      ? { value: tutors.length, label: t("stats.verifiedTutors"), tone: "text-navy" }
+    tutorCount > 0
+      ? { value: tutorCount, label: t("stats.verifiedTutors"), tone: "text-navy" }
       : { value: "100%", label: t("stats.nidVerified"), tone: "text-navy" },
     { value: areas.length || "—", label: t("stats.sylhetAreas"), tone: "text-orange-text" },
     { value: lookups.subjects?.length || "—", label: t("stats.subjects"), tone: "text-success" },
@@ -174,7 +159,7 @@ export default function Home() {
                 onSubmit={(e) => {
                   e.preventDefault();
                   e.currentTarget.querySelector("input")?.blur(); // close the phone keyboard
-                  scrollToTutors();
+                  navigate(searchPath({ q: searchQuery.trim() }));
                 }}
                 className="flex items-center gap-2"
               >
@@ -206,13 +191,10 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => setAreaSheetOpen(true)}
-                  className="md:hidden relative w-12 h-12 shrink-0 flex items-center justify-center rounded-md border border-border bg-bg-subtle text-fg-secondary active:scale-95 transition"
+                  className="md:hidden w-12 h-12 shrink-0 flex items-center justify-center rounded-md border border-border bg-bg-subtle text-fg-secondary active:scale-95 transition"
                   aria-label={t("home.filter")}
                 >
                   <SlidersHorizontal className="w-5 h-5" aria-hidden />
-                  {selectedArea && (
-                    <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-orange ring-2 ring-bg-subtle" />
-                  )}
                 </button>
 
                 <Button type="submit" className="hidden md:inline-flex shrink-0 min-h-12">
@@ -227,15 +209,9 @@ export default function Home() {
                     <MapPin className="w-4 h-4 text-orange" aria-hidden />
                     {t("home.sylhet")}
                   </span>
-                  <AreaChip selected={!selectedArea} onClick={() => setSelectedArea("")}>
-                    {t("home.allAreas")}
-                  </AreaChip>
+                  <AreaChip to={searchPath()}>{t("home.allAreas")}</AreaChip>
                   {areas.map((area) => (
-                    <AreaChip
-                      key={area.id}
-                      selected={selectedArea === area.slug}
-                      onClick={() => setSelectedArea(selectedArea === area.slug ? "" : area.slug)}
-                    >
+                    <AreaChip key={area.id} to={searchPath({ area: area.slug })}>
                       {areaName(area)}
                     </AreaChip>
                   ))}
@@ -265,19 +241,6 @@ export default function Home() {
             <div className="flex flex-col gap-1 mb-5 md:mb-8">
               <h2 className="text-2xl sm:text-3xl font-display font-bold">{t("section.featuredTitle")}</h2>
               <p className="text-sm sm:text-base text-fg-secondary">{t("section.featuredSubtitle")}</p>
-              {selectedAreaObj && (
-                <div className="mt-2">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedArea("")}
-                    className="inline-flex items-center gap-1.5 min-h-9 pl-3 pr-2 rounded-full bg-orange-light text-orange-text text-sm font-semibold"
-                    aria-label={`${t("home.filterActive", { area: areaName(selectedAreaObj) })} — ${t("common.clear")}`}
-                  >
-                    {t("home.filterActive", { area: areaName(selectedAreaObj) })}
-                    <X className="w-4 h-4" aria-hidden />
-                  </button>
-                </div>
-              )}
             </div>
 
             {tutorsState === "loading" && (
@@ -310,6 +273,18 @@ export default function Home() {
               </div>
             )}
 
+            {tutorsState === "ready" && tutors.length > 0 && (
+              <div className="mt-8 flex justify-center">
+                <Link
+                  to={searchPath()}
+                  className="inline-flex items-center justify-center gap-2 min-h-12 px-8 rounded-md border-2 border-orange text-orange-text font-display font-semibold hover:bg-orange-pale transition-colors"
+                >
+                  {t("home.viewAll")}
+                  <ArrowRight className="w-4 h-4" aria-hidden />
+                </Link>
+              </div>
+            )}
+
             {tutorsState === "ready" && tutors.length === 0 && (
               <div className="max-w-lg mx-auto text-center py-10 px-6 bg-bg-card rounded-lg border border-border flex flex-col items-center gap-3">
                 <div className="w-14 h-14 rounded-full bg-orange-light text-orange-text flex items-center justify-center">
@@ -317,27 +292,15 @@ export default function Home() {
                 </div>
                 <h3 className="font-display font-bold text-lg">{t("home.empty.title")}</h3>
                 <p className="text-sm text-fg-secondary max-w-prose">
-                  {selectedArea || searchQuery ? t("home.empty.filtered") : t("home.empty.body")}
+                  {t("home.empty.body")}
                 </p>
                 <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-2.5 mt-2">
-                  {selectedArea || searchQuery ? (
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setSelectedArea("");
-                        setSearchQuery("");
-                      }}
-                    >
-                      {t("home.empty.showAll")}
-                    </Button>
-                  ) : (
-                    <Link
-                      to="/register"
-                      className="inline-flex items-center justify-center min-h-11 px-6 rounded-md bg-orange text-on-orange font-display font-semibold text-sm hover:bg-orange-hover transition-colors"
-                    >
-                      {t("home.empty.becomeTutor")}
-                    </Link>
-                  )}
+                  <Link
+                    to="/register"
+                    className="inline-flex items-center justify-center min-h-11 px-6 rounded-md bg-orange text-on-orange font-display font-semibold text-sm hover:bg-orange-hover transition-colors"
+                  >
+                    {t("home.empty.becomeTutor")}
+                  </Link>
                 </div>
               </div>
             )}
@@ -440,8 +403,7 @@ export default function Home() {
             size="lg"
             onClick={() => {
               setPostSheetOpen(false);
-              setActiveTab("home");
-              scrollToTutors();
+              navigate(searchPath());
             }}
           >
             {t("post.browseCta")}
@@ -460,38 +422,17 @@ export default function Home() {
       >
         <div className="flex flex-col gap-4">
           <p className="text-sm text-fg-secondary">{t("home.filterHint")}</p>
-          <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label={t("home.filterTitle")}>
-            {[{ id: "all", slug: "" }, ...areas].map((area) => {
-              const selected = selectedArea === area.slug;
-              return (
-                <button
-                  key={area.id}
-                  type="button"
-                  role="radio"
-                  aria-checked={selected}
-                  onClick={() => setSelectedArea(area.slug)}
-                  className={`min-h-12 px-3 rounded-md border text-sm font-medium text-left transition cursor-pointer ${
-                    selected
-                      ? "border-orange bg-orange-light text-orange-text font-semibold"
-                      : "border-border bg-bg-subtle text-fg"
-                  }`}
-                >
-                  {area.slug ? areaName(area) : t("home.allAreas")}
-                </button>
-              );
-            })}
+          <div className="grid grid-cols-2 gap-2">
+            {[{ id: "all", slug: "" }, ...areas].map((area) => (
+              <Link
+                key={area.id}
+                to={searchPath(area.slug ? { area: area.slug } : {})}
+                className="min-h-12 px-3 inline-flex items-center rounded-md border border-border bg-bg-subtle text-fg text-sm font-medium hover:border-orange hover:bg-orange-light hover:text-orange-text transition"
+              >
+                {area.slug ? areaName(area) : t("home.allAreas")}
+              </Link>
+            ))}
           </div>
-          <Button
-            size="lg"
-            className="w-full"
-            onClick={() => {
-              setAreaSheetOpen(false);
-              setActiveTab("home");
-              scrollToTutors();
-            }}
-          >
-            {t("home.filterApply")}
-          </Button>
         </div>
       </BottomSheet>
     </div>

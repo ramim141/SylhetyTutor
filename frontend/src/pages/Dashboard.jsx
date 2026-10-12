@@ -135,7 +135,7 @@ export default function Dashboard() {
         <NextStep
           role={user?.role}
           t={t}
-          onBrowse={() => navigate("/", { state: { tab: "tutors" } })}
+          onBrowse={() => navigate("/tutors")}
         />
 
         {/* Account details */}

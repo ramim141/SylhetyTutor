@@ -15,7 +15,7 @@
 | `seed_demo` (৩০ জন, শুধু local/staging) | ✅ |
 | `/tutors` page: URL sync, sort, pagination, skeleton, empty, error | ✅ |
 | Filter sidebar (desktop `lg+`) ও bottom sheet (ফোন), active-filter chip | ✅ |
-| Home এর search ও "সব tutor" লিঙ্ক `/tutors` এর সাথে জোড়া | ⏳ বাকি |
+| Home ↔ Search: Home এ সেরা ৬ জন preview + "সব tutor দেখুন"; hero search, area chip ও ফোনের area sheet `/tutors?…` এ নিয়ে যায় (Home নিজে filter করে না) | ✅ |
 | Tutor profile page (card এর "View Profile") | Sprint 3 |
 
 ---

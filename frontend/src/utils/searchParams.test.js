@@ -3,6 +3,7 @@ import {
   clearFilters,
   countActiveFilters,
   parseFilters,
+  searchPath,
   toSearchParams,
 } from "./searchParams";
 
@@ -91,5 +92,24 @@ describe("filters helpers", () => {
       q: "ali",
       sort: "newest",
     });
+  });
+});
+
+describe("searchPath", () => {
+  it("is the plain search page with no filters", () => {
+    expect(searchPath()).toBe("/tutors");
+    expect(searchPath({})).toBe("/tutors");
+    expect(searchPath({ q: "" })).toBe("/tutors");
+  });
+
+  it("builds a shareable link for the given filters", () => {
+    expect(searchPath({ area: "amberkhana" })).toBe("/tutors?area=amberkhana");
+    expect(searchPath({ q: "math", area: "zindabazar" })).toBe("/tutors?q=math&area=zindabazar");
+  });
+
+  it("encodes what the user typed", () => {
+    expect(searchPath({ q: "জিন্দাবাজার & math" })).toBe(
+      "/tutors?q=%E0%A6%9C%E0%A6%BF%E0%A6%A8%E0%A7%8D%E0%A6%A6%E0%A6%BE%E0%A6%AC%E0%A6%BE%E0%A6%9C%E0%A6%BE%E0%A6%B0+%26+math"
+    );
   });
 });

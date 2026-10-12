@@ -62,3 +62,9 @@ export function clearFilters(filters) {
   const { q, sort } = filters;
   return applyChange({}, { q, sort });
 }
+
+/** Link to the search page, e.g. searchPath({ area: "amberkhana" }) -> "/tutors?area=amberkhana". */
+export function searchPath(filters = {}) {
+  const query = toSearchParams(applyChange({}, filters)).toString();
+  return query ? `/tutors?${query}` : "/tutors";
+}
