@@ -6,7 +6,7 @@ Two developers (@ramim141, @Mahdi-HasanIO), monorepo, 8-sprint MVP. Mobile-first
 Source of truth for scope and design (read before building a feature):
 `SylhetyTutor — System Architecture Document.md` (models §3, API §4, rules §8.8) ·
 `SylhetyTutor Sprint Plan.md` (what each sprint delivers) · `DESIGN.md` (colors, components, UI rules) ·
-`Sprint_1.md` (API contract and auth rules). Where docs and code disagree, code is current; fix the doc.
+`Sprint_1.md` (API contract and auth rules) · `Sprint_2.md` (tutor search contract). Where docs and code disagree, code is current; fix the doc.
 
 ## Layout
 

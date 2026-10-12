@@ -1,9 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ChevronLeft, ChevronRight, GraduationCap, RefreshCw, Search as SearchIcon } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  GraduationCap,
+  RefreshCw,
+  Search as SearchIcon,
+  SlidersHorizontal,
+} from "lucide-react";
 import { useTranslation } from "../i18n";
 import { getTutors } from "../api/tutors";
 import {
+  FILTER_KEYS,
   PAGE_SIZE,
   SORTS,
   applyChange,
@@ -12,11 +20,15 @@ import {
   parseFilters,
   toSearchParams,
 } from "../utils/searchParams";
+import { useLookups } from "../hooks/useLookups";
 import { Header } from "../components/layout/Header";
 import { BottomNav } from "../components/layout/BottomNav";
+import { ActiveFilterChips } from "../components/tutor/ActiveFilterChips";
 import { TutorCard } from "../components/tutor/TutorCard";
 import { TutorCardSkeleton } from "../components/tutor/TutorCardSkeleton";
+import { TutorFilters } from "../components/tutor/TutorFilters";
 import { Alert } from "../components/ui/Alert";
+import { BottomSheet } from "../components/ui/BottomSheet";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 
@@ -29,6 +41,9 @@ export default function Search() {
   const filters = useMemo(() => parseFilters(searchParams), [searchParams]);
   const query = toSearchParams(filters).toString();
 
+  const lookups = useLookups();
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [draft, setDraft] = useState({});
   const [text, setText] = useState(filters.q ?? "");
   const [state, setState] = useState("loading"); // loading | ready | error
   const [data, setData] = useState({ count: 0, results: [] });
@@ -39,13 +54,16 @@ export default function Search() {
       setSearchParams((current) => toSearchParams(applyChange(parseFilters(current), patch)), {
         replace,
       }),
-    [setSearchParams]
+    [setSearchParams],
   );
 
   // Search box: wait for a pause in typing, and don't fill the Back history with every word
   useEffect(() => {
     if (text.trim() === (filters.q ?? "")) return undefined;
-    const timer = setTimeout(() => change({ q: text.trim() }, { replace: true }), SEARCH_DEBOUNCE_MS);
+    const timer = setTimeout(
+      () => change({ q: text.trim() }, { replace: true }),
+      SEARCH_DEBOUNCE_MS,
+    );
     return () => clearTimeout(timer);
   }, [text, filters.q, change]);
 
@@ -80,6 +98,21 @@ export default function Search() {
   const activeFilters = countActiveFilters(filters);
   const hasCriteria = activeFilters > 0 || Boolean(filters.q);
 
+  const openSheet = () => {
+    setDraft(
+      Object.fromEntries(
+        FILTER_KEYS.filter((key) => filters[key] !== undefined).map((key) => [key, filters[key]]),
+      ),
+    );
+    setSheetOpen(true);
+  };
+
+  // Everything chosen in the sheet lands in the URL at once, as one history entry
+  const applyDraft = () => {
+    change(Object.fromEntries(FILTER_KEYS.map((key) => [key, draft[key] ?? ""])));
+    setSheetOpen(false);
+  };
+
   const goToPage = (next) => {
     change({ page: next });
     document.getElementById("results")?.scrollIntoView?.({ block: "start" });
@@ -91,7 +124,9 @@ export default function Search() {
 
       <main className="max-w-[1200px] mx-auto px-4 md:px-6 py-6 md:py-10 flex flex-col gap-6">
         <div>
-          <h1 className="font-display font-extrabold text-3xl tracking-tight">{t("search.title")}</h1>
+          <h1 className="font-display font-extrabold text-3xl tracking-tight">
+            {t("search.title")}
+          </h1>
           <p className="text-fg-secondary mt-1 max-w-prose">{t("search.subtitle")}</p>
         </div>
 
@@ -126,108 +161,153 @@ export default function Search() {
               ))}
             </select>
           </div>
+          <Button variant="outline" onClick={openSheet} className="lg:hidden">
+            <SlidersHorizontal className="w-5 h-5" aria-hidden />
+            {activeFilters > 0 ? `${t("search.filters")} (${activeFilters})` : t("search.filters")}
+          </Button>
         </div>
 
-        <section id="results" aria-labelledby="results-heading" className="scroll-mt-24 flex flex-col gap-5">
-          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 min-h-6">
-            <h2 id="results-heading" aria-live="polite" className="text-sm text-fg-secondary">
-              {state === "ready" &&
-                (data.count === 1
-                  ? t("search.resultOne")
-                  : t("search.resultMany", { count: data.count }))}
-            </h2>
+        <ActiveFilterChips
+          filters={filters}
+          lookups={lookups}
+          onRemove={(keys) => change(Object.fromEntries(keys.map((key) => [key, ""])))}
+        />
+
+        <div className="lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-8 lg:items-start">
+          <aside
+            aria-label={t("search.filters")}
+            className="hidden lg:block sticky top-24 bg-bg-subtle border border-border rounded-lg p-5"
+          >
+            <h2 className="font-display font-bold text-base mb-4">{t("search.filters")}</h2>
+            <TutorFilters values={filters} lookups={lookups} onChange={change} />
             {activeFilters > 0 && (
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-fg-secondary">
-                  {activeFilters === 1
-                    ? t("search.filtersOne")
-                    : t("search.filtersMany", { count: activeFilters })}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setSearchParams(toSearchParams(clearFilters(filters)))}
-                  className="min-h-11 px-2 font-display font-semibold text-orange-text hover:underline cursor-pointer"
-                >
-                  {t("search.clearFilters")}
-                </button>
+              <button
+                type="button"
+                onClick={() => setSearchParams(toSearchParams(clearFilters(filters)))}
+                className="mt-4 min-h-11 font-display font-semibold text-orange-text hover:underline cursor-pointer"
+              >
+                {t("search.clearFilters")}
+              </button>
+            )}
+          </aside>
+
+          <section
+            id="results"
+            aria-labelledby="results-heading"
+            className="scroll-mt-24 flex flex-col gap-5"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 min-h-6">
+              <h2 id="results-heading" aria-live="polite" className="text-sm text-fg-secondary">
+                {state === "ready" &&
+                  (data.count === 1
+                    ? t("search.resultOne")
+                    : t("search.resultMany", { count: data.count }))}
+              </h2>
+            </div>
+
+            {state === "loading" && (
+              <div className={GRID} role="status" aria-label={t("home.tutorsLoading")}>
+                <TutorCardSkeleton />
+                <TutorCardSkeleton />
+                <TutorCardSkeleton />
               </div>
             )}
-          </div>
 
-          {state === "loading" && (
-            <div className={GRID} role="status" aria-label={t("home.tutorsLoading")}>
-              <TutorCardSkeleton />
-              <TutorCardSkeleton />
-              <TutorCardSkeleton />
-            </div>
-          )}
-
-          {state === "error" && (
-            <div className="max-w-md mx-auto flex flex-col items-center gap-4 py-8 text-center">
-              <Alert variant="error">{t("home.tutorsError")}</Alert>
-              <Button variant="outline" onClick={() => setReloadKey((key) => key + 1)}>
-                <RefreshCw className="w-4 h-4" aria-hidden />
-                {t("common.retry")}
-              </Button>
-            </div>
-          )}
-
-          {state === "ready" && data.results.length > 0 && (
-            <div className={GRID}>
-              {data.results.map((tutor) => (
-                <TutorCard key={tutor.id} {...tutor} />
-              ))}
-            </div>
-          )}
-
-          {state === "ready" && data.results.length === 0 && (
-            <div className="max-w-lg mx-auto text-center py-10 px-6 bg-bg-card rounded-lg border border-border flex flex-col items-center gap-3">
-              <div className="w-14 h-14 rounded-full bg-orange-light text-orange-text flex items-center justify-center">
-                <GraduationCap className="w-7 h-7" aria-hidden />
-              </div>
-              <h3 className="font-display font-bold text-lg">{t("search.empty.title")}</h3>
-              <p className="text-sm text-fg-secondary max-w-prose">
-                {hasCriteria ? t("search.empty.filtered") : t("search.empty.body")}
-              </p>
-              {hasCriteria ? (
-                <Button
-                  variant="outline"
-                  className="mt-2"
-                  onClick={() => {
-                    setText("");
-                    setSearchParams(new URLSearchParams());
-                  }}
-                >
-                  {t("search.clearFilters")}
+            {state === "error" && (
+              <div className="max-w-md mx-auto flex flex-col items-center gap-4 py-8 text-center">
+                <Alert variant="error">{t("home.tutorsError")}</Alert>
+                <Button variant="outline" onClick={() => setReloadKey((key) => key + 1)}>
+                  <RefreshCw className="w-4 h-4" aria-hidden />
+                  {t("common.retry")}
                 </Button>
-              ) : (
-                <Link to="/register" className="mt-2 inline-flex">
-                  <Button variant="outline">{t("home.empty.becomeTutor")}</Button>
-                </Link>
-              )}
-            </div>
-          )}
+              </div>
+            )}
 
-          {state === "ready" && totalPages > 1 && (
-            <nav
-              aria-label={t("search.pagination")}
-              className="flex items-center justify-between gap-3 pt-2"
-            >
-              <Button variant="ghost" disabled={page <= 1} onClick={() => goToPage(page - 1)}>
-                <ChevronLeft className="w-4 h-4" aria-hidden />
-                {t("search.prev")}
-              </Button>
-              <p className="text-sm text-fg-secondary tabular-nums">
-                {t("search.pageOf", { page, total: totalPages })}
-              </p>
-              <Button variant="ghost" disabled={page >= totalPages} onClick={() => goToPage(page + 1)}>
-                {t("search.next")}
-                <ChevronRight className="w-4 h-4" aria-hidden />
-              </Button>
-            </nav>
-          )}
-        </section>
+            {state === "ready" && data.results.length > 0 && (
+              <div className={GRID}>
+                {data.results.map((tutor) => (
+                  <TutorCard key={tutor.id} {...tutor} />
+                ))}
+              </div>
+            )}
+
+            {state === "ready" && data.results.length === 0 && (
+              <div className="max-w-lg mx-auto text-center py-10 px-6 bg-bg-card rounded-lg border border-border flex flex-col items-center gap-3">
+                <div className="w-14 h-14 rounded-full bg-orange-light text-orange-text flex items-center justify-center">
+                  <GraduationCap className="w-7 h-7" aria-hidden />
+                </div>
+                <h3 className="font-display font-bold text-lg">{t("search.empty.title")}</h3>
+                <p className="text-sm text-fg-secondary max-w-prose">
+                  {hasCriteria ? t("search.empty.filtered") : t("search.empty.body")}
+                </p>
+                {hasCriteria ? (
+                  <Button
+                    variant="outline"
+                    className="mt-2"
+                    onClick={() => {
+                      setText("");
+                      setSearchParams(new URLSearchParams());
+                    }}
+                  >
+                    {t("search.clearFilters")}
+                  </Button>
+                ) : (
+                  <Link to="/register" className="mt-2 inline-flex">
+                    <Button variant="outline">{t("home.empty.becomeTutor")}</Button>
+                  </Link>
+                )}
+              </div>
+            )}
+
+            {state === "ready" && totalPages > 1 && (
+              <nav
+                aria-label={t("search.pagination")}
+                className="flex items-center justify-between gap-3 pt-2"
+              >
+                <Button variant="ghost" disabled={page <= 1} onClick={() => goToPage(page - 1)}>
+                  <ChevronLeft className="w-4 h-4" aria-hidden />
+                  {t("search.prev")}
+                </Button>
+                <p className="text-sm text-fg-secondary tabular-nums">
+                  {t("search.pageOf", { page, total: totalPages })}
+                </p>
+                <Button
+                  variant="ghost"
+                  disabled={page >= totalPages}
+                  onClick={() => goToPage(page + 1)}
+                >
+                  {t("search.next")}
+                  <ChevronRight className="w-4 h-4" aria-hidden />
+                </Button>
+              </nav>
+            )}
+          </section>
+        </div>
       </main>
+
+      <BottomSheet
+        isOpen={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        title={t("search.filters")}
+        hideAt="lg"
+        footer={
+          <div className="flex gap-3">
+            <Button variant="ghost" onClick={() => setDraft({})}>
+              {t("search.clearFilters")}
+            </Button>
+            <Button className="flex-1" onClick={applyDraft}>
+              {t("search.apply")}
+            </Button>
+          </div>
+        }
+      >
+        <TutorFilters
+          values={draft}
+          lookups={lookups}
+          onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
+          liveFee
+        />
+      </BottomSheet>
 
       <BottomNav />
     </div>

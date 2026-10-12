@@ -59,3 +59,48 @@ def test_get_individual_lookup_lists(api_client):
     res_unis = api_client.get("/api/v1/lookups/universities/")
     assert res_unis.status_code == 200
     assert len(res_unis.json()) == 3
+
+
+def test_grouped_lookups_are_served_from_cache_after_the_first_request(
+    api_client, django_assert_num_queries
+):
+    call_command("seed_data")
+    first = api_client.get("/api/v1/lookups/").json()
+
+    with django_assert_num_queries(0):
+        second = api_client.get("/api/v1/lookups/").json()
+
+    assert second == first
+
+
+@pytest.mark.parametrize(
+    "make",
+    [
+        lambda: Area.objects.create(name_en="New Area", name_bn="নতুন", slug="new-area"),
+        lambda: Area.objects.get(slug="zindabazar").delete(),
+        lambda: Area.objects.get(slug="zindabazar").save(),
+    ],
+    ids=["create", "delete", "save"],
+)
+def test_changing_a_lookup_clears_the_cache(api_client, make):
+    call_command("seed_data")
+    api_client.get("/api/v1/lookups/")  # fills the cache
+
+    make()
+
+    after = api_client.get("/api/v1/lookups/").json()["areas"]
+    assert {a["slug"] for a in after} == set(
+        Area.objects.filter(is_active=True).values_list("slug", flat=True)
+    )
+
+
+def test_deactivating_through_the_admin_form_path_is_visible_immediately(api_client):
+    call_command("seed_data")
+    assert len(api_client.get("/api/v1/lookups/").json()["areas"]) == 14
+
+    area = Area.objects.get(slug="amberkhana")
+    area.is_active = False
+    area.save()
+
+    slugs = [a["slug"] for a in api_client.get("/api/v1/lookups/").json()["areas"]]
+    assert "amberkhana" not in slugs

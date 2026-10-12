@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -11,6 +12,9 @@ from .serializers import (
     SubjectSerializer,
     UniversitySerializer,
 )
+
+LOOKUPS_CACHE_KEY = "lookups:grouped:v1"
+LOOKUPS_CACHE_SECONDS = 60 * 60  # signals clear it on every save/delete, so this is only a ceiling
 
 
 class LookupsGroupedView(APIView):
@@ -30,18 +34,23 @@ class LookupsGroupedView(APIView):
         responses={200: LookupsGroupedSerializer},
     )
     def get(self, request):
-        data = {
-            "areas": Area.objects.filter(is_active=True).order_by("sort_order", "name_en"),
-            "subjects": Subject.objects.filter(is_active=True).order_by("sort_order", "name_en"),
-            "class_levels": ClassLevel.objects.filter(is_active=True).order_by(
-                "sort_order", "name_en"
-            ),
-            "universities": University.objects.filter(is_active=True).order_by(
-                "sort_order", "name_en"
-            ),
-        }
-        serializer = LookupsGroupedSerializer(data)
-        return Response(serializer.data)
+        payload = cache.get(LOOKUPS_CACHE_KEY)
+        if payload is None:
+            data = {
+                "areas": Area.objects.filter(is_active=True).order_by("sort_order", "name_en"),
+                "subjects": Subject.objects.filter(is_active=True).order_by(
+                    "sort_order", "name_en"
+                ),
+                "class_levels": ClassLevel.objects.filter(is_active=True).order_by(
+                    "sort_order", "name_en"
+                ),
+                "universities": University.objects.filter(is_active=True).order_by(
+                    "sort_order", "name_en"
+                ),
+            }
+            payload = LookupsGroupedSerializer(data).data
+            cache.set(LOOKUPS_CACHE_KEY, payload, LOOKUPS_CACHE_SECONDS)
+        return Response(payload)
 
 
 class AreaListView(APIView):

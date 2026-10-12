@@ -2,7 +2,14 @@ import React, { useEffect } from "react";
 import { X } from "lucide-react";
 import { useTranslation } from "../../i18n";
 
-export function BottomSheet({ isOpen, onClose, title, children }) {
+// Tailwind needs whole class names, so the breakpoint where the sheet gives way is a lookup
+const HIDE_AT = { md: "md:hidden", lg: "lg:hidden" };
+
+/**
+ * Mobile slide-up sheet. `hideAt` is where a desktop layout takes over (default md);
+ * `footer` stays pinned at the bottom (e.g. Apply / Clear).
+ */
+export function BottomSheet({ isOpen, onClose, title, children, footer, hideAt = "md" }) {
   const { t } = useTranslation();
   useEffect(() => {
     if (!isOpen) return;
@@ -30,7 +37,7 @@ export function BottomSheet({ isOpen, onClose, title, children }) {
       role="dialog"
       aria-modal="true"
       aria-label={title || "Bottom sheet dialog"}
-      className="fixed inset-0 z-50 md:hidden flex flex-col justify-end"
+      className={`fixed inset-0 z-50 ${HIDE_AT[hideAt] ?? HIDE_AT.md} flex flex-col justify-end`}
     >
       {/* Backdrop */}
       <div
@@ -62,6 +69,12 @@ export function BottomSheet({ isOpen, onClose, title, children }) {
 
         {/* Content */}
         <div>{children}</div>
+
+        {footer && (
+          <div className="sticky -bottom-8 -mx-5 -mb-8 mt-5 px-5 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] bg-bg-card border-t border-border-light">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );

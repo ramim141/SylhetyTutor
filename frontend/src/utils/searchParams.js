@@ -8,7 +8,7 @@ export const GENDERS = ["male", "female"];
 const TEXT_KEYS = ["q", "area", "subject", "class_level", "university"];
 const NUMBER_KEYS = ["fee_min", "fee_max"];
 // Filters shown as "applied" (the search box, sort and page are not filters)
-const FILTER_KEYS = ["area", "subject", "class_level", "university", "gender", ...NUMBER_KEYS];
+export const FILTER_KEYS = ["area", "subject", "class_level", "university", "gender", ...NUMBER_KEYS];
 
 function toWholeNumber(value) {
   return /^\d{1,9}$/.test(value ?? "") ? Number(value) : null;
