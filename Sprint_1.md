@@ -118,7 +118,7 @@ Sprint Plan এর Sprint 1 টেবিলের অর্ধেকের ব�
 | Password | Django এর ৪টা validator (৮+ অক্ষর, সাধারণ password নয়, শুধু সংখ্যা নয়, নামের মতো নয়) |
 | Phone বদল | `PATCH /auth/me/` এ phone ও role বদলানো যাবে না (পরে OTP দিয়ে) |
 | Login ব্যর্থ | ভুল phone ও ভুল password এ **একই** বার্তা — কোন phone এ account আছে বোঝা যাবে না |
-| Rate limit | Login: প্রতি IP মিনিটে ৫ বার, register: ঘণ্টায় ১০ বার (DRF throttle, cache এ) |
+| Rate limit | Login: প্রতি **account** (phone/email) এ মিনিটে ৫ বার, সাথে IP প্রতি মিনিটে ৬০ বার; register: IP প্রতি ঘণ্টায় ৩০ বার (DRF throttle, cache এ)। IP তে ৫ নয়, কারণ মোবাইল operator এ অনেক user এক IP (CGNAT) |
 | Token | Access ৩০ মিনিট, refresh ৭ দিন, rotate + blacklist (settings এ আগেই আছে)। Token এ `role` claim |
 | Token storage (frontend) | এখন `localStorage` (`src/api/tokens.js`); Sprint 8 এ refresh token httpOnly cookie তে |
 
@@ -204,7 +204,7 @@ Sprint Plan এর Sprint 1 টেবিলের অর্ধেকের ব�
 8. ভুল password ও অজানা phone → একই 401 বার্তা
 9. Refresh → নতুন access; logout এর পর পুরোনো refresh → 401
 10. `GET /auth/me/` token ছাড়া → 401, token সহ → নিজের data; `PATCH` এ `role`/`phone` বদলায় না
-11. Login এ ৬ষ্ঠ চেষ্টা → 429
+11. একই account এ ৬ষ্ঠ ভুল চেষ্টা → 429 (`retry_after` সহ); একই IP র অন্য user আটকায় না
 12. `seed_data` দুইবার চালালে সংখ্যা একই (১২ / ৫ / ১৪ / ৩)
 
 ---
@@ -267,7 +267,7 @@ Sprint Plan এর Sprint 1 টেবিলের অর্ধেকের ব�
 - [ ] Logout → `/dashboard` খুললে `/login` এ ফেরত
 - [ ] `01712345678` দিয়ে login → dashboard; email দিয়ে login (বড় হাতের অক্ষরে) → dashboard
 - [ ] ভুল password → তিন ভাষাতেই ঠিক বার্তা
-- [ ] ৬ বার ভুল login → "অনেকবার চেষ্টা" বার্তা
+- [ ] একই account এ ৬ বার ভুল login → "অনেকবার চেষ্টা" বার্তা
 - [ ] EN / বাং / Mixed বদলে login ও register page এ সব লেখা বদলায়, layout ভাঙে না
 - [ ] 360px ফোনে ও desktop এ; light ও dark দুই theme
 - [ ] Access token মেয়াদ শেষ হলে (test এর জন্য `ACCESS_TOKEN_LIFETIME=1`) নিজে refresh, user টের পায় না
