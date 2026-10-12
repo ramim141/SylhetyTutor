@@ -26,6 +26,7 @@ python -m pytest -q                              # SQLite by default, no Docker/
 python -m ruff check . && python -m ruff format --check .
 python manage.py makemigrations --check --dry-run   # must print "No changes detected"
 python manage.py seed_data                       # 14 areas, 12 subjects, 5 class levels, 3 universities (idempotent)
+python manage.py seed_demo                       # 30 demo tutors (26 approved), local/staging only; --reset removes them
 
 # Frontend (from frontend/) — needs Node >= 24
 npm ci
