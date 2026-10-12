@@ -6,7 +6,8 @@ Two developers (@ramim141, @Mahdi-HasanIO), monorepo, 8-sprint MVP. Mobile-first
 Source of truth for scope and design (read before building a feature):
 `SylhetyTutor — System Architecture Document.md` (models §3, API §4, rules §8.8) ·
 `SylhetyTutor Sprint Plan.md` (what each sprint delivers) · `DESIGN.md` (colors, components, UI rules) ·
-`Sprint_1.md` (API contract and auth rules) · `Sprint_2.md` (tutor search contract). Where docs and code disagree, code is current; fix the doc.
+`Sprint_1.md` (API contract and auth rules) · `Sprint_2.md` (tutor search contract) · `Sprint_3.md` (tutor profile, uploads) ·
+`PROJECT_STATUS.md` (what exists today, known gaps). Where docs and code disagree, code is current; fix the doc.
 
 ## Layout
 
@@ -65,6 +66,11 @@ Breaking an endpoint's shape means updating `Sprint_1.md`/Swagger and the fronte
 - imgBB (profile photos, `IMGBB_API_KEY`) is a **public** host: never send NID, student-ID or any identity document there. Those stay in `PRIVATE_MEDIA_ROOT`.
 - No invented numbers: no fake ratings, counts or testimonials. No review → show "New", not 0.0 or 5.0.
 - Login is throttled per account (5/min), not per IP: mobile carriers share IPs (CGNAT).
+
+**Keep `PROJECT_STATUS.md` current.** It is the one-page record of what exists. In the *same commit* as any change that
+adds, removes or changes a feature, endpoint, page, command, decision or known gap, update it: the sprint table, the
+relevant section, the gaps table, a dated line at the top of "পরিবর্তনের তালিকা", and the "শেষ হালনাগাদ" line with the
+real test counts. Never mark something verified that was not (browser, Postgres, imgBB key…): say what was and was not.
 
 **Tests ship with the change.** Backend: pytest + permission tests for any endpoint. Frontend: Vitest + Testing
 Library; mock `api/*` modules in page/route tests (no real network). Prefer fixing the cause over loosening a test.
