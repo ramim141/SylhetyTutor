@@ -4,12 +4,17 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Search from "./pages/Search";
-import TutorProfile from "./pages/TutorProfile";
-import TutorRegistration from "./pages/TutorRegistration";
-import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { RouteFallback } from "./components/layout/RouteFallback";
 import { useAuthStore } from "./store/authStore";
+
+// The first pages a visitor sees (Home, Search, Login, Register) load with the app. The rest are
+// fetched when first opened, which keeps the first download small on a slow phone connection.
+const TutorProfile = lazy(() => import("./pages/TutorProfile"));
+const TutorRegistration = lazy(() => import("./pages/TutorRegistration"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Notifications = lazy(() => import("./pages/Notifications"));
 
 // Component gallery for development only; not included in the production bundle
 const DevUI = import.meta.env.DEV ? lazy(() => import("./pages/DevUI")) : null;
@@ -22,39 +27,49 @@ export default function App() {
   }, [loadUser]);
 
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/tutors" element={<Search />} />
-      <Route path="/tutors/:slug" element={<TutorProfile />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route
-        path="/tutor/profile"
-        element={
-          <ProtectedRoute>
-            <TutorRegistration />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-      {DevUI && (
+    <Suspense fallback={<RouteFallback />}>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/tutors" element={<Search />} />
+        <Route path="/tutors/:slug" element={<TutorProfile />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route
-          path="/dev/ui"
+          path="/tutor/profile"
           element={
-            <Suspense fallback={null}>
-              <DevUI />
-            </Suspense>
+            <ProtectedRoute>
+              <TutorRegistration />
+            </ProtectedRoute>
           }
         />
-      )}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <Notifications />
+            </ProtectedRoute>
+          }
+        />
+        {DevUI && (
+          <Route
+            path="/dev/ui"
+            element={
+              <Suspense fallback={null}>
+                <DevUI />
+              </Suspense>
+            }
+          />
+        )}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
   );
 }

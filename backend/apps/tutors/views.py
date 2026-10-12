@@ -15,6 +15,7 @@ from rest_framework.views import APIView
 from apps.accounts.permissions import IsTutor
 from apps.accounts.throttles import DocumentUploadThrottle
 
+from . import review
 from .documents import DOCUMENT_FIELDS, clean_document_image, document_response, private_storage
 from .exceptions import AlreadySubmitted, ProfileLocked
 from .filters import SORT_ORDERINGS, TutorFilterSet
@@ -209,6 +210,7 @@ class TutorSubmitView(APIView):
         profile.submitted_at = timezone.now()
         profile.rejection_reason = ""
         profile.save(update_fields=["verification_status", "submitted_at", "rejection_reason"])
+        review.record_submission(profile, request.user)
         return Response(TutorMeSerializer(profile).data, status=status.HTTP_200_OK)
 
 

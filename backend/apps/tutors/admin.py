@@ -1,16 +1,41 @@
-from django.contrib import admin
+from django import forms
+from django.contrib import admin, messages
+from django.contrib.admin.helpers import ActionForm
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
 from django.urls import path, reverse
 from django.utils.html import format_html, format_html_join
 
+from . import review
 from .documents import document_response
-from .models import TutorAvailability, TutorProfile
+from .models import TutorAvailability, TutorProfile, VerificationEvent
 
 
 class TutorAvailabilityInline(admin.TabularInline):
     model = TutorAvailability
     extra = 0
+
+
+class VerificationEventInline(admin.TabularInline):
+    model = VerificationEvent
+    extra = 0
+    can_delete = False
+    fields = ("created_at", "action", "actor", "reason")
+    readonly_fields = fields
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+class ReviewActionForm(ActionForm):
+    reason = forms.CharField(
+        required=False,
+        label="Reason",
+        widget=forms.TextInput(attrs={"placeholder": "Required to reject; the tutor sees it"}),
+    )
 
 
 @admin.register(TutorProfile)
@@ -37,8 +62,18 @@ class TutorProfileAdmin(admin.ModelAdmin):
         "department",
     )
     filter_horizontal = ("subjects", "class_levels", "areas")
-    inlines = [TutorAvailabilityInline]
-    readonly_fields = ("submitted_at", "verified_at", "verified_by", "document_links")
+    inlines = [TutorAvailabilityInline, VerificationEventInline]
+    action_form = ReviewActionForm
+    actions = ["approve_profiles", "reject_profiles"]
+    # Status changes only through the approve / reject actions, so each one is recorded and told
+    readonly_fields = (
+        "verification_status",
+        "rejection_reason",
+        "submitted_at",
+        "verified_at",
+        "verified_by",
+        "document_links",
+    )
     fieldsets = (
         ("User Association", {"fields": ("user", "gender")}),
         (
@@ -82,6 +117,39 @@ class TutorProfileAdmin(admin.ModelAdmin):
             },
         ),
     )
+
+    def get_queryset(self, request):
+        # a draft is still being written by the tutor: admins never see it (Sprint_1.md)
+        return (
+            super()
+            .get_queryset(request)
+            .exclude(verification_status=TutorProfile.VerificationStatus.DRAFT)
+            .select_related("user", "university")
+        )
+
+    def _decide(self, request, queryset, decide):
+        done = 0
+        for profile in queryset:
+            try:
+                decide(profile)
+            except review.ReviewError as exc:
+                self.message_user(request, f"{profile}: {exc}", messages.ERROR)
+            else:
+                done += 1
+        return done
+
+    @admin.action(description="Approve selected pending profiles")
+    def approve_profiles(self, request, queryset):
+        done = self._decide(request, queryset, lambda p: review.approve(p, request.user))
+        if done:
+            self.message_user(request, f"{done} profile(s) approved.", messages.SUCCESS)
+
+    @admin.action(description="Reject selected profiles (write the reason first)")
+    def reject_profiles(self, request, queryset):
+        reason = request.POST.get("reason", "")
+        done = self._decide(request, queryset, lambda p: review.reject(p, request.user, reason))
+        if done:
+            self.message_user(request, f"{done} profile(s) rejected.", messages.SUCCESS)
 
     @admin.display(description="Tutor Name", ordering="user__full_name")
     def get_full_name(self, obj):

@@ -68,6 +68,7 @@ LOCAL_APPS = [
     "apps.accounts",
     "apps.lookups",
     "apps.tutors",
+    "apps.notifications",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -164,6 +165,20 @@ MEDIA_ROOT = BASE_DIR / "media"
 # they are only ever streamed by an authenticated view (see apps/tutors/documents.py).
 # Production needs a persistent volume (or a private bucket, Sprint 8).
 PRIVATE_MEDIA_ROOT = Path(os.getenv("PRIVATE_MEDIA_ROOT", BASE_DIR / "private_media"))
+
+# Where the web app lives: emails link here
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+# Email (for users who gave an address; development prints to the console). Production sends
+# through SMTP: set EMAIL_HOST, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, DEFAULT_FROM_EMAIL.
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+EMAIL_HOST = os.getenv("EMAIL_HOST", "localhost")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True") == "True"
+EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "10"))
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "SylhetyTutor <no-reply@sylhetytutor.com>")
 
 # Profile photos go to imgBB (a public host: never send identity documents there).
 # Without a key the avatar endpoint answers 503 `uploads_unavailable`.
