@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     DocumentDownloadView,
+    TutorDetailView,
     TutorDocumentView,
     TutorListView,
     TutorMeView,
@@ -18,4 +19,6 @@ urlpatterns = [
     path(
         "documents/<uuid:profile_id>/<str:kind>/", DocumentDownloadView.as_view(), name="document"
     ),
+    # Last: any other word under /tutors/ is a profile address (slugs.RESERVED keeps the above free)
+    path("<slug:slug>/", TutorDetailView.as_view(), name="detail"),
 ]

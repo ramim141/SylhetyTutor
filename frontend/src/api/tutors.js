@@ -9,3 +9,12 @@ export async function getTutors(params = {}, config = {}) {
   const response = await api.get("/tutors/", { ...config, params });
   return response.data;
 }
+
+/**
+ * One tutor's public profile (no phone, email or documents).
+ * Rejects with a 404 response when the address is unknown or the tutor is not listed.
+ */
+export async function getTutor(slug, config = {}) {
+  const response = await api.get(`/tutors/${encodeURIComponent(slug)}/`, config);
+  return response.data;
+}

@@ -1,9 +1,10 @@
 import { Star, CheckCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Badge } from "../ui/Badge";
-import { Button } from "../ui/Button";
 import { useTranslation } from "../../i18n";
 
 export function TutorCard({
+  slug,
   name,
   initials,
   avatarUrl,
@@ -22,7 +23,7 @@ export function TutorCard({
 
   return (
     <div
-      className={`relative rounded-lg p-5 shadow-card hover:shadow-md transition-all duration-200 flex flex-col justify-between ${
+      className={`group relative rounded-lg p-5 shadow-card hover:shadow-md transition-all duration-200 flex flex-col justify-between ${
         isFeatured
           ? "border-2 border-featured-border bg-featured-bg"
           : "border border-border bg-bg-card"
@@ -57,7 +58,17 @@ export function TutorCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
               <h3 className="font-display font-bold text-base text-fg truncate">
-                {name}
+                {slug ? (
+                  // Stretched link: the whole card is the click target, one link for screen readers
+                  <Link
+                    to={`/tutors/${slug}`}
+                    className="after:absolute after:inset-0 after:rounded-lg focus-visible:after:ring-2 focus-visible:after:ring-orange"
+                  >
+                    {name}
+                  </Link>
+                ) : (
+                  name
+                )}
               </h3>
               {isVerified && (
                 <span title={t("card.verifiedTitle")} className="inline-flex">
@@ -117,9 +128,13 @@ export function TutorCard({
       </div>
 
       {/* Action Button */}
-      <Button variant="outline" className="w-full">
+      {/* Looks like a button; the stretched link above is what is actually clicked */}
+      <span
+        aria-hidden
+        className="inline-flex items-center justify-center w-full min-h-11 px-6 rounded-md border-2 border-orange text-orange-text font-display font-semibold text-sm transition-colors group-hover:bg-orange-pale"
+      >
         {t("card.viewProfile")}
-      </Button>
+      </span>
     </div>
   );
 }

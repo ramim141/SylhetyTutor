@@ -198,7 +198,7 @@ class Command(BaseCommand):
         user.set_unusable_password()
         user.save(update_fields=["password"])
 
-        profile, _ = TutorProfile.objects.update_or_create(
+        profile, created = TutorProfile.objects.update_or_create(
             user=user,
             defaults={
                 "gender": spec["gender"],
@@ -222,6 +222,10 @@ class Command(BaseCommand):
         profile.areas.set(Area.objects.filter(slug__in=spec["areas"]))
         profile.subjects.set(Subject.objects.filter(slug__in=spec["subjects"]))
         profile.class_levels.set(ClassLevel.objects.filter(slug__in=spec["classes"]))
+        if created and profile.slug:
+            # the slug was made before the subjects existed; make it again, once, with them
+            profile.slug = None
+            profile.save()
         profile.availability.all().delete()
         TutorAvailability.objects.bulk_create(
             TutorAvailability(tutor=profile, day=day, slot=slot)

@@ -25,6 +25,7 @@ class TutorCardSerializer(serializers.ModelSerializer):
         model = TutorProfile
         fields = [
             "id",
+            "slug",
             "name",
             "initials",
             "avatarUrl",
@@ -197,3 +198,69 @@ class TutorMeUpdateSerializer(serializers.Serializer):
                 TutorAvailability(tutor=profile, day=day, slot=slot) for day, slot in sorted(wanted)
             )
         return profile
+
+
+class LookupNameSerializer(serializers.Serializer):
+    """A subject / class / area with both names, so the page can pick the user's language."""
+
+    slug = serializers.CharField()
+    name_en = serializers.CharField()
+    name_bn = serializers.CharField()
+
+
+class UniversityNameSerializer(LookupNameSerializer):
+    short_name = serializers.CharField()
+
+
+class TutorPublicSerializer(serializers.ModelSerializer):
+    """
+    What anyone may see on a tutor's public page. It lists its fields on purpose (never
+    `__all__`): contact details, student-ID number, documents and review state stay out.
+    """
+
+    name = serializers.CharField(source="user.full_name", read_only=True)
+    initials = serializers.CharField(read_only=True)
+    avatarUrl = serializers.SerializerMethodField()
+    university = UniversityNameSerializer(read_only=True)
+    subjects = LookupNameSerializer(many=True, read_only=True)
+    classLevels = LookupNameSerializer(source="class_levels", many=True, read_only=True)
+    areas = LookupNameSerializer(many=True, read_only=True)
+    availability = serializers.SerializerMethodField()
+    rating = serializers.FloatField(source="rating_avg", read_only=True)
+    reviewCount = serializers.IntegerField(source="review_count", read_only=True)
+    feeMin = serializers.IntegerField(source="fee_min", read_only=True)
+    feeMax = serializers.IntegerField(source="fee_max", read_only=True)
+    isFeatured = serializers.BooleanField(source="is_featured", read_only=True)
+    isVerified = serializers.BooleanField(source="is_verified", read_only=True)
+
+    class Meta:
+        model = TutorProfile
+        fields = [
+            "id",
+            "slug",
+            "name",
+            "initials",
+            "avatarUrl",
+            "gender",
+            "university",
+            "department",
+            "year",
+            "bio",
+            "feeMin",
+            "feeMax",
+            "subjects",
+            "classLevels",
+            "areas",
+            "availability",
+            "rating",
+            "reviewCount",
+            "isFeatured",
+            "isVerified",
+        ]
+
+    def get_avatarUrl(self, obj):
+        return obj.user.avatar_url or None
+
+    def get_availability(self, obj):
+        slots = sorted(obj.availability.all(), key=lambda a: (DAY_ORDER[a.day], SLOT_ORDER[a.slot]))
+        return [{"day": a.day, "slot": a.slot} for a in slots]

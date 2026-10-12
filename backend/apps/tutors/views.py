@@ -5,7 +5,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import serializers, status
 from rest_framework.exceptions import ErrorDetail
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -24,6 +24,7 @@ from .serializers import (
     TutorCardSerializer,
     TutorMeSerializer,
     TutorMeUpdateSerializer,
+    TutorPublicSerializer,
 )
 
 
@@ -87,6 +88,35 @@ class TutorListView(ListAPIView):
             OpenApiParameter("page", int),
             OpenApiParameter("page_size", int, description="Default 20, maximum 50"),
         ],
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+
+class TutorDetailView(RetrieveAPIView):
+    """A tutor's public page. Only verified tutors with an active account have one."""
+
+    permission_classes = [AllowAny]
+    serializer_class = TutorPublicSerializer
+    lookup_field = "slug"
+
+    def get_queryset(self):
+        return (
+            TutorProfile.objects.filter(
+                verification_status=TutorProfile.VerificationStatus.APPROVED,
+                user__is_active=True,
+            )
+            .select_related("user", "university")
+            .prefetch_related("subjects", "class_levels", "areas", "availability")
+        )
+
+    @extend_schema(
+        tags=["tutors"],
+        summary="A tutor's public profile",
+        description=(
+            "No phone, email, address, student-ID number or documents: contact opens only "
+            "after a booked demo (Architecture Doc §8.8). Anything not public answers 404."
+        ),
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)

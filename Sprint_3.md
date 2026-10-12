@@ -10,7 +10,7 @@
 | `GET/PATCH /tutors/me/` (ধাপে ধাপে draft save) ও `POST /tutors/me/submit/` | ✅ |
 | NID ও Student ID upload (private storage, ৫ MB, আসল ছবি কি না যাচাই, EXIF মোছা) | ✅ |
 | Profile photo (avatar): 512px বর্গ, imgBB তে | ✅ |
-| `GET /tutors/{slug}/` public profile, slug | ⏳ |
+| `GET /tutors/{slug}/` public profile, slug; কার্ড ক্লিক করলে profile; profile page (`/tutors/:slug`) | ✅ |
 | Frontend: ৬-ধাপের form, upload component, profile page, dashboard status card | ⏳ |
 
 ## 📝 Contract — নিজের profile (শুধু `role=tutor`; অন্যরা 403, ছাড়া 401)
@@ -81,3 +81,13 @@
 - **ব্যর্থতা**: imgBB ডাউন/অস্বীকার/ভুল উত্তর/`https` ছাড়া URL → 502 `upload_failed`, আগের ছবি অক্ষত; উত্তরে key বা imgBB এর কাঁচা লেখা থাকে না। Throttle: মিনিটে ৫টা।
 - **সীমা (সৎভাবে)**: ছবি সরালে বা বদলালে সাইট সাথে সাথে নতুনটা দেখায়, কিন্তু **imgBB তে পুরোনো কপি থেকে যায়** (স্বয়ংক্রিয় মোছা নেই)। দরকারে `avatar_delete_url` (Django admin এ দেখা যায়) দিয়ে হাতে মুছতে হবে।
 - **যাচাই বাকি**: আসল imgBB key দিয়ে একবার চালানো। এখনকার test সব imgBB mock করে।
+
+## 🌐 Public profile — `GET /api/v1/tutors/{slug}/`
+
+- **Slug**: নাম + সর্বোচ্চ দুটো subject, যেমন `rahim-uddin-physics-math`; একই হলে `-2`, `-3`। **প্রথমবার `approved` হওয়ার সময় একবার** বানানো হয় (Django admin এ status বদলালেও `save()` তে), তারপর **কখনো বদলায় না** — tutor subject বদলালেও শেয়ার করা লিঙ্ক চলে। বাংলা নামের (ল্যাটিন অক্ষর নেই) slug শুধু subject থেকে, তাও না থাকলে `tutor`। `me`, `documents`, `featured`, `area`, `subject`, `register` কখনো slug হয় না (এই ঠিকানাগুলোর আলাদা মানে আছে)। `draft`/`pending`/`rejected` এর slug নেই।
+- **Response** (শুধু এই field গুলো, `__all__` নয়): `id, slug, name, initials, avatarUrl, gender, university{slug,name_en,name_bn,short_name}, department, year, bio, feeMin, feeMax, subjects[{slug,name_en,name_bn}], classLevels[…], areas[…], availability[{day,slot}], rating, reviewCount, isFeatured, isVerified`। দুই ভাষার নাম আসে, page নিজে ভাষা বাছে।
+- **কখনো আসে না**: phone, email, ঠিকানা, `student_id_number`, NID/Student ID, status, rejection reason, `verified_by`, `delete_url` (টেস্টে ঠিক এই তালিকা ধরে যাচাই করা)।
+- **404** (একই standard shape): অজানা ঠিকানা, `draft`/`pending`/`rejected`, বা suspended account।
+- **Search card** এ এখন `slug` আছে; কার্ডের পুরোটাই একটা লিঙ্ক (নামের উপর stretched link, screen reader এ একটাই link)।
+- **Frontend `/tutors/:slug`**: header (ছবি/আদ্যক্ষর, নাম, ✓, university · department · বর্ষ, "New" বা আসল rating, fee), পরিচিতি, বিষয়/শ্রেণি/এলাকা, সাপ্তাহিক সময়সূচি (শনি থেকে শুক্র × সকাল/দুপুর/সন্ধ্যা; ✓ ও – চিহ্ন, শুধু রঙ নয়), review (খালি, সৎ বার্তা), "ফোন নম্বর গোপন থাকে" নোট। ফাঁকা অংশ (bio, subject…) দেখানো হয় না। অজানা ঠিকানায় বন্ধুত্বপূর্ণ পাতা, নেটওয়ার্ক সমস্যায় retry। Back লিঙ্ক আগের search (filter সহ) এ ফেরে।
+- **এখনো নেই**: যোগাযোগ/আবেদন বাটন (Sprint 4–5), review (Sprint 7), পাতার SEO meta/JSON-LD (Sprint 7)।

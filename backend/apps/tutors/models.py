@@ -11,6 +11,8 @@ from django.db import models
 from apps.lookups.models import Area, ClassLevel, Subject, University
 
 from .documents import document_upload_to, private_storage
+from .slugs import MAX_LENGTH as SLUG_MAX_LENGTH
+from .slugs import build_slug
 
 
 class TutorProfile(models.Model):
@@ -44,6 +46,8 @@ class TutorProfile(models.Model):
     department = models.CharField(max_length=150, blank=True)
     year = models.CharField(max_length=50, blank=True, help_text="e.g. 3rd Year")
     student_id_number = models.CharField(max_length=50, blank=True)
+    # Public address, made when the profile is first approved and never changed (see slugs.py)
+    slug = models.SlugField(max_length=SLUG_MAX_LENGTH, unique=True, null=True, blank=True)
     # Identity documents: private storage, no URL (see documents.py)
     nid_photo = models.FileField(
         upload_to=document_upload_to, storage=private_storage, blank=True, max_length=255
@@ -94,6 +98,13 @@ class TutorProfile(models.Model):
     def __str__(self):
         uni = self.university.short_name if self.university else "Tutor"
         return f"{self.user.full_name} ({uni})"
+
+    def save(self, *args, **kwargs):
+        if self.verification_status == self.VerificationStatus.APPROVED and not self.slug:
+            self.slug = build_slug(self, TutorProfile)
+            if kwargs.get("update_fields") is not None:
+                kwargs["update_fields"] = {*kwargs["update_fields"], "slug"}
+        super().save(*args, **kwargs)
 
     # Fields an approved profile must have (checked in clean(), so Django admin cannot skip them)
     REQUIRED_FIELDS = (
