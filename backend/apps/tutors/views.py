@@ -304,4 +304,8 @@ class DocumentDownloadView(APIView):
         profile = TutorProfile.objects.filter(pk=profile_id).select_related("user").first()
         if profile is None or not (is_admin or profile.user_id == user.pk):
             raise Http404
-        return document_response(profile, kind)
+        response = document_response(profile, kind)
+        if profile.user_id != user.pk:
+            # the owner reading their own scan is not worth a row; an admin reading it is
+            review.record_document_view(profile, user, kind)
+        return response

@@ -36,6 +36,14 @@ def custom_exception_handler(exc, context):
     if response.status_code == 403:
         custom_data["detail"] = "You do not have permission to perform this action."
         custom_data["code"] = "permission_denied"
+        # a view that raised PermissionDenied with its own code (e.g. self_approval) keeps it
+        own_code = exc.get_codes() if hasattr(exc, "get_codes") else None
+        if isinstance(own_code, dict):
+            own_code = own_code.get("detail")
+        if isinstance(own_code, str) and own_code != "permission_denied":
+            custom_data["code"] = own_code
+            if isinstance(data, dict) and data.get("detail"):
+                custom_data["detail"] = str(data["detail"])
         response.data = custom_data
         return response
 
@@ -77,6 +85,10 @@ def custom_exception_handler(exc, context):
         if "detail" in data and not fields_dict:
             custom_data["detail"] = str(data["detail"])
             custom_data["code"] = getattr(data.get("detail"), "code", "invalid")
+        elif "detail" in data:
+            # a named error that also lists fields (e.g. incomplete_profile)
+            custom_data["detail"] = str(data["detail"])
+            custom_data["code"] = getattr(data["detail"], "code", "invalid")
 
         response.data = custom_data
 

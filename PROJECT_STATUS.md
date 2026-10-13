@@ -1,7 +1,7 @@
 # SylhetyTutor — প্রজেক্টের বর্তমান অবস্থা
 
 > **শেষ হালনাগাদ:** 2026-10-12 · **Branch:** `sprint-1-fursuu` (push করা, `main`-এ এখনো PR খোলা হয়নি)
-> **Test:** backend 253 · frontend 295 · সব পাস (backend SQLite **ও** PostgreSQL 16.15-এ); ruff, oxlint, build, `makemigrations --check` পরিষ্কার
+> **Test:** backend 276 · frontend 295 · সব পাস (backend SQLite **ও** PostgreSQL 16.15-এ); ruff, oxlint, build, `makemigrations --check` পরিষ্কার
 >
 > এই ফাইলই "এখন পর্যন্ত কী হয়েছে" এর একমাত্র সংক্ষিপ্ত রেকর্ড। **কোনো feature, endpoint, পাতা, command, সিদ্ধান্ত বা জানা-সমস্যা বদলালে একই commit-এ এটা হালনাগাদ করতে হবে** (নিচের "পরিবর্তনের তালিকা"-য় এক লাইন + উপরের তারিখ ও test সংখ্যা)। বিস্তারিত contract আছে `Sprint_1.md`, `Sprint_2.md`, `Sprint_3.md`-এ; নিয়মকানুন `CLAUDE.md`-এ।
 
@@ -29,11 +29,12 @@
 | Public profile | `GET tutors/{slug}/` (শুধু approved) |
 | নিজের profile | `GET/PATCH tutors/me/` · `POST tutors/me/submit/` |
 | NID / Student ID | `PUT/DELETE tutors/me/documents/{nid|student_id}/` · `GET tutors/documents/{id}/{kind}/` (শুধু মালিক ও admin) |
+| Admin verification | `GET admin/approvals/?status=` (pending ডিফল্ট, পুরোনো জমা আগে, `counts` সহ) · `GET admin/approvals/{id}/` · `POST …/approve/` · `POST …/reject/ {reason}` (শুধু admin; draft কখনো নয়) |
 | Notification | `GET notifications/` (+`unread_count`) · `GET notifications/unread-count/` · `POST notifications/read-all/` · `POST notifications/{id}/read/` (শুধু নিজেরটা; অন্যেরটা 404) |
 | অন্যান্য | `GET health/` (DB + cache) · `api/docs/` (Swagger) · Django admin |
 
 - **Model:** `User` (UUID, phone/email, role), `Area/Subject/ClassLevel/University`, `TutorProfile` (`draft → pending → approved/rejected`), `TutorAvailability`, `VerificationEvent` (জমা/approve/reject-এর audit), `Notification` (kind + data; লেখা frontend বানায়)।
-- **Admin verification:** Django admin-এ শুধু জমা-দেওয়া (draft নয়) profile দেখায়; status হাতে বদলানো যায় না, শুধু "Approve" / "Reject" action (reject-এ কারণ বাধ্যতামূলক); প্রতিটি সিদ্ধান্ত `VerificationEvent`-এ ও tutor-কে notification + (email থাকলে) তাঁর ভাষায় email। Mail সার্ভার ব্যর্থ হলে সিদ্ধান্ত আটকায় না। নিয়ম `apps/tutors/review.py`-এ।
+- **Admin verification:** Django admin-এ শুধু জমা-দেওয়া (draft নয়) profile দেখায়; status হাতে বদলানো যায় না, শুধু "Approve" / "Reject" action (reject-এ কারণ বাধ্যতামূলক); প্রতিটি সিদ্ধান্ত `VerificationEvent`-এ ও tutor-কে notification + (email থাকলে) তাঁর ভাষায় email। Mail সার্ভার ব্যর্থ হলে সিদ্ধান্ত আটকায় না। নিয়ম `apps/tutors/review.py`-এ; React-এর জন্য একই service-এর ওপর admin API (error code: `not_pending`, `incomplete_profile` + `fields`, `self_approval` 403, reason `required`/`too_short`/`too_long` — ১০–৫০০ অক্ষর)। Admin অন্যের NID/ID পড়লে `VerificationEvent(document_viewed)` লেখা হয় (মালিক নিজে পড়লে নয়)।
 - **Command:** `seed_data` (১৪ area, ১২ subject, ৫ class, ৩ university) · `seed_demo` (৩০ demo tutor, ২৬ approved; production-এ চলে না; `--reset`)।
 - **নিরাপত্তা (বাস্তবায়িত ও test করা):** login প্রতি account-এ ৫/মিনিট; password change/upload throttle; error shape `{detail, code, fields}`; `admin` role API দিয়ে নয়; approved profile অসম্পূর্ণ হতে পারে না (model `clean()`-এ, তাই Django admin ও `full_clean` আটকায়; ডাটাবেস-স্তরে constraint নয়); public profile ও card-এ phone/email/ID কখনো নেই (allow-list)।
 - **NID/Student ID:** `PRIVATE_MEDIA_ROOT`-এ (`MEDIA_ROOT`-এর বাইরে, কোনো URL নেই), আসল ছবি কি না decode করে যাচাই, ৫ MB, EXIF মুছে JPEG, এলোমেলো নাম, pending/approved-এ লক, profile মুছলে ফাইলও মোছে, admin-এ session-সুরক্ষিত লিঙ্ক।
@@ -70,7 +71,7 @@
 | --- | --- |
 | Password reset | নেই (SMS স্থগিত; Sprint 4–5-এ email) |
 | imgBB ছবি মোছা | সরালে/বদলালে সাইট নতুনটা দেখায়, কিন্তু imgBB-তে পুরোনো কপি থাকে (imgBB-র স্বয়ংক্রিয় delete API নেই; `avatar_delete_url` শুধু DB-তে, কখনো expose হয় না) — সীমাবদ্ধতা, বাইরের নির্ভরতা |
-| Admin UI | verification এখন শুধু Django admin; React admin পাতা নেই |
+| Admin UI | admin API তৈরি, কিন্তু React admin পাতা (queue, detail, document viewer) এখনো নেই; আপাতত Django admin |
 | Notification | শুধু approve/reject; bell ফোকাসে/লোডে refresh হয়, লাইভ push/polling নেই; admin-কে "নতুন জমা" নোটিশ নেই |
 | Bundle | main 496 kB (gzip 153 kB), বাকি পাতা আলাদা chunk; লক্ষ্য <200 kB gzip এর ভেতরে প্রায় আছে, আসল ফোন/নেটওয়ার্কে মাপা হয়নি |
 | Production-এর আগে | `PRIVATE_MEDIA_ROOT` persistent volume (বা private bucket) + backup; Nginx-এ কখনো খোলা নয় |
@@ -84,6 +85,7 @@
 
 ## পরিবর্তনের তালিকা (নতুনটা উপরে যোগ হবে)
 
+- **2026-10-13** — Sprint 4 Part 1: admin approvals API (list/detail/approve/reject), verification error code (`not_pending`, `incomplete_profile`, `self_approval`), reason ১০–৫০০, `document_viewed` audit; exception handler এখন custom 403/409 code রাখে। Backend 276 (SQLite ও Postgres 16 দুটোতেই)। React admin পাতা পরের part।
 - **2026-10-12** — Stabilize + Sprint 4 (আংশিক), commit হয়নি: Search কার্ড তিন ভাষায় (API কার্ড এখন object পাঠায় — `Sprint_2.md` দেখুন), হার্ডকোডেড `aria-label` ঠিক, Register-এ password-similarity, route-ভিত্তিক lazy-load ও অব্যবহৃত `react-hook-form` বাদ, admin verification (approve/reject + কারণ + audit) ও notification (API, email, bell, `/notifications`), Postgres 16-এ suite যাচাই।
 - **2026-10-12** — Sprint 3 শেষ: ৬-ধাপের registration form, ছবি ও NID/ID upload, dashboard status কার্ড, public profile ও slug, `seed_demo`-র ছবি; imgBB-তে avatar।
 - **2026-10-12** — Sprint 2 শেষ: search API ও `/tutors` পাতা, filter sidebar/sheet, Home ↔ Search, `seed_demo`, lookups cache।
