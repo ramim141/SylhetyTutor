@@ -1,0 +1,43 @@
+"""
+Custom permission classes for role-based access control.
+Architecture Doc Section 3.1 & Sprint_1.md.
+"""
+
+from rest_framework.permissions import BasePermission
+
+from .models import User
+
+
+class IsGuardian(BasePermission):
+    def has_permission(self, request, view):
+        return bool(
+            request.user
+            and request.user.is_authenticated
+            and request.user.role == User.Role.GUARDIAN
+        )
+
+
+class IsTutor(BasePermission):
+    def has_permission(self, request, view):
+        return bool(
+            request.user and request.user.is_authenticated and request.user.role == User.Role.TUTOR
+        )
+
+
+class IsAdmin(BasePermission):
+    def has_permission(self, request, view):
+        return bool(
+            request.user
+            and request.user.is_authenticated
+            and (request.user.role == User.Role.ADMIN or request.user.is_staff)
+        )
+
+
+class IsOwnerOrAdmin(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if not request.user or not request.user.is_authenticated:
+            return False
+        if request.user.role == User.Role.ADMIN or request.user.is_staff:
+            return True
+        user_attr = getattr(obj, "user", None)
+        return user_attr == request.user or obj == request.user

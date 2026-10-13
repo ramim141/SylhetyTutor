@@ -66,6 +66,8 @@ THIRD_PARTY_APPS = [
 # apps.lookups, apps.tutors, apps.guardians, apps.matching, apps.reviews, apps.payments
 LOCAL_APPS = [
     "apps.accounts",
+    "apps.lookups",
+    "apps.tutors",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -121,10 +123,17 @@ CACHES = {
 # Custom Auth Model
 AUTH_USER_MODEL = "accounts.User"
 
+AUTHENTICATION_BACKENDS = [
+    "apps.accounts.backends.PhoneOrEmailBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        # Our User has full_name/phone, not Django's default username/first_name/last_name
+        "OPTIONS": {"user_attributes": ("full_name", "phone", "email")},
     },
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
@@ -151,6 +160,17 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# NID and student-ID scans live here, outside MEDIA_ROOT, and are never mapped to a URL:
+# they are only ever streamed by an authenticated view (see apps/tutors/documents.py).
+# Production needs a persistent volume (or a private bucket, Sprint 8).
+PRIVATE_MEDIA_ROOT = Path(os.getenv("PRIVATE_MEDIA_ROOT", BASE_DIR / "private_media"))
+
+# Profile photos go to imgBB (a public host: never send identity documents there).
+# Without a key the avatar endpoint answers 503 `uploads_unavailable`.
+IMGBB_API_KEY = os.getenv("IMGBB_API_KEY", "")
+IMGBB_API_URL = os.getenv("IMGBB_API_URL", "https://api.imgbb.com/1/upload")
+IMGBB_TIMEOUT = int(os.getenv("IMGBB_TIMEOUT", "15"))
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Django REST Framework
@@ -167,6 +187,17 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "EXCEPTION_HANDLER": "config.exceptions.custom_exception_handler",
+    # No global anonymous limit: Bangladeshi mobile users share IPs (CGNAT), so a
+    # per-IP daily cap would block real guardians browsing tutors. See accounts/throttles.py
+    "DEFAULT_THROTTLE_RATES": {
+        "login_identifier": "5/minute",
+        "login_ip": "60/minute",
+        "register_ip": "30/hour",
+        "password_change": "5/minute",
+        "document_upload": "5/minute",
+        "avatar_upload": "5/minute",
+    },
 }
 
 # SimpleJWT configuration

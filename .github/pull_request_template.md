@@ -18,3 +18,4 @@ Closes #
 - [ ] Light ও dark theme দুটোতেই ঠিক; কোনো hard-coded রং (`text-white`, hex) নেই (DESIGN.md)
 - [ ] Keyboard দিয়ে চালানো যায়; icon-only বাটনে `aria-label`
 - [ ] Phone / ঠিকানা / NID এর মতো সংবেদনশীল data response বা log এ নেই
+- [ ] `PROJECT_STATUS.md` হালনাগাদ করা হয়েছে (feature / endpoint / পাতা / জানা-সমস্যা বদলালে)

@@ -9,7 +9,7 @@
   --color-orange: #f47920;
   --color-orange-hover: #e06810;
   --color-orange-text: #b44d0c;
-  --color-on-orange: #0f1d3d;
+  --color-on-orange: #ffffff;
   --color-on-navy: #ffffff;
   --color-orange-light: #fef3ea;
   --color-orange-pale: #fff8f2;
@@ -42,10 +42,19 @@
   --color-badge-pro: #7c3aed;
   --color-badge-premium: #b44d0c;
 
+  /* Ink: always-dark brand surface (auth side panel). Not redefined in dark mode,
+     unlike navy which turns light there. */
+  --color-ink: #0c1427;
+  --color-ink-soft: #16213d;
+  --color-ink-border: #26324f;
+  --color-on-ink: #ffffff;
+  --color-on-ink-muted: #c8d4ee;
+
   /* Fonts */
   --font-display: "Plus Jakarta Sans", "Hind Siliguri", system-ui, sans-serif;
   --font-body: "Hind Siliguri", "Plus Jakarta Sans", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-script: "Caveat", "Segoe Script", cursive; /* tagline only */
 
   /* Radius */
   --radius-sm: 6px;
@@ -70,7 +79,7 @@
   --color-orange: #f5923f;
   --color-orange-hover: #f9a85e;
   --color-orange-text: #f5923f;
-  --color-on-orange: #0e1117;
+  --color-on-orange: #ffffff;
   --color-on-navy: #0e1117;
   --color-orange-light: #2a1f14;
   --color-orange-pale: #1e1814;

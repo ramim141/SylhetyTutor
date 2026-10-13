@@ -66,6 +66,9 @@ db.sqlite3
 db.sqlite3-journal
 backend/media/
 media/
+# NID / student-ID scans: never commit
+backend/private_media/
+private_media/
 backend/staticfiles/
 staticfiles/
 

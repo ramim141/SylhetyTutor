@@ -1,9 +1,10 @@
 import { Star, CheckCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Badge } from "../ui/Badge";
-import { Button } from "../ui/Button";
 import { useTranslation } from "../../i18n";
 
 export function TutorCard({
+  slug,
   name,
   initials,
   avatarUrl,
@@ -13,8 +14,8 @@ export function TutorCard({
   classes = [],
   rating = 0,
   reviewCount = 0,
-  feeMin = 0,
-  feeMax = 0,
+  feeMin = null,
+  feeMax = null,
   isFeatured = false,
   isVerified = true,
 }) {
@@ -22,7 +23,7 @@ export function TutorCard({
 
   return (
     <div
-      className={`relative rounded-lg p-5 shadow-card hover:shadow-md transition-all duration-200 flex flex-col justify-between ${
+      className={`group relative rounded-lg p-5 shadow-card hover:shadow-md transition-all duration-200 flex flex-col justify-between ${
         isFeatured
           ? "border-2 border-featured-border bg-featured-bg"
           : "border border-border bg-bg-card"
@@ -57,11 +58,22 @@ export function TutorCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
               <h3 className="font-display font-bold text-base text-fg truncate">
-                {name}
+                {slug ? (
+                  // Stretched link: the whole card is the click target, one link for screen readers
+                  <Link
+                    to={`/tutors/${slug}`}
+                    className="after:absolute after:inset-0 after:rounded-lg focus-visible:after:ring-2 focus-visible:after:ring-orange"
+                  >
+                    {name}
+                  </Link>
+                ) : (
+                  name
+                )}
               </h3>
               {isVerified && (
-                <span title="NID & Student ID Verified" className="inline-flex">
-                  <CheckCircle className="w-4 h-4 text-info shrink-0" />
+                <span title={t("card.verifiedTitle")} className="inline-flex">
+                  <CheckCircle className="w-4 h-4 text-info shrink-0" aria-hidden />
+                  <span className="sr-only">{t("card.verifiedTitle")}</span>
                 </span>
               )}
             </div>
@@ -83,11 +95,16 @@ export function TutorCard({
 
         {/* Rating and Class tag row */}
         <div className="flex items-center justify-between text-xs mb-4">
-          <div className="flex items-center gap-1.5 font-display font-bold text-fg">
-            <Star className="w-4 h-4 text-star fill-star" />
-            <span>{rating.toFixed(1)}</span>
-            <span className="text-fg-muted font-normal">({reviewCount})</span>
-          </div>
+          {reviewCount > 0 ? (
+            <div className="flex items-center gap-1.5 font-display font-bold text-fg tabular-nums">
+              <Star className="w-4 h-4 text-star fill-star" aria-hidden />
+              <span>{Number(rating).toFixed(1)}</span>
+              <span className="text-fg-muted font-normal">({reviewCount})</span>
+            </div>
+          ) : (
+            // No reviews yet: say so honestly instead of showing 0.0 or a made-up rating
+            <Badge variant="free">{t("card.new")}</Badge>
+          )}
 
           <div className="flex gap-1 flex-wrap justify-end">
             {classes.slice(0, 2).map((c) => (
@@ -98,20 +115,26 @@ export function TutorCard({
           </div>
         </div>
 
-        {/* Fee range */}
-        <div className="text-xs text-fg-muted mb-4">
-          Salary:{" "}
-          <span className="font-display font-bold text-sm text-fg">
-            ৳{feeMin.toLocaleString()} - ৳{feeMax.toLocaleString()}
-          </span>
-          <span className="text-fg-muted"> /month</span>
-        </div>
+        {/* Fee range (an incomplete profile may not have one yet: show nothing, never ৳0) */}
+        {feeMin != null && feeMax != null && (
+          <div className="text-xs text-fg-muted mb-4">
+            {t("card.salary")}:{" "}
+            <span className="font-display font-bold text-sm text-fg tabular-nums">
+              ৳{feeMin.toLocaleString("en-IN")}–{feeMax.toLocaleString("en-IN")}
+            </span>
+            <span className="text-fg-muted">{t("card.perMonth")}</span>
+          </div>
+        )}
       </div>
 
       {/* Action Button */}
-      <Button variant="outline" className="w-full">
+      {/* Looks like a button; the stretched link above is what is actually clicked */}
+      <span
+        aria-hidden
+        className="inline-flex items-center justify-center w-full min-h-11 px-6 rounded-md border-2 border-orange text-orange-text font-display font-semibold text-sm transition-colors group-hover:bg-orange-pale"
+      >
         {t("card.viewProfile")}
-      </Button>
+      </span>
     </div>
   );
 }

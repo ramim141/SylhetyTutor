@@ -22,3 +22,26 @@
     outline-offset: 2px;
   }
 }
+
+/* Horizontal chip rows: swipeable on phones without a visible scrollbar */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Logo: light file by default, dark file when the theme is dark (works with the manual toggle) */
+.logo-light,
+.logo-dark {
+  display: block;
+}
+.logo-dark {
+  display: none;
+}
+:root[data-theme="dark"] .logo-light {
+  display: none;
+}
+:root[data-theme="dark"] .logo-dark {
+  display: block;
+}

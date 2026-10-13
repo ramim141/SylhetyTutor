@@ -13,10 +13,21 @@ class UserAdmin(BaseUserAdmin):
     list_display = ["full_name", "phone", "email", "role", "is_active", "date_joined"]
     list_filter = ["role", "is_active", "is_staff"]
     search_fields = ["full_name", "phone", "email"]
-    readonly_fields = ["date_joined", "last_login"]
+    readonly_fields = ["date_joined", "last_login", "avatar_url", "avatar_delete_url"]
     fieldsets = [
         (None, {"fields": ["phone", "email", "password"]}),
-        ("Profile", {"fields": ["full_name", "role", "avatar", "preferred_language"]}),
+        (
+            "Profile",
+            {
+                "fields": [
+                    "full_name",
+                    "role",
+                    "avatar_url",
+                    "avatar_delete_url",
+                    "preferred_language",
+                ]
+            },
+        ),
         (
             "Permissions",
             {"fields": ["is_active", "is_staff", "is_superuser", "groups", "user_permissions"]},

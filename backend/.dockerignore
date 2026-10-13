@@ -9,6 +9,7 @@ venv/
 .git
 .gitignore
 media/
+private_media/
 staticfiles/
 *.log
 db.sqlite3

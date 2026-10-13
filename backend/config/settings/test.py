@@ -13,3 +13,6 @@ EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
 # Tests never depend on a running Redis
 CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+
+# The React app talks JSON; multipart (the test client's default) cannot carry nested lists
+REST_FRAMEWORK = {**REST_FRAMEWORK, "TEST_REQUEST_DEFAULT_FORMAT": "json"}  # noqa: F405

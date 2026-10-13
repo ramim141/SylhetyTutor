@@ -1,4 +1,7 @@
 from django.contrib.auth.base_user import BaseUserManager
+from django.core.exceptions import ValidationError
+
+from .validators import normalize_email_address, validate_bd_phone
 
 
 class UserManager(BaseUserManager):
@@ -9,7 +12,13 @@ class UserManager(BaseUserManager):
     def _create_user(self, full_name, phone=None, email=None, password=None, **extra_fields):
         if not phone and not email:
             raise ValueError("Either phone or email must be provided.")
-        email = self.normalize_email(email) if email else None
+        # Same rules as the register API, so users made in admin/createsuperuser can log in
+        if phone:
+            try:
+                phone = validate_bd_phone(phone)
+            except ValidationError as exc:
+                raise ValueError(exc.messages[0]) from exc
+        email = normalize_email_address(email) or None
         user = self.model(full_name=full_name, phone=phone or None, email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)

@@ -30,6 +30,7 @@
 | --- | --- |
 | Logo wordmark | **"Sylhety"** Navy (`#1a2e5e`) + **"Tutor"** Orange (`#f47920`), সবসময় একসাথে, মাঝে space নেই। "T" এর উপরে graduation cap icon। |
 | Logo on dark bg | "Sylhety" light navy (`#c8d4ee`), "Tutor" orange (`#f5923f`) |
+| Logo file | `<Logo />` (`frontend/src/components/ui/Logo.jsx`): ক্যাপ-পরা location pin + wordmark। `public/images/logo.png` (light) ও `logo-dark.png` (dark, "Sylhety" `#c8d4ee`) — দুটোই 311×72, মূল ফাইল (`public/SylhetyTutor Graduation Pin Logo.png`, 2161×728) থেকে বানানো। Theme বদলালে CSS নিজে ঠিক ফাইল দেখায়; সবসময়-গাঢ় জায়গায় (`ink` panel) `variant="on-dark"`। Navbar এ উচ্চতা `h-9` (mobile) / `h-10` (md+) |
 | Logo min size | Header এ height 32px, mobile এ 28px; চারপাশে অন্তত logo এর "T" এর সমান ফাঁকা জায়গা |
 | Personality | বিশ্বস্ত, স্থানীয়, পরিষ্কার। Navy = trust (verified, safe), Orange = action (খুঁজুন, apply করুন) |
 | Background decor | হালকা orange circle (10% opacity), কখনো solid নয়, content এর পেছনে চাপা |
@@ -87,6 +88,18 @@
 | `star` | `#f59e0b` | `#fbbf24` | Rating star icon (পাশে সংখ্যা সবসময় লেখা থাকবে) |
 | `badge-pro` | `#7c3aed` | `#a78bfa` | "Pro" badge text |
 | `badge-premium` | `#b44d0c` | `#f5923f` | "Premium" badge text (`orange-light` bg এর উপর) |
+
+### 2.4.1 Ink (সবসময় গাঢ় surface)
+
+| Token | Light ও Dark (একই) | কোথায় |
+| --- | --- | --- |
+| `ink` | `#0c1427` | Auth page এর বাম panel — dark mode এও গাঢ় থাকে (`navy` dark mode এ হালকা হয়ে যায়, তাই সেখানে চলে না) |
+| `ink-soft` | `#16213d` | Ink এর উপর card / tile |
+| `ink-border` | `#26324f` | Ink এর উপর border |
+| `on-ink` | `#ffffff` | Ink এর উপর লেখা (18.3:1) |
+| `on-ink-muted` | `#c8d4ee` | Ink এর উপর বর্ণনা (12.3:1) |
+
+Ink এর উপর কমলা heading এ `orange` (`#f47920`, 6.6:1) চলে — বড় লেখা হিসেবে।
 
 ### 2.5 Contrast Rules (পড়ার মান — WCAG AA)
 
