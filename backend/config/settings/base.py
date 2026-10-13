@@ -69,6 +69,7 @@ LOCAL_APPS = [
     "apps.lookups",
     "apps.tutors",
     "apps.notifications",
+    "apps.guardians",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -212,8 +213,14 @@ REST_FRAMEWORK = {
         "password_change": "5/minute",
         "document_upload": "5/minute",
         "avatar_upload": "5/minute",
+        "requirement_create": "10/hour",
     },
 }
+
+# Guardian requirements (Sprint_4.md)
+MAX_OPEN_REQUIREMENTS = 3
+MAX_DRAFT_REQUIREMENTS = 5
+REQUIREMENT_LIFETIME_DAYS = 30
 
 # SimpleJWT configuration
 SIMPLE_JWT = {

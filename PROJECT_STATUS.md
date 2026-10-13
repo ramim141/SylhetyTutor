@@ -1,7 +1,7 @@
 # SylhetyTutor — প্রজেক্টের বর্তমান অবস্থা
 
 > **শেষ হালনাগাদ:** 2026-10-14 · **Base:** `main` (`a5f5417`; PR #5–#7 merge হয়েছে, CI সবুজ)
-> **Test:** backend 276 · frontend 321 · সব পাস (backend SQLite ও PostgreSQL 16-এ, Windows-এও); ruff, oxlint, build, `makemigrations --check` পরিষ্কার
+> **Test:** backend 323 (SQLite) · frontend 321 · সব পাস; ruff, `makemigrations --check` পরিষ্কার। Frontend ও Postgres/ব্রাউজারে requirement flow এখনো যাচাই হয়নি।
 >
 > এই ফাইলই "এখন পর্যন্ত কী হয়েছে" এর একমাত্র সংক্ষিপ্ত রেকর্ড। **কোনো feature, endpoint, পাতা, command, সিদ্ধান্ত বা জানা-সমস্যা বদলালে একই commit-এ এটা হালনাগাদ করতে হবে** (নিচের "পরিবর্তনের তালিকা"-য় এক লাইন + উপরের তারিখ ও test সংখ্যা)। বিস্তারিত contract আছে `Sprint_1.md`, `Sprint_2.md`, `Sprint_3.md`, `Sprint_4.md`-এ; নিয়মকানুন `CLAUDE.md`-এ।
 
@@ -13,7 +13,7 @@
 | 1 | Auth: register/login/refresh/logout/me, lookup + seed | ✅ শেষ (+ পাসওয়ার্ড বদল, আগের পেজে ফেরা, avatar) |
 | 2 | Tutor search: filter, sort, pagination, URL-synced, shareable | ✅ শেষ |
 | 3 | Tutor profile ও registration: ৬-ধাপের form, NID/ID upload, public profile | ✅ শেষ (imgBB-তে আসল key দিয়ে ছবি এখনো যাচাই বাকি) |
-| 4 | Verification (admin), guardian requirement | 🟡 Verification (admin API + React panel) ও notification শেষ; `GuardianProfile`, `Requirement`, matching, requirement form বাকি — পরিকল্পনা `Sprint_4.md` |
+| 4 | Verification (admin), guardian requirement | 🟡 Verification, notification ও **requirement backend** (GuardianProfile, Requirement, matching) শেষ; requirement form, "আমার requirement" ও tutor-এর "আপনার জন্য tuition" পাতা (frontend) বাকি — `Sprint_4.md` |
 | 5 | Apply → demo booking, notification (SMS স্থগিত) | ⬜ |
 | 6 | bKash manual payment, commission | ⬜ |
 | 7 | Review, Home polish, SEO, safety/report | ⬜ |
@@ -31,6 +31,7 @@
 | NID / Student ID | `PUT/DELETE tutors/me/documents/{nid|student_id}/` · `GET tutors/documents/{id}/{kind}/` (শুধু মালিক ও admin) |
 | Admin verification | `GET admin/approvals/?status=` (pending ডিফল্ট, পুরোনো জমা আগে, `counts` সহ) · `GET admin/approvals/{id}/` · `POST …/approve/` · `POST …/reject/ {reason}` (শুধু admin; draft কখনো নয়) |
 | Notification | `GET notifications/` (+`unread_count`) · `GET notifications/unread-count/` · `POST notifications/read-all/` · `POST notifications/{id}/read/` (শুধু নিজেরটা; অন্যেরটা 404) |
+| Guardian / Requirement | `GET guardians/me/` · `GET/POST requirements/` (draft তৈরি, ১০/ঘণ্টা) · `GET/PATCH/DELETE requirements/{id}/` (PATCH/DELETE শুধু draft; open-এ DELETE → `use_close`) · `POST …/publish/` (limit: ৩ open, ৫ draft; `too_many_open`, `incomplete_requirement`) · `POST …/close/` · `GET requirements/matching/` ও `matching/{id}/` (শুধু approved tutor; area + class + ≥১ subject + gender মিললে; `budget_fits` শুধু flag) |
 | অন্যান্য | `GET health/` (DB + cache) · `api/docs/` (Swagger) · Django admin |
 
 - **Model:** `User` (UUID, phone/email, role), `Area/Subject/ClassLevel/University`, `TutorProfile` (`draft → pending → approved/rejected`), `TutorAvailability`, `VerificationEvent` (জমা/approve/reject-এর audit), `Notification` (kind + data; লেখা frontend বানায়)।
@@ -80,7 +81,7 @@
 | Notification | শুধু approve/reject; bell ফোকাসে/লোডে refresh হয়, লাইভ push/polling নেই; admin-কে "নতুন জমা" নোটিশ নেই |
 | Bundle | main 509 kB (gzip 159 kB; বাড়ছে মূলত i18n key-তে — তিন ভাষার সব লেখা main-এ), বাকি পাতা আলাদা chunk; লক্ষ্য <200 kB gzip এর ভেতরে প্রায় আছে, আসল ফোন/নেটওয়ার্কে মাপা হয়নি |
 | Production-এর আগে | `PRIVATE_MEDIA_ROOT` persistent volume (বা private bucket) + backup; Nginx-এ কখনো খোলা নয় |
-| Guardian / Requirement | `apps/guardians` নেই: `GuardianProfile`, `Requirement`, matching, requirement form ও tutor-এর "আপনার জন্য tuition" বাকি; Home-এর "Post" শিট এখনো "শীঘ্রই আসছে" দেখায় (`Sprint_4.md`) |
+| Requirement frontend | requirement form, "আমার requirement" তালিকা, tutor-এর "আপনার জন্য tuition" পাতা, Home-এর "Post" শিট (এখনো "শীঘ্রই আসছে") বাকি; tutor-কে নতুন requirement-এর notification নেই (`Sprint_4.md`) |
 
 ## পরের ধাপ (প্রস্তাব)
 
@@ -90,6 +91,7 @@
 
 ## পরিবর্তনের তালিকা (নতুনটা উপরে যোগ হবে)
 
+- **2026-10-14** — Sprint 4 backend: `apps/guardians` (`GuardianProfile` + signal + পুরোনো guardian-দের backfill migration, `Requirement`: draft/open/closed, ৩০ দিনে expire, limit ৩ open/৫ draft lock-সহ), `schedule_note`-এ ফোন/e-mail/link/chat-app/বাংলা সংখ্যা আটকানো, matching (area, class, subject, gender), `IsApprovedTutor`, tutor-এর response-এ guardian-এর কোনো তথ্য নেই (allow-list; test আছে), Django admin read-only। `Sprint_4.md` থেকে পার্থক্য: `title` রাখা হয়নি; admin-এর জন্য আলাদা guardian API নেই, শুধু Django admin; budget ৫০০–১,০০,০০০ টাকা। Test +৪৭ (323)।
 - **2026-10-14** — Stabilize: `test_avatar`-এর ৫ MB বাইট test-এর নামে ঢুকত (Windows-এ ২টা error ও ১০ MB output) — `ids=` দিয়ে ঠিক; frontend test-এর অপেক্ষার সীমা ১s থেকে ৫s (`/dev/ui` lazy route সাময়িক ব্যর্থ হত); `VerificationDetail` approve test-এর race ঠিক; `Sprint_4.md` (পরিকল্পনা) যোগ; `main` Docker ও Postgres 16-এ শূন্য থেকে যাচাই।
 - **2026-10-13** — Sprint 4 Part 2: React admin verification (queue, detail, document viewer, checklist, approve/reject dialog), `RoleRoute`, `Dialog`, dashboard-এ admin কার্ড, তিন ভাষা। Test-এ ধরা পড়া বাগ ঠিক: dialog প্রতি keystroke-এ focus হারাত।
 - **2026-10-13** — Sprint 4 Part 1: admin approvals API (list/detail/approve/reject), verification error code (`not_pending`, `incomplete_profile`, `self_approval`), reason ১০–৫০০, `document_viewed` audit; exception handler এখন custom 403/409 code রাখে। Backend 276 (SQLite ও Postgres 16 দুটোতেই)। React admin পাতা পরের part।
