@@ -8,6 +8,7 @@ import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { ChangePasswordForm } from "../components/auth/ChangePasswordForm";
 import { TutorStatusCard } from "../components/tutor/TutorStatusCard";
+import { AdminQueueCard } from "../components/admin/AdminQueueCard";
 import { BottomNav } from "../components/layout/BottomNav";
 
 const LANGUAGES = ["en", "bn", "mixed"];
@@ -123,6 +124,8 @@ export default function Dashboard() {
 
         {user?.role === "tutor" ? (
           <TutorStatusCard />
+        ) : user?.role === "admin" ? (
+          <AdminQueueCard />
         ) : (
           <NextStep role={user?.role} t={t} onBrowse={() => navigate("/tutors")} />
         )}

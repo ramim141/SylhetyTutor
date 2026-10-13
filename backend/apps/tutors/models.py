@@ -213,6 +213,7 @@ class VerificationEvent(models.Model):
         SUBMITTED = "submitted", "Submitted"
         APPROVED = "approved", "Approved"
         REJECTED = "rejected", "Rejected"
+        DOCUMENT_VIEWED = "document_viewed", "Document viewed"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     profile = models.ForeignKey(
@@ -227,6 +228,8 @@ class VerificationEvent(models.Model):
         related_name="verification_events",
     )
     reason = models.TextField(blank=True)
+    # small plain extras, e.g. {"kind": "nid"} for document_viewed
+    meta = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

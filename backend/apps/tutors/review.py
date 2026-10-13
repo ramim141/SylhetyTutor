@@ -19,7 +19,30 @@ Status = TutorProfile.VerificationStatus
 
 
 class ReviewError(Exception):
-    """The decision is not allowed; the message is safe to show to the admin."""
+    """
+    The decision is not allowed. `code` and `status` become the API error; the message is safe
+    to show to an admin. `fields` lists what is missing, for incomplete_profile.
+    """
+
+    def __init__(self, code, message, status=409, fields=None):
+        super().__init__(message)
+        self.code = code
+        self.status = status
+        self.fields = fields or []
+
+
+REASON_MIN, REASON_MAX = 10, 500
+
+
+def clean_reason(reason):
+    reason = (reason or "").strip()
+    if not reason:
+        raise ReviewError("required", "Write the reason: the tutor sees it.", status=400)
+    if len(reason) < REASON_MIN:
+        raise ReviewError("too_short", f"Reason needs at least {REASON_MIN} characters.", 400)
+    if len(reason) > REASON_MAX:
+        raise ReviewError("too_long", f"Reason can be at most {REASON_MAX} characters.", 400)
+    return reason
 
 
 def record_submission(profile, actor):
@@ -28,14 +51,28 @@ def record_submission(profile, actor):
     )
 
 
+def record_document_view(profile, actor, kind):
+    """Who looked at an identity document, and when (never edited, only added)."""
+    VerificationEvent.objects.create(
+        profile=profile,
+        action=VerificationEvent.Action.DOCUMENT_VIEWED,
+        actor=actor,
+        meta={"kind": kind},
+    )
+
+
 @transaction.atomic
 def approve(profile, admin_user):
     profile = TutorProfile.objects.select_for_update().get(pk=profile.pk)
+    if profile.user_id == admin_user.pk:
+        raise ReviewError("self_approval", "You cannot approve your own profile.", status=403)
     if profile.verification_status != Status.PENDING:
-        raise ReviewError("Only a pending profile can be approved.")
+        raise ReviewError("not_pending", "Only a pending profile can be approved.")
     gaps = [name for name in profile.missing_fields() if name in profile.REQUIRED_FIELDS]
     if gaps:
-        raise ReviewError("The profile is incomplete: " + ", ".join(gaps))
+        raise ReviewError(
+            "incomplete_profile", "The profile is incomplete: " + ", ".join(gaps), fields=gaps
+        )
     profile.verification_status = Status.APPROVED
     profile.verified_at = timezone.now()
     profile.verified_by = admin_user
@@ -50,12 +87,12 @@ def approve(profile, admin_user):
 
 @transaction.atomic
 def reject(profile, admin_user, reason):
-    reason = (reason or "").strip()
-    if not reason:
-        raise ReviewError("Write the reason: the tutor sees it and must know what to fix.")
+    reason = clean_reason(reason)
     profile = TutorProfile.objects.select_for_update().get(pk=profile.pk)
+    if profile.user_id == admin_user.pk:
+        raise ReviewError("self_approval", "You cannot review your own profile.", status=403)
     if profile.verification_status not in (Status.PENDING, Status.APPROVED):
-        raise ReviewError("Only a pending or approved profile can be rejected.")
+        raise ReviewError("not_pending", "Only a pending or approved profile can be rejected.")
     profile.verification_status = Status.REJECTED
     profile.rejection_reason = reason
     profile.verified_at = None
