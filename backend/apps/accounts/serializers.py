@@ -5,7 +5,10 @@ Sprint 1 — Architecture Doc Section 3.1 & Sprint_1.md.
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
+from rest_framework.fields import get_error_detail
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 
 from apps.lookups.models import Area
@@ -38,6 +41,7 @@ class UserSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "role", "date_joined"]
 
+    @extend_schema_field(serializers.CharField(allow_null=True))
     def get_avatar(self, obj):
         return obj.avatar_url or None
 
@@ -93,6 +97,16 @@ class RegisterSerializer(serializers.Serializer):
                 {"phone": ["Either phone or email must be provided."]},
                 code="required",
             )
+
+        # The field-level check above knows nothing about the person. Now that name, phone and
+        # email are known, also refuse a password that is just a copy of them (Django's
+        # similarity validator, configured for our fields in settings). Everything else was
+        # already checked, so this can only add "too similar", never a duplicate message.
+        who = User(full_name=attrs["full_name"], phone=phone, email=email)
+        try:
+            validate_password(attrs["password"], user=who)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError({"password": get_error_detail(exc)}) from exc
         return attrs
 
     def create(self, validated_data):
@@ -142,6 +156,13 @@ class ChangePasswordSerializer(serializers.Serializer):
                 code="same_password",
             )
         return attrs
+
+
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField(
+        required=False,
+        help_text="The refresh token to revoke (optional: logging out twice is fine)",
+    )
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):

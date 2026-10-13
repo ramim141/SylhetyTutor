@@ -1,4 +1,5 @@
 from django.db import transaction
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from apps.lookups.models import Area, ClassLevel, Subject, University
@@ -6,11 +7,30 @@ from apps.lookups.models import Area, ClassLevel, Subject, University
 from .models import TutorAvailability, TutorProfile
 
 
+class LookupNameSerializer(serializers.Serializer):
+    """A subject / class / area with both names, so the page can pick the user's language."""
+
+    slug = serializers.CharField()
+    name_en = serializers.CharField()
+    name_bn = serializers.CharField()
+
+
+class UniversityNameSerializer(LookupNameSerializer):
+    short_name = serializers.CharField()
+
+
 class TutorCardSerializer(serializers.ModelSerializer):
+    """
+    A search result. Lookup names come with both languages so the page can show the
+    visitor's own (Bangla mode must not show English names). Anything the tutor has not
+    filled in is null, never a made-up placeholder such as a fake university or area.
+    """
+
     name = serializers.CharField(source="user.full_name", read_only=True)
     initials = serializers.CharField(read_only=True)
     avatarUrl = serializers.SerializerMethodField()
-    university = serializers.SerializerMethodField()
+    university = UniversityNameSerializer(read_only=True)
+    department = serializers.CharField(read_only=True)
     area = serializers.SerializerMethodField()
     subjects = serializers.SerializerMethodField()
     classes = serializers.SerializerMethodField()
@@ -30,6 +50,7 @@ class TutorCardSerializer(serializers.ModelSerializer):
             "initials",
             "avatarUrl",
             "university",
+            "department",
             "area",
             "subjects",
             "classes",
@@ -41,27 +62,23 @@ class TutorCardSerializer(serializers.ModelSerializer):
             "isVerified",
         ]
 
+    @extend_schema_field(serializers.CharField(allow_null=True))
     def get_avatarUrl(self, obj):
         return obj.user.avatar_url or None
 
-    def get_university(self, obj):
-        uni_name = (
-            obj.university.short_name or obj.university.name_en
-            if obj.university
-            else "Sylhet University"
-        )
-        dept_str = f" ({obj.department})" if obj.department else ""
-        return f"{uni_name}{dept_str}"
-
+    @extend_schema_field(LookupNameSerializer(allow_null=True))
     def get_area(self, obj):
-        primary_area = next(iter(obj.areas.all()), None)
-        return primary_area.name_en if primary_area else "Sylhet City"
+        # the first one stands for the tutor on a card; the profile lists them all
+        area = next(iter(obj.areas.all()), None)
+        return LookupNameSerializer(area).data if area else None
 
+    @extend_schema_field(LookupNameSerializer(many=True))
     def get_subjects(self, obj):
-        return [s.name_en for s in obj.subjects.all()[:4]]
+        return LookupNameSerializer(list(obj.subjects.all())[:4], many=True).data
 
+    @extend_schema_field(LookupNameSerializer(many=True))
     def get_classes(self, obj):
-        return [c.name_en for c in obj.class_levels.all()[:3]]
+        return LookupNameSerializer(list(obj.class_levels.all())[:3], many=True).data
 
 
 DAY_ORDER = {day: index for index, (day, _) in enumerate(TutorAvailability.Day.choices)}
@@ -118,21 +135,31 @@ class TutorMeSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
+    @extend_schema_field(AvailabilitySlotSerializer(many=True))
     def get_availability(self, obj):
         slots = sorted(obj.availability.all(), key=lambda a: (DAY_ORDER[a.day], SLOT_ORDER[a.slot]))
         return [{"day": a.day, "slot": a.slot} for a in slots]
 
+    @extend_schema_field(
+        {
+            "type": "object",
+            "properties": {"nid": {"type": "boolean"}, "student_id": {"type": "boolean"}},
+        }
+    )
     def get_documents(self, obj):
         # Only whether each file exists; the file itself is streamed by its own endpoint
         return {"nid": bool(obj.nid_photo), "student_id": bool(obj.student_id_photo)}
 
+    @extend_schema_field(serializers.ListField(child=serializers.CharField()))
     def get_missing(self, obj):
         return obj.missing_fields()
 
+    @extend_schema_field(serializers.IntegerField())
     def get_required_total(self, obj):
         # so "5 of 13 done" needs no number hard-coded in the frontend
         return len(TutorProfile.FORM_ORDER)
 
+    @extend_schema_field(serializers.BooleanField())
     def get_can_edit(self, obj):
         return obj.verification_status != TutorProfile.VerificationStatus.PENDING
 
@@ -207,18 +234,6 @@ class TutorMeUpdateSerializer(serializers.Serializer):
         return profile
 
 
-class LookupNameSerializer(serializers.Serializer):
-    """A subject / class / area with both names, so the page can pick the user's language."""
-
-    slug = serializers.CharField()
-    name_en = serializers.CharField()
-    name_bn = serializers.CharField()
-
-
-class UniversityNameSerializer(LookupNameSerializer):
-    short_name = serializers.CharField()
-
-
 class TutorPublicSerializer(serializers.ModelSerializer):
     """
     What anyone may see on a tutor's public page. It lists its fields on purpose (never
@@ -265,9 +280,11 @@ class TutorPublicSerializer(serializers.ModelSerializer):
             "isVerified",
         ]
 
+    @extend_schema_field(serializers.CharField(allow_null=True))
     def get_avatarUrl(self, obj):
         return obj.user.avatar_url or None
 
+    @extend_schema_field(AvailabilitySlotSerializer(many=True))
     def get_availability(self, obj):
         slots = sorted(obj.availability.all(), key=lambda a: (DAY_ORDER[a.day], SLOT_ORDER[a.slot]))
         return [{"day": a.day, "slot": a.slot} for a in slots]

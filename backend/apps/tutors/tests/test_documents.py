@@ -384,6 +384,8 @@ def test_deleting_a_profile_deletes_its_scans_from_disk(uploaded):
 
 def test_admin_page_links_to_the_scans_and_a_staff_session_can_open_them(uploaded):
     _, _, profile = uploaded
+    # admins only see profiles that were submitted (a draft is still the tutor's own)
+    TutorProfile.objects.filter(pk=profile.pk).update(verification_status="pending")
     boss = User.objects.create_superuser("Boss", phone="01799999999", password=PASSWORD)
     browser = Client()
     browser.force_login(boss)

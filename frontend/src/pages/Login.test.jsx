@@ -4,7 +4,8 @@ import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Login from "./Login";
 import { useAuthStore } from "../store/authStore";
-import { mixed } from "../i18n";
+import { en, mixed } from "../i18n";
+import { useLanguageStore } from "../store/languageStore";
 
 describe("Login Page", () => {
   beforeEach(() => {
@@ -140,6 +141,44 @@ describe("Login Page", () => {
       renderFrom({ pathname: "/tutors", search: "?q=math" });
 
       expect(screen.getByRole("link", { name: mixed["auth.noAccount"] })).toHaveAttribute("href", "/register");
+    });
+  });
+
+  describe("language and theme buttons", () => {
+    const renderLogin = () =>
+      render(
+        <MemoryRouter>
+          <Login />
+        </MemoryRouter>
+      );
+
+    it("are named in the chosen language, including what they are set to now", () => {
+      useLanguageStore.setState({ lang: "mixed" });
+      renderLogin();
+
+      expect(screen.getByRole("button", { name: `${mixed["nav.langSelect"]} (Mix)` })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /^Theme: / })).toBeInTheDocument();
+    });
+
+    it("change their names when the language changes", async () => {
+      useLanguageStore.setState({ lang: "en" });
+      renderLogin();
+
+      await userEvent.click(screen.getByRole("button", { name: `${en["nav.langSelect"]} (EN)` }));
+
+      expect(useLanguageStore.getState().lang).toBe("mixed");
+      expect(
+        await screen.findByRole("button", { name: `${mixed["nav.langSelect"]} (Mix)` })
+      ).toBeInTheDocument();
+    });
+
+    it("have no fixed English label", () => {
+      useLanguageStore.setState({ lang: "bn" });
+      renderLogin();
+
+      expect(screen.queryByRole("button", { name: "Toggle language" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Toggle theme" })).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /^থিম: / })).toBeInTheDocument();
     });
   });
 });

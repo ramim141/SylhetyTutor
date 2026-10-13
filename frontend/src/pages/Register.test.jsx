@@ -160,4 +160,35 @@ describe("Register Page", () => {
 
     expect(await screen.findByText("Tutors page")).toBeInTheDocument();
   });
+
+  it("names the language and theme buttons in the chosen language", async () => {
+    renderRegister();
+
+    expect(
+      await screen.findByRole("button", { name: `${mixed["nav.langSelect"]} (Mix)` })
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Theme: / })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Toggle language" })).not.toBeInTheDocument();
+  });
+
+  it("tells the user, next to the password, when it is too similar to their own details", async () => {
+    useAuthStore.setState({
+      register: vi.fn().mockRejectedValue({
+        response: {
+          status: 400,
+          data: {
+            code: "invalid",
+            fields: { password: [{ code: "password_too_similar", message: "too similar" }] },
+          },
+        },
+      }),
+    });
+    const user = userEvent.setup();
+    renderRegister();
+
+    await fillValidForm(user);
+    await user.click(screen.getByRole("button", { name: new RegExp(mixed["reg.submit"]) }));
+
+    expect(await screen.findByText(mixed["error.password.password_too_similar"])).toBeInTheDocument();
+  });
 });

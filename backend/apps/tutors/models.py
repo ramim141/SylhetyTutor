@@ -204,3 +204,33 @@ class TutorAvailability(models.Model):
 
     def __str__(self):
         return f"{self.tutor_id} {self.day} {self.slot}"
+
+
+class VerificationEvent(models.Model):
+    """Who sent a profile for review and who decided on it, and why. Never edited, only added."""
+
+    class Action(models.TextChoices):
+        SUBMITTED = "submitted", "Submitted"
+        APPROVED = "approved", "Approved"
+        REJECTED = "rejected", "Rejected"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    profile = models.ForeignKey(
+        TutorProfile, on_delete=models.CASCADE, related_name="verification_events"
+    )
+    action = models.CharField(max_length=20, choices=Action.choices)
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="verification_events",
+    )
+    reason = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.action} {self.profile_id}"

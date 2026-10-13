@@ -4,14 +4,24 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import { TutorCard } from "./TutorCard";
 import { mixed } from "../../i18n";
+import { useLanguageStore } from "../../store/languageStore";
 
 const base = {
   name: "Rahim Uddin",
   initials: "RU",
-  university: "SUST",
-  area: "Amberkhana",
-  subjects: ["Physics"],
-  classes: ["HSC"],
+  university: {
+    slug: "sust",
+    name_en: "Shahjalal University",
+    name_bn: "শাহজালাল বিশ্ববিদ্যালয়",
+    short_name: "SUST",
+  },
+  department: "Physics",
+  area: { slug: "amberkhana", name_en: "Amberkhana", name_bn: "আম্বরখানা" },
+  subjects: [
+    { slug: "physics", name_en: "Physics", name_bn: "পদার্থবিজ্ঞান" },
+    { slug: "math", name_en: "Math", name_bn: "গণিত" },
+  ],
+  classes: [{ slug: "hsc", name_en: "HSC", name_bn: "এইচএসসি" }],
 };
 
 describe("TutorCard", () => {
@@ -43,7 +53,7 @@ describe("TutorCard", () => {
             <Route path="/tutors" element={<TutorCard {...base} {...props} />} />
             <Route path="/tutors/:slug" element={<div>Profile page</div>} />
           </Routes>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
     it("links the tutor's name to the profile address", () => {
@@ -51,7 +61,7 @@ describe("TutorCard", () => {
 
       expect(screen.getByRole("link", { name: "Rahim Uddin" })).toHaveAttribute(
         "href",
-        "/tutors/rahim-uddin-physics"
+        "/tutors/rahim-uddin-physics",
       );
     });
 
@@ -75,6 +85,53 @@ describe("TutorCard", () => {
 
       expect(screen.queryByRole("link")).not.toBeInTheDocument();
       expect(screen.getByRole("heading", { name: "Rahim Uddin" })).toBeInTheDocument();
+    });
+  });
+
+  describe("names in the visitor's language", () => {
+    beforeEach(() => useLanguageStore.setState({ lang: "mixed" }));
+
+    it("shows Bangla names for subjects, classes, university and area in Bangla and Mixed mode", () => {
+      render(<TutorCard {...base} />);
+
+      expect(screen.getByText("পদার্থবিজ্ঞান, গণিত")).toBeInTheDocument();
+      expect(screen.getByText("এইচএসসি")).toBeInTheDocument();
+      expect(screen.getByText(/শাহজালাল বিশ্ববিদ্যালয় \(Physics\)/)).toBeInTheDocument();
+      expect(screen.getByText("আম্বরখানা")).toBeInTheDocument();
+      expect(screen.queryByText(/Amberkhana/)).not.toBeInTheDocument();
+    });
+
+    it("shows English names (and the short university name) in English", () => {
+      useLanguageStore.setState({ lang: "en" });
+      render(<TutorCard {...base} />);
+
+      expect(screen.getByText("Physics, Math")).toBeInTheDocument();
+      expect(screen.getByText("HSC")).toBeInTheDocument();
+      expect(screen.getByText(/SUST \(Physics\)/)).toBeInTheDocument();
+      expect(screen.getByText("Amberkhana")).toBeInTheDocument();
+    });
+
+    it("leaves out what the tutor has not filled in instead of inventing it", () => {
+      render(
+        <TutorCard
+          {...base}
+          university={null}
+          department=""
+          area={null}
+          subjects={[]}
+          classes={[]}
+        />,
+      );
+
+      expect(screen.queryByText(/Sylhet/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/·/)).not.toBeInTheDocument();
+    });
+
+    it("shows only the part that exists when the area is missing", () => {
+      render(<TutorCard {...base} area={null} />);
+
+      expect(screen.getByText(/শাহজালাল বিশ্ববিদ্যালয় \(Physics\)/)).toBeInTheDocument();
+      expect(screen.queryByText(/·/)).not.toBeInTheDocument();
     });
   });
 });

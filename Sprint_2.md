@@ -34,7 +34,7 @@ Public। শুধু `approved` ও active tutor; card এ phone, email, ঠ�
 | `sort` | `featured` (default) / `rating` / `newest` | অন্য মান → 400 |
 | `page`, `page_size` | পূর্ণ সংখ্যা | default ২০, সর্বোচ্চ ৫০; শেষের পরের page → 404 |
 
-**Response**: `{ count, next, previous, results: [card…] }`। Card: `id, name, initials, avatarUrl, university, area, subjects, classes, rating, reviewCount, feeMin, feeMax, isFeatured, isVerified`। Review না থাকলে `reviewCount: 0`, UI "New" দেখায় (০.০ নয়)।
+**Response**: `{ count, next, previous, results: [card…] }`। Card: `id, slug, name, initials, avatarUrl, university, department, area, subjects, classes, rating, reviewCount, feeMin, feeMax, isFeatured, isVerified`। `university` = `{slug, name_en, name_bn, short_name}`, `area` = প্রধান area `{slug, name_en, name_bn}` বা `null`, `subjects` (সর্বোচ্চ ৪) ও `classes` (সর্বোচ্চ ৩) = `{slug, name_en, name_bn}`-এর তালিকা — frontend ভাষা অনুযায়ী নাম বেছে নেয়। Review না থাকলে `reviewCount: 0`, UI "New" দেখায় (০.০ নয়)।
 
 **ক্রম**: `featured` = featured আগে, তারপর rating, review সংখ্যা, নতুন। `rating` এ review নেই এমন tutor সবার শেষে।
 
