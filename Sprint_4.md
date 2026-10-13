@@ -448,3 +448,20 @@ TutorVerificationEvent  id · profile(FK, CASCADE) · actor(FK, SET_NULL) · act
 | Email যায় না (SMTP নেই) | approve আটকায় না; in-app সবসময়; production SMTP Sprint 8 এ |
 | Phone-only tutor রা কোনো email পায় না | in-app বার্তা + dashboard; SMS চালু হলে যোগ হবে (জানা সীমা) |
 | Scope বাড়া ("apply ও এখনই দিই") | Sprint 5 এ; MVP list এর বাইরে কিছু ঢুকবে না |
+
+---
+
+## বাস্তবায়নের পর: পরিকল্পনা থেকে যা আলাদা হয়েছে (2026-10-14)
+
+কোড-ই চূড়ান্ত; এই তালিকা শুধু পার্থক্য মনে রাখার জন্য।
+
+| পরিকল্পনা | যা হয়েছে |
+| --- | --- |
+| `title` ফিল্ড | রাখা হয়নি: কার্ডের শিরোনাম class + subject থেকে বানানো হয় (ফ্রি-টেক্সট কম = যোগাযোগ-তথ্য ঢোকার পথও কম) |
+| Error code `open_limit`, `draft_limit`, `incomplete`, `closed`, `budget_range`, `tutor_not_approved` | `too_many_open`, `too_many_drafts`, `incomplete_requirement` (400, `fields` সহ), `not_draft` (draft ছাড়া edit/delete → 409), `use_close` (open মুছতে চাইলে), budget-এ `budget_min` ঘরে `invalid`; approved নয় এমন tutor পায় সাধারণ `403 permission_denied` |
+| Publish: `closed` থেকে আবার publish | চলে, এবং মেয়াদ-শেষ open requirement-ও আবার publish করা যায় (`published_at` নতুন হয়) |
+| Admin-এর জন্য guardian API (admin serializer) | করা হয়নি; admin শুধু Django admin-এ read-only দেখে |
+| ৪ ধাপের requirement form | এক পাতার form (class, area, subject, budget, পছন্দ, দিন-সময়): "Publish" ও "Draft save" দুটো বোতাম; মাঝপথে ছেড়ে দিলে draft থেকে আবার খোলা যায় |
+| Budget সীমা | ৫০০ থেকে ১,০০,০০০ টাকা (পরিকল্পনায় সীমা বলা ছিল না) |
+| Tutor-কে নতুন requirement-এর notification | এই ভাগে নেই (notification kind বদলায়নি) |
+| `seed_demo`-এ demo requirement | যোগ করা হয়নি |
