@@ -6,6 +6,7 @@ import Register from "./pages/Register";
 import Search from "./pages/Search";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { RoleRoute } from "./components/auth/RoleRoute";
 import { RouteFallback } from "./components/layout/RouteFallback";
 import { useAuthStore } from "./store/authStore";
 
@@ -15,6 +16,8 @@ const TutorProfile = lazy(() => import("./pages/TutorProfile"));
 const TutorRegistration = lazy(() => import("./pages/TutorRegistration"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Notifications = lazy(() => import("./pages/Notifications"));
+const VerificationQueue = lazy(() => import("./pages/admin/VerificationQueue"));
+const VerificationDetail = lazy(() => import("./pages/admin/VerificationDetail"));
 
 // Component gallery for development only; not included in the production bundle
 const DevUI = import.meta.env.DEV ? lazy(() => import("./pages/DevUI")) : null;
@@ -56,6 +59,22 @@ export default function App() {
             <ProtectedRoute>
               <Notifications />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/verification"
+          element={
+            <RoleRoute roles={["admin"]}>
+              <VerificationQueue />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/admin/verification/:id"
+          element={
+            <RoleRoute roles={["admin"]}>
+              <VerificationDetail />
+            </RoleRoute>
           }
         />
         {DevUI && (
