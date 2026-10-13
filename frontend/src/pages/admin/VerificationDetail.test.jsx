@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -125,7 +125,8 @@ describe("VerificationDetail", () => {
 
     expect(approveProfile).toHaveBeenCalledWith("p1");
     expect(await screen.findByText(mixed["admin.result.approved"])).toBeInTheDocument();
-    expect(getApproval).toHaveBeenLastCalledWith("p2", expect.any(Object));
+    // The banner can show a moment before the next profile is requested
+    await waitFor(() => expect(getApproval).toHaveBeenLastCalledWith("p2", expect.any(Object)));
   });
 
   it("goes back to the queue when nothing else is waiting", async () => {

@@ -1,6 +1,9 @@
 import "@testing-library/jest-dom/vitest";
 import { afterEach } from "vitest";
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
+
+// findBy*/waitFor wait 1s by default; lazy routes (e.g. /dev/ui) can take longer on a busy CI runner
+configure({ asyncUtilTimeout: 5000 });
 
 afterEach(() => {
   cleanup();
