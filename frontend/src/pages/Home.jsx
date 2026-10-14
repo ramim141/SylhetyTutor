@@ -51,7 +51,7 @@ export default function Home() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t, lang } = useTranslation();
-  const { status } = useAuthStore();
+  const { status, user } = useAuthStore();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("home");
@@ -94,7 +94,10 @@ export default function Home() {
 
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
-    if (tabId === "post") setPostSheetOpen(true);
+    if (tabId === "post") {
+      if (status === "authenticated" && user?.role === "guardian") navigate("/requirements/new");
+      else setPostSheetOpen(true);
+    }
     else if (tabId === "tutors") navigate(searchPath());
     else if (tabId === "areas") setAreaSheetOpen(true);
     else if (tabId === "account") navigate(status === "authenticated" ? "/dashboard" : "/login");
@@ -376,7 +379,7 @@ export default function Home() {
 
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
 
-      {/* Post requirement: honest placeholder until Sprint 4 builds posting */}
+      {/* Post requirement: guardians go straight to the form; everyone else is told what to do */}
       <BottomSheet
         isOpen={postSheetOpen}
         onClose={() => {
@@ -387,9 +390,18 @@ export default function Home() {
       >
         <div className="flex flex-col gap-4">
           <p className="text-sm text-fg-secondary">{t("post.body")}</p>
-          <Alert variant="info">
-            {status === "authenticated" ? t("post.signedInNote") : t("post.comingSoon")}
-          </Alert>
+          {status === "authenticated" && user?.role === "guardian" ? (
+            <Link
+              to="/requirements/new"
+              className="inline-flex items-center justify-center min-h-13 px-8 rounded-md bg-orange text-on-orange font-display font-semibold hover:bg-orange-hover transition-colors"
+            >
+              {t("post.startCta")}
+            </Link>
+          ) : (
+            <Alert variant="info">
+              {status === "authenticated" ? t("post.signedInNote") : t("post.comingSoon")}
+            </Alert>
+          )}
           {status !== "authenticated" && (
             <Link
               to="/register"

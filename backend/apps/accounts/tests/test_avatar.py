@@ -246,6 +246,9 @@ def test_any_imgbb_problem_is_a_clean_502_and_keeps_the_old_photo(client, user, 
         (image_bytes("GIF"), "me.gif", "image/gif", "unsupported_format"),
         (b"\xff\xd8\xff" + b"x" * (5 * 1024 * 1024), "me.jpg", "image/jpeg", "file_too_large"),
     ],
+    # Explicit ids: pytest would otherwise build the name from the bytes, and a 5 MB name breaks
+    # PYTEST_CURRENT_TEST on Windows (32,767-character limit) and floods the terminal
+    ids=["plain_text", "pdf", "gif", "too_large"],
 )
 def test_a_bad_file_is_refused_before_anything_is_sent(client, imgbb, data, name, type_, code):
     response = put(client, data=data, name=name, content_type=type_)

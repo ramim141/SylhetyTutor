@@ -16,6 +16,9 @@ const TutorProfile = lazy(() => import("./pages/TutorProfile"));
 const TutorRegistration = lazy(() => import("./pages/TutorRegistration"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Notifications = lazy(() => import("./pages/Notifications"));
+const MyRequirements = lazy(() => import("./pages/requirements/MyRequirements"));
+const RequirementForm = lazy(() => import("./pages/requirements/RequirementForm"));
+const TutorRequirements = lazy(() => import("./pages/tutor/TutorRequirements"));
 const VerificationQueue = lazy(() => import("./pages/admin/VerificationQueue"));
 const VerificationDetail = lazy(() => import("./pages/admin/VerificationDetail"));
 
@@ -59,6 +62,38 @@ export default function App() {
             <ProtectedRoute>
               <Notifications />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/requirements"
+          element={
+            <RoleRoute roles={["guardian"]}>
+              <MyRequirements />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/requirements/new"
+          element={
+            <RoleRoute roles={["guardian"]}>
+              <RequirementForm />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/requirements/:id/edit"
+          element={
+            <RoleRoute roles={["guardian"]}>
+              <RequirementForm />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/tutor/requirements"
+          element={
+            <RoleRoute roles={["tutor"]}>
+              <TutorRequirements />
+            </RoleRoute>
           }
         />
         <Route

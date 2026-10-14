@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Calendar, LogOut, Mail, Phone, Search } from "lucide-react";
+import { ArrowLeft, Calendar, ClipboardList, LogOut, Mail, Phone, Search } from "lucide-react";
 import { useTranslation } from "../i18n";
 import { useAuthStore } from "../store/authStore";
 import { authApi } from "../api/auth";
@@ -28,21 +28,46 @@ function DetailRow({ icon: Icon, label, value }) {
 function NextStep({ role, t, onBrowse }) {
   if (role === "guardian") {
     return (
-      <section className="bg-orange-pale border border-orange/20 rounded-lg p-5 flex flex-col gap-4">
-        <div className="flex gap-3">
-          <Search className="w-6 h-6 text-orange shrink-0" aria-hidden />
-          <div className="flex flex-col gap-1">
-            <p className="text-xs font-display font-semibold text-orange-text">
-              {t("dashboard.nextStep")}
-            </p>
-            <h2 className="font-display font-bold text-fg">{t("dashboard.guardian.nextTitle")}</h2>
-            <p className="text-sm text-fg-secondary">{t("dashboard.guardian.nextBody")}</p>
+      <>
+        <section className="bg-bg-card border border-border rounded-lg p-5 shadow-card flex flex-col gap-4">
+          <div className="flex gap-3">
+            <ClipboardList className="w-6 h-6 text-orange shrink-0" aria-hidden />
+            <div className="flex flex-col gap-1">
+              <h2 className="font-display font-bold text-fg">
+                {t("dashboard.guardian.postTitle")}
+              </h2>
+              <p className="text-sm text-fg-secondary">{t("dashboard.guardian.postBody")}</p>
+            </div>
           </div>
-        </div>
-        <Button onClick={onBrowse} className="w-full">
-          {t("dashboard.guardian.nextCta")}
-        </Button>
-      </section>
+          <div className="flex flex-col gap-2">
+            <Link to="/requirements/new" className="block">
+              <Button className="w-full">{t("dashboard.guardian.postCta")}</Button>
+            </Link>
+            <Link to="/requirements" className="block">
+              <Button variant="outline" className="w-full">
+                {t("dashboard.guardian.myCta")}
+              </Button>
+            </Link>
+          </div>
+        </section>
+        <section className="bg-orange-pale border border-orange/20 rounded-lg p-5 flex flex-col gap-4">
+          <div className="flex gap-3">
+            <Search className="w-6 h-6 text-orange shrink-0" aria-hidden />
+            <div className="flex flex-col gap-1">
+              <p className="text-xs font-display font-semibold text-orange-text">
+                {t("dashboard.nextStep")}
+              </p>
+              <h2 className="font-display font-bold text-fg">
+                {t("dashboard.guardian.nextTitle")}
+              </h2>
+              <p className="text-sm text-fg-secondary">{t("dashboard.guardian.nextBody")}</p>
+            </div>
+          </div>
+          <Button onClick={onBrowse} className="w-full">
+            {t("dashboard.guardian.nextCta")}
+          </Button>
+        </section>
+      </>
     );
   }
   return null;
@@ -80,9 +105,9 @@ export default function Dashboard() {
         : user?.role;
 
   const joined = user?.date_joined
-    ? new Intl.DateTimeFormat(lang === "bn" ? "bn-BD" : "en-GB", { dateStyle: "medium" }).format(
-        new Date(user.date_joined)
-      )
+    ? new Intl.DateTimeFormat(lang === "bn" ? "bn-BD" : "en-GB", {
+        dateStyle: "medium",
+      }).format(new Date(user.date_joined))
     : null;
 
   const initial = user?.full_name?.trim().charAt(0).toUpperCase() || "?";
@@ -123,7 +148,25 @@ export default function Dashboard() {
         </section>
 
         {user?.role === "tutor" ? (
-          <TutorStatusCard />
+          <>
+            <TutorStatusCard />
+            <section className="bg-bg-card border border-border rounded-lg p-5 shadow-card flex flex-col gap-4">
+              <div className="flex gap-3">
+                <ClipboardList className="w-6 h-6 text-orange shrink-0" aria-hidden />
+                <div className="flex flex-col gap-1">
+                  <h2 className="font-display font-bold text-fg">
+                    {t("dashboard.tutor.matchTitle")}
+                  </h2>
+                  <p className="text-sm text-fg-secondary">{t("dashboard.tutor.matchBody")}</p>
+                </div>
+              </div>
+              <Link to="/tutor/requirements" className="block">
+                <Button variant="outline" className="w-full">
+                  {t("dashboard.tutor.matchCta")}
+                </Button>
+              </Link>
+            </section>
+          </>
         ) : user?.role === "admin" ? (
           <AdminQueueCard />
         ) : (

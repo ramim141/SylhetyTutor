@@ -24,6 +24,17 @@ class IsTutor(BasePermission):
         )
 
 
+class IsApprovedTutor(BasePermission):
+    """A tutor an admin has approved: the only ones who may see guardians' requirements."""
+
+    def has_permission(self, request, view):
+        user = request.user
+        if not (user and user.is_authenticated and user.role == User.Role.TUTOR):
+            return False
+        profile = getattr(user, "tutor_profile", None)
+        return bool(profile and profile.verification_status == "approved")
+
+
 class IsAdmin(BasePermission):
     def has_permission(self, request, view):
         return bool(
