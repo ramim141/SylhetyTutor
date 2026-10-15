@@ -1,14 +1,19 @@
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
-from rest_framework.exceptions import APIException, ErrorDetail
+from rest_framework.exceptions import APIException, ErrorDetail, NotFound
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.accounts.permissions import IsApprovedTutor, IsTutor
+from apps.accounts.permissions import IsApprovedTutor, IsGuardian, IsTutor
+from apps.guardians.views import guardian_of, own_requirement
 
 from . import services
 from .models import TutorApplication
-from .serializers import ApplyWriteSerializer, TutorApplicationSerializer
+from .serializers import (
+    ApplyWriteSerializer,
+    GuardianApplicationSerializer,
+    TutorApplicationSerializer,
+)
 from .throttles import ApplicationCreateThrottle
 
 
@@ -61,3 +66,50 @@ class MyApplicationsView(APIView):
         return Response(
             TutorApplicationSerializer(queryset, many=True, context={"profile": profile}).data
         )
+
+
+def applicants_queryset(requirement):
+    return requirement.applications.select_related(
+        "tutor__user", "tutor__university"
+    ).prefetch_related("tutor__subjects", "tutor__class_levels", "tutor__areas")
+
+
+class RequirementApplicantsView(APIView):
+    """The guardian's list of who applied. Opening it marks new applications as viewed."""
+
+    permission_classes = [IsGuardian]
+
+    @extend_schema(responses=GuardianApplicationSerializer(many=True), tags=["applications"])
+    def get(self, request, pk):
+        requirement = own_requirement(request, pk)
+        services.mark_viewed(requirement)
+        return Response(
+            GuardianApplicationSerializer(applicants_queryset(requirement), many=True).data
+        )
+
+
+class ApplicationDecisionView(APIView):
+    """Shortlist or reject one applicant; `action` is set by the URL."""
+
+    permission_classes = [IsGuardian]
+    action = None
+
+    @extend_schema(request=None, responses=GuardianApplicationSerializer, tags=["applications"])
+    def post(self, request, pk):
+        application = own_application(request, pk)
+        try:
+            getattr(services, self.action)(application)
+        except services.MatchingError as error:
+            raise MatchingFailed(error) from None
+        application = applicants_queryset(application.requirement).get(pk=pk)
+        return Response(GuardianApplicationSerializer(application).data)
+
+
+def own_application(request, pk):
+    """A guardian only ever reaches applications on their own requirements; else a plain 404."""
+    try:
+        return TutorApplication.objects.select_related("requirement", "tutor__user").get(
+            pk=pk, requirement__guardian=guardian_of(request)
+        )
+    except TutorApplication.DoesNotExist:
+        raise NotFound() from None

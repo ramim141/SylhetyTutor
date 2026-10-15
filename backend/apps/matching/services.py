@@ -44,3 +44,48 @@ def apply(profile, requirement_id, message=""):
     except IntegrityError:
         raise MatchingError("already_applied", "You already applied to this requirement.") from None
     return application
+
+
+def live_requirement(application):
+    """Decisions only make sense while the requirement is open."""
+    requirement = application.requirement
+    if requirement.status != "open" or requirement.is_expired:
+        raise MatchingError("requirement_not_open", "This requirement is no longer open.")
+    return requirement
+
+
+def mark_viewed(requirement):
+    """The guardian opened the list: everything new becomes 'viewed' (the tutor can see that)."""
+    requirement.applications.filter(status=Status.APPLIED).update(status=Status.VIEWED)
+
+
+@transaction.atomic
+def shortlist(application):
+    application = TutorApplication.objects.select_for_update().get(pk=application.pk)
+    live_requirement(application)
+    if application.status == Status.SHORTLISTED:
+        raise MatchingError("already_shortlisted", "This tutor is already shortlisted.")
+    application.status = Status.SHORTLISTED
+    application.save(update_fields=["status", "updated_at"])
+    notify(
+        application.tutor.user,
+        Notification.Kind.APPLICATION_SHORTLISTED,
+        requirement_id=str(application.requirement_id),
+    )
+    return application
+
+
+@transaction.atomic
+def reject(application):
+    application = TutorApplication.objects.select_for_update().get(pk=application.pk)
+    live_requirement(application)
+    if application.status == Status.REJECTED:
+        raise MatchingError("already_rejected", "This application is already rejected.")
+    application.status = Status.REJECTED
+    application.save(update_fields=["status", "updated_at"])
+    notify(
+        application.tutor.user,
+        Notification.Kind.APPLICATION_REJECTED,
+        requirement_id=str(application.requirement_id),
+    )
+    return application
