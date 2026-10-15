@@ -20,6 +20,12 @@ class Notification(models.Model):
         APPLICATION_SHORTLISTED = "application_shortlisted", "You were shortlisted"
         APPLICATION_REJECTED = "application_rejected", "Your application was not taken"
         DEMO_BOOKED = "demo_booked", "A demo class was booked"
+        PAYMENT_VERIFIED = "payment_verified", "Your payment was verified"
+        PAYMENT_REJECTED = "payment_rejected", "Your payment could not be verified"
+        CONFIRM_TUITION = "confirm_tuition", "Did the tuition start?"
+        COMMISSION_DUE = "commission_due", "A commission is due"
+        COMMISSION_REMINDER = "commission_reminder", "A commission is overdue"
+        ACCOUNT_SUSPENDED = "account_suspended", "Applying is paused until commission is paid"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(

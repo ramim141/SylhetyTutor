@@ -71,6 +71,7 @@ LOCAL_APPS = [
     "apps.notifications",
     "apps.guardians",
     "apps.matching",
+    "apps.payments",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -216,6 +217,7 @@ REST_FRAMEWORK = {
         "avatar_upload": "5/minute",
         "requirement_create": "10/hour",
         "application_create": "30/hour",
+        "payment_submit": "10/hour",
     },
 }
 
@@ -232,6 +234,17 @@ DEMO_MAX_DAYS_AHEAD = 30
 # unpaid, a booked demo does NOT open contact.
 UNLOCK_FEE_ENABLED = os.getenv("UNLOCK_FEE_ENABLED", "false").lower() == "true"
 UNLOCK_FEE_AMOUNT = 150  # BDT, proposed range 100-200
+
+# Payments and commission (Sprint_6.md). bKash Send Money number tutors pay to: set it in env.
+BKASH_NUMBER = os.getenv("BKASH_NUMBER", "01700000000")
+# Architecture Doc 8.8 leaves the rate open (percent of the first month vs fixed): one number here
+COMMISSION_AMOUNT = 500  # BDT per confirmed tuition
+COMMISSION_DUE_DAYS = 7  # invoice due this many days after the guardian confirms
+COMMISSION_REMINDER_DAYS = 14
+COMMISSION_SUSPEND_DAYS = 21
+CONFIRMATION_AFTER_DAYS = 7  # ask the guardian this long after the demo
+CONFIRMATION_CALL_AFTER_DAYS = 3  # no answer by then: onto the admin's call list
+CONFIRMATION_LINK_MAX_AGE_DAYS = 30
 
 # SimpleJWT configuration
 SIMPLE_JWT = {
