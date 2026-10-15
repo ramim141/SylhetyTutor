@@ -1,7 +1,7 @@
 # SylhetyTutor — প্রজেক্টের বর্তমান অবস্থা
 
-> **শেষ হালনাগাদ:** 2026-10-16 · **Base:** `main` (`026ddc9`; Sprint 5 = PR #10 merge হয়েছে) · **Branch:** `feat/sprint-6-on-main` (Sprint 6, `main`-এর বিরুদ্ধে PR; আগের PR #11 ভুল করে Sprint 5-এর branch-এ merge হয়েছিল, `main`-এ পৌঁছায়নি)
-> **Test:** backend 399 · frontend 377 · সব পাস (SQLite, Python 3.13, Windows); ruff, oxlint, build, `makemigrations --check` পরিষ্কার। আগের নোট: Python 3.14-এ ৭টা Django-admin-পেজ test ব্যর্থ হয় (admin template বাগ, Sprint 5-এর আগেও) — 3.13 ও CI-তে সবুজ। Postgres/Docker-এ Sprint 5–6 এখনো দেখা হয়নি।
+> **শেষ হালনাগাদ:** 2026-10-16 · **Base:** `main` (`8137284`; Sprint 5 = PR #10, Sprint 6 = PR #12 merge হয়েছে, CI সবুজ)
+> **Test:** backend 399 · frontend 377 · সব পাস (SQLite Python 3.13 Windows; **এবং Docker-এ Python 3.12 + PostgreSQL 16**); ruff, oxlint, build, `makemigrations --check` পরিষ্কার। আগের নোট: Python 3.14-এ ৭টা Django-admin-পেজ test ব্যর্থ হয় (admin template বাগ, Sprint 5-এর আগেও) — 3.12/3.13 ও CI-তে সবুজ।
 >
 > এই ফাইলই "এখন পর্যন্ত কী হয়েছে" এর একমাত্র সংক্ষিপ্ত রেকর্ড। **কোনো feature, endpoint, পাতা, command, সিদ্ধান্ত বা জানা-সমস্যা বদলালে একই commit-এ এটা হালনাগাদ করতে হবে** (নিচের "পরিবর্তনের তালিকা"-য় এক লাইন + উপরের তারিখ ও test সংখ্যা)। বিস্তারিত contract আছে `Sprint_1.md`, `Sprint_2.md`, `Sprint_3.md`, `Sprint_4.md`-এ; নিয়মকানুন `CLAUDE.md`-এ।
 
@@ -15,7 +15,7 @@
 | 3 | Tutor profile ও registration: ৬-ধাপের form, NID/ID upload, public profile | ✅ শেষ (imgBB-তে আসল key দিয়ে ছবি এখনো যাচাই বাকি) |
 | 4 | Verification (admin), guardian requirement | ✅ Verification (admin API + React panel), notification, requirement (backend + form + "আমার requirement" + tutor-এর "আপনার জন্য tuition") — বাকি ছোট কাজ নিচের gaps-এ; পরিকল্পনা ও পার্থক্য `Sprint_4.md` |
 | 5 | Apply → shortlist → demo booking → contact খোলা, notification (SMS স্থগিত, Celery বাকি) | ✅ code + test শেষ (branch `feat/sprint-5-apply-demo`); ব্রাউজারে/Postgres-এ যাচাই বাকি — contract `Sprint_5.md` |
-| 6 | bKash manual payment, unlock fee, guardian confirmation, commission | ✅ code + test শেষ (branch `feat/sprint-6-payment-commission`); আসল ব্রাউজারে SQLite-এ পুরো চক্র দেখা (নিচে), Postgres/Docker বাকি — contract `Sprint_6.md` |
+| 6 | bKash manual payment, unlock fee, guardian confirmation, commission | ✅ code + test শেষ (`main`-এ, PR #12); আসল ব্রাউজারে SQLite-এ পুরো চক্র দেখা (নিচে), Postgres/Docker বাকি — contract `Sprint_6.md` |
 | 7 | Review, Home polish, SEO, safety/report | ⬜ |
 | 8 | Production, soft launch | ⬜ |
 
@@ -80,7 +80,8 @@
 - ✅ **Docker + Postgres-এ আসল ব্রাউজারে admin approve/reject (2026-10-14)** — approve → public search ২৬ থেকে ২৭, slug, audit (`document_viewed`, `approved`), tutor-এর notification; reject (১০ অক্ষরের নিচে error; chip) → কারণ সংরক্ষিত, `verified_at` খালি, notification; আবার জমা → `pending`। আসল API-তে অনুমতি: 401/403/404 ও 409 (`not_pending`, `self_approval`)। 375px ও dark-এও দেখা। (শুধু Mixed ভাষায়।)
 - ✅ **Docker + Postgres 16-এ requirement flow, আসল ব্রাউজারে (2026-10-14)** — ২টা নতুন migration সফল; guardian: form, ফোন নম্বর দেওয়া note আটকে বাংলা error, ঠিক করে publish, তালিকায় "Open"; tutor (approved): class না মিললে খালি, মিললে card ও "budget মেলে" ট্যাগ। শুধু Mixed ভাষা; ফোনের মতো সরু (~৫০০px) ও dark-এ tutor পাতা, light-এ guardian পাতা দেখা। **দেখা হয়নি:** EN/বাং ভাষা, ৩৬০px ও বড় পর্দা, Home-এর Post শিট ও dashboard কার্ড (শুধু test-এ আছে), close/delete dialog (শুধু test-এ), limit (৩ open) আসল ব্রাউজারে। Test user মুছে ফেলা হয়েছে।
 - ✅ **Sprint 5 ও 6 আসল ব্রাউজারে (Chromium pane, SQLite, আসল backend, Mixed ভাষা, ৩৭৫px ও dark; admin পাতা desktop-এও) — 2026-10-15:** apply → shortlist → demo → (fee চালু) bKash TrxID জমা (ভুল TrxID আটকানো) → admin verify → contact খোলা → `send_confirmations --days-ahead 10` → login-ছাড়া link-এ "হ্যাঁ" → commission ৳500 due → `process_commissions --days-ahead 21` (apply বন্ধ সতর্কতা) → commission pay → admin verify → suspension উঠে গেছে; email console backend-এ। **দেখা হয়নি:** light theme, EN/বাং ভাষা, ৩৬০px, Postgres/Docker, reject/waive/call-list ব্রাউজারে (শুধু test-এ), আসল SMTP।
-- ⚠️ **Sprint 5 আগে শুধু test-এ যাচাই ছিল** (pytest + Vitest + lint + build): আসল ব্রাউজারে, Postgres 16-এ, Docker-এ, EN/বাং ভাষায়, ৩৬০px ও dark-এ দেখা হয়নি।
+- ✅ **Docker + PostgreSQL 16 + Python 3.12 (2026-10-16, Sprint 6 সহ কোড, `main`-এর সমান)** — migration সফল, `manage.py check` পরিষ্কার, **পুরো backend suite ৩৯৯ পাস**; লাইভ API-তে Sprint 1–6 পুরো চক্র ৬৮টা যাচাইয়ের ৬৭টা পাস (বাকি ১টা ছিল আমার স্ক্রিপ্টের ভুল sort নাম, API ঠিকই 400 দিয়েছে): register/login/language, search ও filter (ফোন-ইমেইল নেই), tutor profile ও NID/ID আপলোড, submit, admin reject → resubmit → approve, requirement ও matching (guardian-এর তথ্য নেই), apply, shortlist, demo, যোগাযোগ শুধু booking-এর পর, guardian confirmation link, commission, bKash TrxID, admin verify, Swagger/OpenAPI। এছাড়া সব ১৭টা পাতা × (ফোন/desktop × light/dark) Edge headless-এ: কোনো console error বা আড়াআড়ি overflow নেই (শুধু Mixed ভাষা)।
+- ⚠️ **এখনো দেখা হয়নি:** EN/বাং ভাষায় পুরো প্রবাহ ব্রাউজারে হাতে চালিয়ে; `UNLOCK_FEE_ENABLED=true` অবস্থায় লাইভ API চক্র (শুধু test-এ আছে); আসল bKash/SMTP/imgBB।
 - ❌ **আসল SMTP দিয়ে email** — শুধু locmem backend-এ test; আসল mail server যাচাই হয়নি।
 - ❌ **imgBB-তে আসল key দিয়ে ছবি আপলোড** (এই sandbox থেকে imgBB পৌঁছানো যায় না; শুধু mock ও "unavailable" বার্তা যাচাই)।
 - ❌ NID আপলোডের **দুজনের security review** (Sprint Plan অনুযায়ী বাধ্যতামূলক; admin এখন আসল document দেখতে পারে, তাই আসল NID নেওয়ার আগে করতে হবে)।
@@ -101,13 +102,14 @@
 
 ## পরের ধাপ (প্রস্তাব)
 
-1. এই PR (Sprint 6) merge, তারপর CI সবুজ কিনা দেখা।
-2. Docker + Postgres 16-এ Sprint 5–6 প্রবাহ একবার দেখা; দুই command-এর cron।
+1. UI polish PR (#13) review ও merge।
+2. দুই command-এর (`send_confirmations`, `process_commissions`) cron; `UNLOCK_FEE_ENABLED=true` সহ লাইভ চক্র একবার।
 3. NID আপলোডের দুজনের security review (আসল NID নেওয়ার আগে)।
 4. Sprint 7: Review, Home, SEO, safety/report।
 
 ## পরিবর্তনের তালিকা (নতুনটা উপরে যোগ হবে)
 
+- **2026-10-16** — সব sprint একসাথে যাচাই: Docker + Postgres 16-এ backend ৩৯৯ পাস, লাইভ API-তে Sprint 1–6 চক্র, সব পাতা ৪ মোডে console/overflow পরিষ্কার (বিস্তারিত "যাচাই হয়েছে"-তে)। কোড বদলায়নি।
 - **2026-10-16** — Sprint 6 `main`-এ আনা: PR #11-এর base ছিল `feat/sprint-5-apply-demo`, তাই merge হয়েও কোড `main`-এ ঢোকেনি। `main`-এর উপর একই tree (৬৭ ফাইল) নতুন branch-এ বসিয়ে PR; `main` + Sprint 6 একসাথে পুরো suite চালানো হয়েছে (backend 399, frontend 377)।
 - **2026-10-15** — Sprint 6 (৫ ভাগে, branch `feat/sprint-6-payment-commission`): নতুন app `apps/payments` (`Payment` + `ManualBkash` gateway, `Commission`), unlock fee bKash TrxID + admin verify (verify হলে `ContactUnlock`), guardian confirmation (signed link, `send_confirmations`, call list), commission (founding মাফ, pay/mark-paid/waive, `process_commissions`: reminder ও apply-বন্ধ), ৬টা নতুন notification kind (+ তিন ভাষার email), `TutorProfile.founding_until/suspended_at`, throttle `payment_submit` ১০/ঘণ্টা ও `confirm_link` ৩০/ঘণ্টা; React: `PayDialog`, `/tutor/payments`, `/confirm/:token`, `/admin/payments`, ১১০টা নতুন i18n key। Test: backend +৩৯ (399), frontend +২৩ (377)। `Sprint_6.md` যোগ।
 - **2026-10-15** — Sprint 5 (৫ ভাগে, branch `feat/sprint-5-apply-demo`): নতুন app `apps/matching` (`TutorApplication`, `Match`, `ContactUnlock`), apply / my-applications / applicants / shortlist / reject / book-demo API, contact শুধু booked demo-র পর, `UNLOCK_FEE_ENABLED` (বন্ধ), ৪টা নতুন notification kind (+ তিন ভাষার email), throttle `application_create` ৩০/ঘণ্টা; React: Apply dialog, `/tutor/applications`, `/requirements/:id/applicants`, ৭১টা নতুন i18n key। Test: backend +৩৭ (360), frontend +১৭ (354)। `Sprint_5.md` যোগ।
