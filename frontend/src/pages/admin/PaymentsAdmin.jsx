@@ -256,7 +256,11 @@ export default function PaymentsAdmin() {
                   }
                   lines={[
                     c.tutor_phone,
-                    t("pay.commission.due", { date: c.due_date }),
+                    t("pay.commission.due", {
+                      date: new Intl.DateTimeFormat(lang === "en" ? "en-GB" : "bn-BD", {
+                        dateStyle: "medium",
+                      }).format(new Date(c.due_date)),
+                    }),
                     c.suspended && t("admin.pay.suspended"),
                     c.payment?.status === "pending" && t("pay.payment.pending"),
                     c.note,

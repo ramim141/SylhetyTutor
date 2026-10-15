@@ -6,7 +6,7 @@ Two developers (@ramim141, @Mahdi-HasanIO), monorepo, 8-sprint MVP. Mobile-first
 Source of truth for scope and design (read before building a feature):
 `SylhetyTutor — System Architecture Document.md` (models §3, API §4, rules §8.8) ·
 `SylhetyTutor Sprint Plan.md` (what each sprint delivers) · `DESIGN.md` (colors, components, UI rules) ·
-`Sprint_1.md` (API contract and auth rules) · `Sprint_2.md` (tutor search contract) · `Sprint_3.md` (tutor profile, uploads) · `Sprint_4.md` (verification, requirement, matching) · `Sprint_5.md` (apply, shortlist, demo, contact) ·
+`Sprint_1.md` (API contract and auth rules) · `Sprint_2.md` (tutor search contract) · `Sprint_3.md` (tutor profile, uploads) · `Sprint_4.md` (verification, requirement, matching) · `Sprint_5.md` (apply, shortlist, demo, contact) · `Sprint_6.md` (payment, confirmation, commission) ·
 `PROJECT_STATUS.md` (what exists today, known gaps). Where docs and code disagree, code is current; fix the doc.
 
 ## Layout
@@ -28,6 +28,8 @@ python -m ruff check . && python -m ruff format --check .
 python manage.py makemigrations --check --dry-run   # must print "No changes detected"
 python manage.py seed_data                       # 14 areas, 12 subjects, 5 class levels, 3 universities (idempotent)
 python manage.py seed_demo                       # 30 demo tutors (26 approved), local/staging only; --reset removes them
+python manage.py send_confirmations              # daily (cron): guardian "did the tuition start?" links; --days-ahead N to try the cycle
+python manage.py process_commissions             # daily (cron): 14-day reminder, 21-day apply pause; --days-ahead N
 
 # Frontend (from frontend/) — needs Node >= 24
 npm ci
