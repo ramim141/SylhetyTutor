@@ -1,7 +1,7 @@
 # SylhetyTutor — প্রজেক্টের বর্তমান অবস্থা
 
-> **শেষ হালনাগাদ:** 2026-10-14 · **Base:** `main` (`a5f5417`; PR #5–#7 merge হয়েছে, CI সবুজ)
-> **Test:** backend 323 (SQLite) · frontend 337 · সব পাস; ruff, oxlint, build, `makemigrations --check` পরিষ্কার। Requirement flow Docker + Postgres 16 ও আসল ব্রাউজারে একবার দেখা হয়েছে (নিচে কী কী দেখা হয়নি লেখা আছে)।
+> **শেষ হালনাগাদ:** 2026-10-15 · **Base:** `main` (`63dd78c`, Sprint 4) + branch `feat/sprint-5-apply-demo` (এখনো PR নেই)
+> **Test:** backend 360 (SQLite; এই মেশিনে Python 3.14 + Django 5.1-এ 353 পাস, ৭টা Django-admin-পেজ test ব্যর্থ — Python 3.14-এ admin template বাগ, Sprint 5-এর আগেও ব্যর্থ; Python 3.12/CI-তে যাচাই বাকি) · frontend 354 পাস; ruff, oxlint, build, `makemigrations --check` পরিষ্কার। Requirement flow Docker + Postgres 16 ও আসল ব্রাউজারে একবার দেখা হয়েছে (নিচে কী কী দেখা হয়নি লেখা আছে)।
 >
 > এই ফাইলই "এখন পর্যন্ত কী হয়েছে" এর একমাত্র সংক্ষিপ্ত রেকর্ড। **কোনো feature, endpoint, পাতা, command, সিদ্ধান্ত বা জানা-সমস্যা বদলালে একই commit-এ এটা হালনাগাদ করতে হবে** (নিচের "পরিবর্তনের তালিকা"-য় এক লাইন + উপরের তারিখ ও test সংখ্যা)। বিস্তারিত contract আছে `Sprint_1.md`, `Sprint_2.md`, `Sprint_3.md`, `Sprint_4.md`-এ; নিয়মকানুন `CLAUDE.md`-এ।
 
@@ -14,7 +14,7 @@
 | 2 | Tutor search: filter, sort, pagination, URL-synced, shareable | ✅ শেষ |
 | 3 | Tutor profile ও registration: ৬-ধাপের form, NID/ID upload, public profile | ✅ শেষ (imgBB-তে আসল key দিয়ে ছবি এখনো যাচাই বাকি) |
 | 4 | Verification (admin), guardian requirement | ✅ Verification (admin API + React panel), notification, requirement (backend + form + "আমার requirement" + tutor-এর "আপনার জন্য tuition") — বাকি ছোট কাজ নিচের gaps-এ; পরিকল্পনা ও পার্থক্য `Sprint_4.md` |
-| 5 | Apply → demo booking, notification (SMS স্থগিত) | ⬜ |
+| 5 | Apply → shortlist → demo booking → contact খোলা, notification (SMS স্থগিত, Celery বাকি) | ✅ code + test শেষ (branch `feat/sprint-5-apply-demo`); ব্রাউজারে/Postgres-এ যাচাই বাকি — contract `Sprint_5.md` |
 | 6 | bKash manual payment, commission | ⬜ |
 | 7 | Review, Home polish, SEO, safety/report | ⬜ |
 | 8 | Production, soft launch | ⬜ |
@@ -32,9 +32,10 @@
 | Admin verification | `GET admin/approvals/?status=` (pending ডিফল্ট, পুরোনো জমা আগে, `counts` সহ) · `GET admin/approvals/{id}/` · `POST …/approve/` · `POST …/reject/ {reason}` (শুধু admin; draft কখনো নয়) |
 | Notification | `GET notifications/` (+`unread_count`) · `GET notifications/unread-count/` · `POST notifications/read-all/` · `POST notifications/{id}/read/` (শুধু নিজেরটা; অন্যেরটা 404) |
 | Guardian / Requirement | `GET guardians/me/` · `GET/POST requirements/` (draft তৈরি, ১০/ঘণ্টা) · `GET/PATCH/DELETE requirements/{id}/` (PATCH/DELETE শুধু draft; open-এ DELETE → `use_close`) · `POST …/publish/` (limit: ৩ open, ৫ draft; `too_many_open`, `incomplete_requirement`) · `POST …/close/` · `GET requirements/matching/` ও `matching/{id}/` (শুধু approved tutor; area + class + ≥১ subject + gender মিললে; `budget_fits` শুধু flag) |
+| Apply / Demo | `POST tutors/me/apply/{req}/` · `GET tutors/me/applications/` · `GET requirements/{id}/applications/` · `POST applications/{id}/shortlist|reject|book-demo/` — contact শুধু book-এর পর (fee বন্ধ থাকলে); বিস্তারিত `Sprint_5.md` |
 | অন্যান্য | `GET health/` (DB + cache) · `api/docs/` (Swagger) · Django admin |
 
-- **Model:** `User` (UUID, phone/email, role), `Area/Subject/ClassLevel/University`, `TutorProfile` (`draft → pending → approved/rejected`), `TutorAvailability`, `VerificationEvent` (জমা/approve/reject-এর audit), `Notification` (kind + data; লেখা frontend বানায়)।
+- **Model:** `User` (UUID, phone/email, role), `Area/Subject/ClassLevel/University`, `TutorProfile` (`draft → pending → approved/rejected`), `TutorAvailability`, `VerificationEvent` (জমা/approve/reject-এর audit), `Notification` (kind + data; লেখা frontend বানায়), `GuardianProfile`, `Requirement`, `TutorApplication` (applied/viewed/shortlisted/rejected), `Match` (demo_at), `ContactUnlock` (কে-কার-কখন, fee_paid)।
 - **Admin verification:** Django admin-এ শুধু জমা-দেওয়া (draft নয়) profile দেখায়; status হাতে বদলানো যায় না, শুধু "Approve" / "Reject" action (reject-এ কারণ বাধ্যতামূলক); প্রতিটি সিদ্ধান্ত `VerificationEvent`-এ ও tutor-কে notification + (email থাকলে) তাঁর ভাষায় email। Mail সার্ভার ব্যর্থ হলে সিদ্ধান্ত আটকায় না। নিয়ম `apps/tutors/review.py`-এ; React-এর জন্য একই service-এর ওপর admin API (error code: `not_pending`, `incomplete_profile` + `fields`, `self_approval` 403, reason `required`/`too_short`/`too_long` — ১০–৫০০ অক্ষর)। Admin অন্যের NID/ID পড়লে `VerificationEvent(document_viewed)` লেখা হয় (মালিক নিজে পড়লে নয়)।
 - **Command:** `seed_data` (১৪ area, ১২ subject, ৫ class, ৩ university) · `seed_demo` (৩০ demo tutor, ২৬ approved; production-এ চলে না; `--reset`)।
 - **নিরাপত্তা (বাস্তবায়িত ও test করা):** login প্রতি account-এ ৫/মিনিট; password change/upload throttle; error shape `{detail, code, fields}`; `admin` role API দিয়ে নয়; approved profile অসম্পূর্ণ হতে পারে না (model `clean()`-এ, তাই Django admin ও `full_clean` আটকায়; ডাটাবেস-স্তরে constraint নয়); public profile ও card-এ phone/email/ID কখনো নেই (allow-list)।
@@ -55,8 +56,10 @@
 | `/dashboard` | account, ভাষা, পাসওয়ার্ড বদল; tutor-এর status কার্ড + "আপনার জন্য tuition" কার্ড; guardian-এর "requirement post করুন / আমার requirement" কার্ড |
 | `/requirements/new` · `/requirements/:id/edit` | (শুধু guardian) এক পাতার form: class, এলাকা, subject chip, budget, tutor-এর পছন্দ, দিন-সময়; "Publish" ও "Draft save"; দিন-সময়ে ফোন/link ঢুকলে ঘরের পাশে বাংলা error; publish ব্যর্থ হলেও draft থাকে, আবার চাপলে নতুন draft হয় না |
 | `/requirements` | (শুধু guardian) নিজের তালিকা: draft/open/closed/expired, publish, edit, delete (নিশ্চিত করে), close (কারণ বেছে), আবার publish; খালি/error অবস্থা |
-| `/tutor/requirements` | (শুধু tutor) matching requirement: class + subject, এলাকা, budget, "budget আপনার fee-র সাথে মেলে/মেলে না" ট্যাগ, "কত আগে post"; approved না হলে লক-অবস্থা (profile-এ যাওয়ার লিঙ্ক); guardian-এর কোনো তথ্য নেই |
+| `/tutor/requirements` | (শুধু tutor) matching requirement, **Apply** বাটন + note dialog (আবেদন হলে "Applied" ট্যাগ): class + subject, এলাকা, budget, "budget আপনার fee-র সাথে মেলে/মেলে না" ট্যাগ, "কত আগে post"; approved না হলে লক-অবস্থা (profile-এ যাওয়ার লিঙ্ক); guardian-এর কোনো তথ্য নেই |
 | Home "Post" শিট / BottomNav | guardian-কে সরাসরি form-এ নেয়; অন্য সবাইকে বলে কী করতে হবে |
+| `/tutor/applications` | (শুধু tutor) নিজের application: status, demo-র সময়, demo ঠিক হলে guardian-এর নাম/ফোন (`tel:` লিঙ্ক); fee চালু থাকলে "unlock fee বাকি" বার্তা |
+| `/requirements/:id/applicants` | (শুধু guardian) applicant card + note, Shortlist / "এখন নয়", Demo ঠিক করুন (date-time dialog, ১ ঘণ্টা–৩০ দিন), booking-এর পর tutor-এর ফোন; `/requirements`-এ open requirement-এ "Applicants (n)" |
 | `/tutor/profile` | ৬ ধাপ + review: প্রতি ধাপে save, মাঝপথ থেকে resume, ছবি ও NID/ID upload, approved-এ শুধু ৪–৬ |
 | `/dev/ui` | component gallery (শুধু dev) |
 
@@ -72,6 +75,7 @@
 - ✅ **Docker compose + PostgreSQL 16, শূন্য database থেকে (2026-10-14, `main`)** — ১২টা migration সব সফল, backend ০ বার restart, `seed_data`/`seed_demo`, public API (search, filter, page ২, profile) ঠিক, profile-এ যোগাযোগের তথ্য নেই।
 - ✅ **Docker + Postgres-এ আসল ব্রাউজারে admin approve/reject (2026-10-14)** — approve → public search ২৬ থেকে ২৭, slug, audit (`document_viewed`, `approved`), tutor-এর notification; reject (১০ অক্ষরের নিচে error; chip) → কারণ সংরক্ষিত, `verified_at` খালি, notification; আবার জমা → `pending`। আসল API-তে অনুমতি: 401/403/404 ও 409 (`not_pending`, `self_approval`)। 375px ও dark-এও দেখা। (শুধু Mixed ভাষায়।)
 - ✅ **Docker + Postgres 16-এ requirement flow, আসল ব্রাউজারে (2026-10-14)** — ২টা নতুন migration সফল; guardian: form, ফোন নম্বর দেওয়া note আটকে বাংলা error, ঠিক করে publish, তালিকায় "Open"; tutor (approved): class না মিললে খালি, মিললে card ও "budget মেলে" ট্যাগ। শুধু Mixed ভাষা; ফোনের মতো সরু (~৫০০px) ও dark-এ tutor পাতা, light-এ guardian পাতা দেখা। **দেখা হয়নি:** EN/বাং ভাষা, ৩৬০px ও বড় পর্দা, Home-এর Post শিট ও dashboard কার্ড (শুধু test-এ আছে), close/delete dialog (শুধু test-এ), limit (৩ open) আসল ব্রাউজারে। Test user মুছে ফেলা হয়েছে।
+- ⚠️ **Sprint 5 শুধু test-এ যাচাই** (pytest + Vitest + lint + build): আসল ব্রাউজারে, Postgres 16-এ, Docker-এ, EN/বাং ভাষায়, ৩৬০px ও dark-এ দেখা হয়নি।
 - ❌ **আসল SMTP দিয়ে email** — শুধু locmem backend-এ test; আসল mail server যাচাই হয়নি।
 - ❌ **imgBB-তে আসল key দিয়ে ছবি আপলোড** (এই sandbox থেকে imgBB পৌঁছানো যায় না; শুধু mock ও "unavailable" বার্তা যাচাই)।
 - ❌ NID আপলোডের **দুজনের security review** (Sprint Plan অনুযায়ী বাধ্যতামূলক; admin এখন আসল document দেখতে পারে, তাই আসল NID নেওয়ার আগে করতে হবে)।
@@ -86,16 +90,18 @@
 | Notification | শুধু approve/reject; bell ফোকাসে/লোডে refresh হয়, লাইভ push/polling নেই; admin-কে "নতুন জমা" নোটিশ নেই |
 | Bundle | main 509 kB (gzip 159 kB; বাড়ছে মূলত i18n key-তে — তিন ভাষার সব লেখা main-এ), বাকি পাতা আলাদা chunk; লক্ষ্য <200 kB gzip এর ভেতরে প্রায় আছে, আসল ফোন/নেটওয়ার্কে মাপা হয়নি |
 | Production-এর আগে | `PRIVATE_MEDIA_ROOT` persistent volume (বা private bucket) + backup; Nginx-এ কখনো খোলা নয় |
-| Requirement-এর বাকি | tutor-কে নতুন requirement-এর notification নেই; `seed_demo`-এ demo requirement নেই; guardian-এর phone OTP (`phone_verified` শুধু রাখা আছে, কেউ সেট করে না); apply/demo booking Sprint 5-এ |
+| Requirement-এর বাকি | tutor-কে নতুন requirement-এর notification নেই; `seed_demo`-এ demo requirement/application নেই; guardian-এর phone OTP (`phone_verified` শুধু রাখা আছে, কেউ সেট করে না) |
+| Sprint 5-এর বাকি | Celery + Redis চালু হয়নি (SMS স্থগিত; Sprint 6-এর guardian confirmation-এ লাগবে); admin-এর জন্য React shortlist পাতা নেই (Django admin action আছে); `UNLOCK_FEE_ENABLED` চালু করলে contact আটকে থাকে যতক্ষণ Sprint 6-এর payment না আসে; application withdraw নেই; booked demo বাতিল করার উপায় নেই (শুধু সময় বদল) |
 
 ## পরের ধাপ (প্রস্তাব)
 
-1. Sprint 4 শেষ করে PR: `chore/post-sprint4-fixes` ও `feat/sprint-4-requirements` (এখনো push হয়নি)।
+1. Sprint 5 PR (`feat/sprint-5-apply-demo`), review, তারপর Docker + Postgres + আসল ব্রাউজারে apply → shortlist → demo → contact প্রবাহ একবার দেখা।
 2. NID আপলোডের দুজনের security review (আসল NID নেওয়ার আগে)।
-3. Sprint 5: apply → demo booking (notification কাঠামো তৈরি আছে)।
+3. Sprint 6: bKash manual payment, unlock fee চালু, guardian confirmation (Celery), commission।
 
 ## পরিবর্তনের তালিকা (নতুনটা উপরে যোগ হবে)
 
+- **2026-10-15** — Sprint 5 (৫ ভাগে, branch `feat/sprint-5-apply-demo`): নতুন app `apps/matching` (`TutorApplication`, `Match`, `ContactUnlock`), apply / my-applications / applicants / shortlist / reject / book-demo API, contact শুধু booked demo-র পর, `UNLOCK_FEE_ENABLED` (বন্ধ), ৪টা নতুন notification kind (+ তিন ভাষার email), throttle `application_create` ৩০/ঘণ্টা; React: Apply dialog, `/tutor/applications`, `/requirements/:id/applicants`, ৭১টা নতুন i18n key। Test: backend +৩৭ (360), frontend +১৭ (354)। `Sprint_5.md` যোগ।
 - **2026-10-14** — Sprint 4 frontend: `/requirements` (তালিকা, close/delete dialog, আবার publish), `/requirements/new` ও `/:id/edit` (এক পাতার form, draft save/resume), `/tutor/requirements` (matching + লক-অবস্থা), dashboard কার্ড, Home "Post" শিট ও BottomNav; ৮৫টা নতুন i18n key (তিন ভাষা); `Sprint_4.md`-এ পার্থক্যের তালিকা। Test +১৬ (frontend 337)।
 - **2026-10-14** — Sprint 4 backend: `apps/guardians` (`GuardianProfile` + signal + পুরোনো guardian-দের backfill migration, `Requirement`: draft/open/closed, ৩০ দিনে expire, limit ৩ open/৫ draft lock-সহ), `schedule_note`-এ ফোন/e-mail/link/chat-app/বাংলা সংখ্যা আটকানো, matching (area, class, subject, gender), `IsApprovedTutor`, tutor-এর response-এ guardian-এর কোনো তথ্য নেই (allow-list; test আছে), Django admin read-only। `Sprint_4.md` থেকে পার্থক্য: `title` রাখা হয়নি; admin-এর জন্য আলাদা guardian API নেই, শুধু Django admin; budget ৫০০–১,০০,০০০ টাকা। Test +৪৭ (323)।
 - **2026-10-14** — Stabilize: `test_avatar`-এর ৫ MB বাইট test-এর নামে ঢুকত (Windows-এ ২টা error ও ১০ MB output) — `ids=` দিয়ে ঠিক; frontend test-এর অপেক্ষার সীমা ১s থেকে ৫s (`/dev/ui` lazy route সাময়িক ব্যর্থ হত); `VerificationDetail` approve test-এর race ঠিক; `Sprint_4.md` (পরিকল্পনা) যোগ; `main` Docker ও Postgres 16-এ শূন্য থেকে যাচাই।
