@@ -1,12 +1,15 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import TutorApplications from "./TutorApplications";
 import { mixed } from "../../i18n";
+import userEvent from "@testing-library/user-event";
 import { getMyApplications } from "../../api/applications";
+import { getPaymentInfo, payUnlock } from "../../api/payments";
 import { useAuthStore } from "../../store/authStore";
 import { useLanguageStore } from "../../store/languageStore";
 
 vi.mock("../../api/applications", () => ({ getMyApplications: vi.fn() }));
+vi.mock("../../api/payments", () => ({ getPaymentInfo: vi.fn(), payUnlock: vi.fn() }));
 
 const requirement = {
   id: "r1",
@@ -28,6 +31,7 @@ const application = (overrides) => ({
   demo_at: null,
   unlock_fee: null,
   contact: null,
+  payment: null,
   ...overrides,
 });
 
@@ -78,15 +82,60 @@ describe("TutorApplications page", () => {
     expect(screen.queryByText(mixed["app.contact.closed"])).not.toBeInTheDocument();
   });
 
-  it("explains a demo that waits for the unlock fee, without a number", async () => {
-    getMyApplications.mockResolvedValue([
+  it("lets the tutor pay a waiting unlock fee by bKash and then shows it is being verified", async () => {
+    getPaymentInfo.mockResolvedValue({ number: "01700000000" });
+    payUnlock.mockResolvedValue({ id: "p1", status: "pending" });
+    getMyApplications.mockResolvedValueOnce([
       application({ status: "shortlisted", demo_at: "2026-10-20T11:00:00+06:00", unlock_fee: 150 }),
     ]);
+    getMyApplications.mockResolvedValueOnce([
+      application({
+        status: "shortlisted",
+        demo_at: "2026-10-20T11:00:00+06:00",
+        unlock_fee: 150,
+        payment: { status: "pending", reject_reason: "" },
+      }),
+    ]);
+    const user = userEvent.setup();
     renderPage();
 
     expect(
       await screen.findByText(mixed["app.unlock.pending"].replace("{fee}", "150")),
     ).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /ফোন করুন/ })).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: mixed["app.unlock.pay"].replace("{fee}", "150") }),
+    );
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByText(/01700000000/)).toBeInTheDocument();
+    await user.type(within(dialog).getByLabelText(mixed["pay.dialog.trx"]), "8N7A6D5EE1");
+    await user.type(within(dialog).getByLabelText(mixed["pay.dialog.sender"]), "01733333333");
+    await user.click(within(dialog).getByRole("button", { name: mixed["pay.dialog.send"] }));
+
+    await waitFor(() =>
+      expect(payUnlock).toHaveBeenCalledWith("a1", {
+        transaction_id: "8N7A6D5EE1",
+        sender_number: "01733333333",
+      }),
+    );
+    expect(await screen.findByText(mixed["app.unlock.verifying"])).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /দিন/ })).not.toBeInTheDocument();
+  });
+
+  it("shows why an unlock payment was rejected and lets the tutor pay again", async () => {
+    getMyApplications.mockResolvedValue([
+      application({
+        status: "shortlisted",
+        demo_at: "2026-10-20T11:00:00+06:00",
+        unlock_fee: 150,
+        payment: { status: "rejected", reject_reason: "TrxID not found in bKash" },
+      }),
+    ]);
+    renderPage();
+
+    expect(await screen.findByText(/TrxID not found in bKash/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /দিন/ })).toBeInTheDocument();
   });
 
   it("shows an empty state that leads to tuition, and an error with retry", async () => {

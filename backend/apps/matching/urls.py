@@ -4,6 +4,7 @@ from .views import (
     ApplicationDecisionView,
     ApplyView,
     BookDemoView,
+    ConfirmationLinkView,
     MyApplicationsView,
     RequirementApplicantsView,
 )
@@ -29,4 +30,5 @@ urlpatterns = [
         name="reject",
     ),
     path("applications/<uuid:pk>/book-demo/", BookDemoView.as_view(), name="book-demo"),
+    path("confirmations/<str:token>/", ConfirmationLinkView.as_view(), name="confirmation"),
 ]

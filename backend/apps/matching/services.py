@@ -30,6 +30,10 @@ def apply(profile, requirement_id, message=""):
     An approved tutor applies to an open requirement that suits them (the same rule that lists it
     for them). One application per tutor per requirement.
     """
+    if profile.suspended_at:
+        raise MatchingError(
+            "account_suspended", "Pay your overdue commission to apply again.", status=403
+        )
     requirement = (
         matching_requirements(profile).select_related("guardian__user").filter(pk=requirement_id)
     ).first()
@@ -110,6 +114,23 @@ def _when(demo_at):
     return timezone.localtime(demo_at).strftime("%a %d %b, %I:%M %p")
 
 
+def notify_demo(match, only=None):
+    """Tell both sides the demo is set (or, with `only`, just that one person)."""
+    requirement = match.requirement
+    data = {
+        "requirement_id": str(requirement.pk),
+        "demo_at": match.demo_at.isoformat(),
+        "when": _when(match.demo_at),
+    }
+    people = {
+        match.tutor.user: "/tutor/applications",
+        requirement.guardian.user: f"/requirements/{requirement.pk}/applicants",
+    }
+    for user, path in people.items():
+        if only is None or user == only:
+            notify(user, Notification.Kind.DEMO_BOOKED, demo_path=path, **data)
+
+
 @transaction.atomic
 def book_demo(application, demo_at, by):
     """
@@ -139,18 +160,5 @@ def book_demo(application, demo_at, by):
     )
     if not unlock_fee_required() and not hasattr(match, "unlock"):
         ContactUnlock.objects.create(match=match, tutor=application.tutor, requirement=requirement)
-    data = {"requirement_id": str(requirement.pk), "demo_at": demo_at.isoformat()}
-    data["when"] = _when(demo_at)
-    notify(
-        application.tutor.user,
-        Notification.Kind.DEMO_BOOKED,
-        demo_path="/tutor/applications",
-        **data,
-    )
-    notify(
-        requirement.guardian.user,
-        Notification.Kind.DEMO_BOOKED,
-        demo_path=f"/requirements/{requirement.pk}/applicants",
-        **data,
-    )
+    notify_demo(match)
     return application
