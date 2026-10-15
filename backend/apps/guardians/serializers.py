@@ -19,6 +19,7 @@ class RequirementSerializer(serializers.ModelSerializer):
     expires_at = serializers.DateTimeField(read_only=True)
     expired = serializers.BooleanField(source="is_expired", read_only=True)
     missing = serializers.SerializerMethodField()
+    application_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Requirement
@@ -39,11 +40,15 @@ class RequirementSerializer(serializers.ModelSerializer):
             "close_reason",
             "created_at",
             "missing",
+            "application_count",
         ]
         read_only_fields = fields
 
     def get_missing(self, obj):
         return obj.missing_fields()
+
+    def get_application_count(self, obj):
+        return obj.applications.count()
 
 
 class RequirementWriteSerializer(serializers.Serializer):
@@ -110,6 +115,7 @@ class MatchingRequirementSerializer(serializers.ModelSerializer):
     area = LookupNameSerializer(read_only=True)
     subjects = LookupNameSerializer(many=True, read_only=True)
     budget_fits = serializers.SerializerMethodField()
+    application_status = serializers.SerializerMethodField()
 
     class Meta:
         model = Requirement
@@ -124,8 +130,13 @@ class MatchingRequirementSerializer(serializers.ModelSerializer):
             "schedule_note",
             "published_at",
             "budget_fits",
+            "application_status",
         ]
         read_only_fields = fields
+
+    def get_application_status(self, obj):
+        """This tutor's own application on it, if any (the view passes a {id: status} map)."""
+        return self.context.get("applications", {}).get(obj.pk)
 
     def get_budget_fits(self, obj):
         return budget_fits(obj, self.context["profile"])

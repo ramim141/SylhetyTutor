@@ -16,6 +16,10 @@ class Notification(models.Model):
     class Kind(models.TextChoices):
         PROFILE_APPROVED = "profile_approved", "Tutor profile approved"
         PROFILE_REJECTED = "profile_rejected", "Tutor profile needs changes"
+        APPLICATION_RECEIVED = "application_received", "A tutor applied to your requirement"
+        APPLICATION_SHORTLISTED = "application_shortlisted", "You were shortlisted"
+        APPLICATION_REJECTED = "application_rejected", "Your application was not taken"
+        DEMO_BOOKED = "demo_booked", "A demo class was booked"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(

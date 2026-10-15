@@ -70,6 +70,7 @@ LOCAL_APPS = [
     "apps.tutors",
     "apps.notifications",
     "apps.guardians",
+    "apps.matching",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -214,6 +215,7 @@ REST_FRAMEWORK = {
         "document_upload": "5/minute",
         "avatar_upload": "5/minute",
         "requirement_create": "10/hour",
+        "application_create": "30/hour",
     },
 }
 
@@ -221,6 +223,15 @@ REST_FRAMEWORK = {
 MAX_OPEN_REQUIREMENTS = 3
 MAX_DRAFT_REQUIREMENTS = 5
 REQUIREMENT_LIFETIME_DAYS = 30
+
+# Apply and demo booking (Sprint_5.md)
+MAX_APPLICATION_MESSAGE = 300
+DEMO_MIN_LEAD_HOURS = 1  # a demo cannot start sooner than this from now
+DEMO_MAX_DAYS_AHEAD = 30
+# Architecture Doc 8.8: contact opens for a fee. Off until payment exists (Sprint 6); while on and
+# unpaid, a booked demo does NOT open contact.
+UNLOCK_FEE_ENABLED = os.getenv("UNLOCK_FEE_ENABLED", "false").lower() == "true"
+UNLOCK_FEE_AMOUNT = 150  # BDT, proposed range 100-200
 
 # SimpleJWT configuration
 SIMPLE_JWT = {
