@@ -222,12 +222,27 @@ Sibling element এর মাঝে margin এর বদলে flex/grid `gap`�
 
 | Token | Light | কোথায় |
 | --- | --- | --- |
-| `shadow-sm` | `0 1px 3px rgb(26 46 94 / 0.06)` | Input focus এর বাইরে, ছোট element |
-| `shadow-card` | `0 2px 8px rgb(26 46 94 / 0.06)` | Card এর স্বাভাবিক অবস্থা |
-| `shadow-md` | `0 4px 12px rgb(26 46 94 / 0.08)` | Card hover, dropdown |
-| `shadow-lg` | `0 8px 30px rgb(26 46 94 / 0.12)` | Modal, mobile bottom sheet |
+| `shadow-sm` | `0 1px 2px rgb(26 46 94 / 0.05)` | Input focus এর বাইরে, ছোট element |
+| `shadow-card` | `0 1px 2px rgb(26 46 94 / 0.04), 0 4px 14px rgb(26 46 94 / 0.05)` | Card এর স্বাভাবিক অবস্থা |
+| `shadow-md` | `0 2px 4px rgb(26 46 94 / 0.04), 0 10px 24px rgb(26 46 94 / 0.09)` | Card hover, dropdown |
+| `shadow-lg` | `0 4px 8px rgb(26 46 94 / 0.05), 0 20px 44px rgb(26 46 94 / 0.14)` | Modal, mobile bottom sheet |
 
-Dark mode এ shadow কালো (`rgb(0 0 0 / 0.3–0.5)`), কারণ গাঢ় পটভূমিতে navy shadow দেখা যায় না।
+প্রতিটা shadow দুই স্তরের: ছোট কাছের ছায়া + চওড়া নরম ছায়া, যাতে surface "বাক্স" না দেখিয়ে একটু উঁচুতে ভাসে। Dark mode এ shadow কালো (`rgb(0 0 0 / 0.25–0.5)`), কারণ গাঢ় পটভূমিতে navy shadow দেখা যায় না।
+
+### 5.3.1 Motion
+
+সব animation `src/styles/theme.css` এর `@theme` এ; কোনো component এ নিজের keyframe বা অজানা utility (যেমন `animate-in`) নয়।
+
+| Token / class | কী | কোথায় |
+| --- | --- | --- |
+| `--ease-out-soft` | `cubic-bezier(0.22, 1, 0.36, 1)`: দ্রুত শুরু, লম্বা থিতু হওয়া | যা আসে: পাতা, sheet, dialog, card |
+| `animate-fade-in` | ০.২৫s opacity | Backdrop |
+| `animate-fade-up` | ০.৪৫s নিচ থেকে ১০px উঠে আসে | `main` (সব পাতায় নিজে থেকে), `.stagger` এর সন্তান |
+| `animate-sheet-up` / `animate-pop` | ০.৩৪s / ০.২৪s | Phone এ bottom sheet ও dialog / desktop এ dialog |
+| `.skeleton` | নরম আলো পেরিয়ে যায় (`animate-shimmer`) | Loading ব্লক; `animate-pulse` নয় |
+| `.stagger` | প্রথম ৬টা সন্তান ৪৫ms ফাঁকে আসে | Card grid |
+
+নিয়ম: card hover এ `hover:-translate-y-0.5` ও `shadow-md`, ০.৩s; button ০.২s `ease-out`। `prefers-reduced-motion: reduce` এ সব animation ও transition প্রায় শূন্য (`base.css`); নতুন animation যোগ করলে এই নিয়ম মেনে চলে কিনা দেখুন।
 
 ### 5.4 Layout & Breakpoints
 
@@ -418,10 +433,11 @@ Tailwind v4 এ config `tailwind.config.js` এ নয়, CSS এর `@theme` �
   --radius-xl: 20px;
 
   /* Shadow */
-  --shadow-sm: 0 1px 3px rgb(26 46 94 / 0.06);
-  --shadow-card: 0 2px 8px rgb(26 46 94 / 0.06);
-  --shadow-md: 0 4px 12px rgb(26 46 94 / 0.08);
-  --shadow-lg: 0 8px 30px rgb(26 46 94 / 0.12);
+  --shadow-sm: 0 1px 2px rgb(26 46 94 / 0.05);
+  --shadow-card: 0 1px 2px rgb(26 46 94 / 0.04), 0 4px 14px rgb(26 46 94 / 0.05);
+  --shadow-md: 0 2px 4px rgb(26 46 94 / 0.04), 0 10px 24px rgb(26 46 94 / 0.09);
+  --shadow-lg: 0 4px 8px rgb(26 46 94 / 0.05), 0 20px 44px rgb(26 46 94 / 0.14);
+  /* + motion tokens and keyframes: see src/styles/theme.css (5.3.1) */
 }
 
 /* ───────── Dark ───────── */
@@ -464,10 +480,10 @@ Tailwind v4 এ config `tailwind.config.js` এ নয়, CSS এর `@theme` �
   --color-badge-pro: #a78bfa;
   --color-badge-premium: #f5923f;
 
-  --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.3);
-  --shadow-card: 0 2px 8px rgb(0 0 0 / 0.3);
-  --shadow-md: 0 4px 12px rgb(0 0 0 / 0.4);
-  --shadow-lg: 0 8px 30px rgb(0 0 0 / 0.5);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.25), 0 4px 14px rgb(0 0 0 / 0.28);
+  --shadow-md: 0 2px 4px rgb(0 0 0 / 0.3), 0 10px 24px rgb(0 0 0 / 0.38);
+  --shadow-lg: 0 4px 8px rgb(0 0 0 / 0.35), 0 20px 44px rgb(0 0 0 / 0.5);
 }
 ```
 
