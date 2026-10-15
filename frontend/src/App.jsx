@@ -19,6 +19,7 @@ const Notifications = lazy(() => import("./pages/Notifications"));
 const MyRequirements = lazy(() => import("./pages/requirements/MyRequirements"));
 const RequirementForm = lazy(() => import("./pages/requirements/RequirementForm"));
 const TutorRequirements = lazy(() => import("./pages/tutor/TutorRequirements"));
+const TutorApplications = lazy(() => import("./pages/tutor/TutorApplications"));
 const VerificationQueue = lazy(() => import("./pages/admin/VerificationQueue"));
 const VerificationDetail = lazy(() => import("./pages/admin/VerificationDetail"));
 
@@ -93,6 +94,14 @@ export default function App() {
           element={
             <RoleRoute roles={["tutor"]}>
               <TutorRequirements />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/tutor/applications"
+          element={
+            <RoleRoute roles={["tutor"]}>
+              <TutorApplications />
             </RoleRoute>
           }
         />

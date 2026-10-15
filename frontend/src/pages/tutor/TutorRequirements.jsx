@@ -5,12 +5,14 @@ import { useTranslation } from "../../i18n";
 import { labelOf } from "../../utils/lookups";
 import { timeAgo } from "../../utils/timeAgo";
 import { getMatchingRequirements } from "../../api/requirements";
+import { Alert } from "../../components/ui/Alert";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
+import { ApplyDialog } from "../../components/applications/ApplyDialog";
 import { BottomNav } from "../../components/layout/BottomNav";
 import { budgetText, headline } from "../../components/requirements/requirementText";
 
-function MatchCard({ item }) {
+function MatchCard({ item, onApply }) {
   const ctx = useTranslation();
   const { t, lang } = ctx;
 
@@ -38,6 +40,21 @@ function MatchCard({ item }) {
         </span>
       </div>
       <p className="text-xs text-fg-muted">{t("match.contactNote")}</p>
+      {item.application_status ? (
+        <div className="flex flex-wrap items-center gap-3">
+          <Badge variant="verified">{t("app.applied")}</Badge>
+          <Link
+            to="/tutor/applications"
+            className="inline-flex items-center min-h-11 text-sm font-display font-semibold text-orange-text hover:underline"
+          >
+            {t("dashboard.tutor.appsCta")}
+          </Link>
+        </div>
+      ) : (
+        <Button className="w-full sm:w-auto sm:self-start" onClick={() => onApply(item)}>
+          {t("app.apply")}
+        </Button>
+      )}
     </li>
   );
 }
@@ -47,6 +64,8 @@ export default function TutorRequirements() {
   const { t } = useTranslation();
   const [state, setState] = useState({ status: "loading", items: [] });
   const [attempt, setAttempt] = useState(0);
+  const [applying, setApplying] = useState(null);
+  const [sent, setSent] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -61,6 +80,18 @@ export default function TutorRequirements() {
     };
   }, [attempt]);
 
+  const applied = (application) => {
+    const id = applying.id;
+    setApplying(null);
+    setSent(true);
+    setState((s) => ({
+      ...s,
+      items: s.items.map((it) =>
+        it.id === id ? { ...it, application_status: application.status } : it,
+      ),
+    }));
+  };
+
   return (
     <div className="min-h-dvh bg-bg-subtle text-fg pb-28 md:pb-10">
       <header className="sticky top-0 z-40 bg-bg/95 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top)]">
@@ -73,10 +104,16 @@ export default function TutorRequirements() {
             <ArrowLeft className="w-5 h-5" aria-hidden />
           </Link>
           <h1 className="text-lg font-display font-bold flex-1">{t("match.title")}</h1>
+          <Link to="/tutor/applications">
+            <Button variant="ghost" size="sm">
+              {t("dashboard.tutor.appsCta")}
+            </Button>
+          </Link>
         </div>
       </header>
 
       <main className="max-w-lg mx-auto px-4 py-5 flex flex-col gap-3">
+        {sent && <Alert variant="success">{t("app.sent")}</Alert>}
         {state.status === "loading" && (
           <p role="status" className="text-sm text-fg-secondary text-center py-10">
             {t("common.loading")}
@@ -120,13 +157,21 @@ export default function TutorRequirements() {
             ) : (
               <ul className="flex flex-col gap-3">
                 {state.items.map((item) => (
-                  <MatchCard key={item.id} item={item} />
+                  <MatchCard key={item.id} item={item} onApply={setApplying} />
                 ))}
               </ul>
             )}
           </>
         )}
       </main>
+
+      {applying && (
+        <ApplyDialog
+          requirementId={applying.id}
+          onClose={() => setApplying(null)}
+          onApplied={applied}
+        />
+      )}
 
       <BottomNav />
     </div>
