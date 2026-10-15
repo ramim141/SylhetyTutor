@@ -165,6 +165,11 @@ export default function Dashboard() {
                   {t("dashboard.tutor.matchCta")}
                 </Button>
               </Link>
+              <Link to="/tutor/applications" className="block">
+                <Button variant="ghost" className="w-full">
+                  {t("dashboard.tutor.appsCta")}
+                </Button>
+              </Link>
             </section>
           </>
         ) : user?.role === "admin" ? (

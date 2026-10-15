@@ -189,7 +189,9 @@ class MatchingListView(ListAPIView):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        context["profile"] = self.request.user.tutor_profile
+        profile = self.request.user.tutor_profile
+        context["profile"] = profile
+        context["applications"] = dict(profile.applications.values_list("requirement_id", "status"))
         return context
 
     @extend_schema(tags=["requirements"])
@@ -206,7 +208,9 @@ class MatchingDetailView(RetrieveAPIView):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        context["profile"] = self.request.user.tutor_profile
+        profile = self.request.user.tutor_profile
+        context["profile"] = profile
+        context["applications"] = dict(profile.applications.values_list("requirement_id", "status"))
         return context
 
     @extend_schema(tags=["requirements"])

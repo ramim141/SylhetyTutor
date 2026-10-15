@@ -430,6 +430,7 @@ def test_tutor_response_has_no_guardian_or_contact_data(lookups, guardian):
         "schedule_note",
         "published_at",
         "budget_fits",
+        "application_status",
     }
 
 

@@ -1,20 +1,38 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Bell, CheckCircle2, CircleAlert } from "lucide-react";
+import { ArrowLeft, Bell, CalendarCheck, CheckCircle2, CircleAlert, UserPlus } from "lucide-react";
 import { useTranslation } from "../i18n";
 import { getNotifications, markAllRead, markRead } from "../api/notifications";
 import { useNotificationStore } from "../store/notificationStore";
+import { useAuthStore } from "../store/authStore";
+import { formatDateTime } from "../utils/dateTime";
 import { Button } from "../components/ui/Button";
 import { BottomNav } from "../components/layout/BottomNav";
 
 const KINDS = {
   profile_approved: { icon: CheckCircle2, tone: "text-success", to: "/dashboard" },
   profile_rejected: { icon: CircleAlert, tone: "text-error", to: "/tutor/profile" },
+  application_received: {
+    icon: UserPlus,
+    tone: "text-info",
+    to: (data) => `/requirements/${data.requirement_id}/applicants`,
+  },
+  application_shortlisted: { icon: CheckCircle2, tone: "text-success", to: "/tutor/applications" },
+  application_rejected: { icon: CircleAlert, tone: "text-fg-muted", to: "/tutor/applications" },
+  demo_booked: {
+    icon: CalendarCheck,
+    tone: "text-success",
+    // the guardian opens the applicants list, the tutor opens their applications
+    to: (data, role) =>
+      role === "guardian" ? `/requirements/${data.requirement_id}/applicants` : "/tutor/applications",
+  },
 };
 
 function NotificationItem({ item, onOpen }) {
   const { t, has, lang } = useTranslation();
+  const role = useAuthStore((state) => state.user?.role);
   const kind = KINDS[item.kind];
+  const target = typeof kind?.to === "function" ? kind.to(item.data || {}, role) : kind?.to;
   const Icon = kind?.icon || Bell;
   const known = has(`notif.${item.kind}.title`);
   const when = new Intl.DateTimeFormat(lang === "bn" ? "bn-BD" : "en-GB", {
@@ -43,13 +61,16 @@ function NotificationItem({ item, onOpen }) {
         </div>
         {known && (
           <p className="text-sm text-fg-secondary break-words">
-            {t(`notif.${item.kind}.body`, { reason: item.data?.reason || "" })}
+            {t(`notif.${item.kind}.body`, {
+              reason: item.data?.reason || "",
+              when: item.data?.demo_at ? formatDateTime(item.data.demo_at, lang) : "",
+            })}
           </p>
         )}
         <p className="text-xs text-fg-muted">{when}</p>
         {kind && (
           <Link
-            to={kind.to}
+            to={target}
             onClick={() => unread && onOpen(item)}
             className="mt-1 inline-flex items-center min-h-11 text-sm font-display font-semibold text-orange-text hover:underline"
           >

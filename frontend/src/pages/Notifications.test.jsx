@@ -100,4 +100,37 @@ describe("Notifications page", () => {
     expect(markRead).toHaveBeenCalledWith("n1");
     expect(useNotificationStore.getState().unread).toBe(0);
   });
+
+  it("opens the applicants list for a new application and says when the demo is", async () => {
+    useAuthStore.setState({ user: { full_name: "Karim", role: "guardian" }, status: "authenticated" });
+    getNotifications.mockResolvedValue({
+      count: 2,
+      unread_count: 2,
+      next: null,
+      results: [
+        {
+          id: "n3",
+          kind: "application_received",
+          data: { requirement_id: "r9" },
+          created_at: "2026-10-12T10:00:00+06:00",
+          read_at: null,
+        },
+        {
+          id: "n4",
+          kind: "demo_booked",
+          data: { requirement_id: "r9", demo_at: "2026-10-20T11:00:00+06:00" },
+          created_at: "2026-10-12T09:00:00+06:00",
+          read_at: null,
+        },
+      ],
+    });
+    renderPage();
+
+    expect(await screen.findByText(mixed["notif.application_received.title"])).toBeInTheDocument();
+    expect(screen.getByText(mixed["notif.demo_booked.title"])).toBeInTheDocument();
+    // the demo time is filled into the sentence, never shown as a raw {when}
+    expect(screen.queryByText(/\{when\}/)).not.toBeInTheDocument();
+    const links = screen.getAllByRole("link", { name: /Applicants দেখুন|Details দেখুন/ });
+    links.forEach((link) => expect(link).toHaveAttribute("href", "/requirements/r9/applicants"));
+  });
 });

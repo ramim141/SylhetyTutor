@@ -76,9 +76,14 @@ function RequirementCard({ item, busy, onPublish, onClose, onDelete }) {
           </>
         )}
         {status === "open" && (
-          <Button size="sm" variant="outline" disabled={busy} onClick={() => onClose(item)}>
-            {t("req.action.close")}
-          </Button>
+          <>
+            <Link to={`/requirements/${item.id}/applicants`}>
+              <Button size="sm">{t("req.action.applicants", { count: item.application_count })}</Button>
+            </Link>
+            <Button size="sm" variant="outline" disabled={busy} onClick={() => onClose(item)}>
+              {t("req.action.close")}
+            </Button>
+          </>
         )}
         {(status === "closed" || status === "expired") && (
           <Button size="sm" disabled={busy} onClick={() => onPublish(item)}>

@@ -37,6 +37,7 @@ function item(overrides) {
     expires_at: "2026-11-10T10:00:00+06:00",
     expired: false,
     missing: [],
+    application_count: 2,
     ...overrides,
   };
 }
@@ -76,6 +77,16 @@ describe("MyRequirements page", () => {
     expect(screen.getAllByRole("button", { name: mixed["req.action.close"] })).toHaveLength(1);
     expect(screen.getAllByRole("button", { name: mixed["req.action.republish"] })).toHaveLength(2);
     expect(screen.getByRole("button", { name: mixed["req.action.delete"] })).toBeInTheDocument();
+  });
+
+  it("links an open requirement to its applicants, with the count", async () => {
+    getMyRequirements.mockResolvedValue([item()]);
+    renderPage();
+
+    const link = await screen.findByRole("link", {
+      name: mixed["req.action.applicants"].replace("{count}", "2"),
+    });
+    expect(link).toHaveAttribute("href", "/requirements/r1/applicants");
   });
 
   it("shows an honest empty state with a way to post", async () => {
