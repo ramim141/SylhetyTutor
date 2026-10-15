@@ -63,6 +63,7 @@ class TutorApplicationSerializer(DemoFieldsMixin, serializers.ModelSerializer):
     demo_at = serializers.SerializerMethodField()
     unlock_fee = serializers.SerializerMethodField()
     contact = serializers.SerializerMethodField()
+    payment = serializers.SerializerMethodField()
 
     class Meta:
         model = TutorApplication
@@ -75,12 +76,28 @@ class TutorApplicationSerializer(DemoFieldsMixin, serializers.ModelSerializer):
             "demo_at",
             "unlock_fee",
             "contact",
+            "payment",
         ]
         read_only_fields = fields
 
     @staticmethod
     def other_user(obj):
         return obj.requirement.guardian.user
+
+    def get_payment(self, obj):
+        """The tutor's latest unlock payment on this demo (shown instead of the Pay button)."""
+        match, _ = demo_state(obj)
+        if not match:
+            return None
+        latest = max(match.payments.all(), key=lambda p: p.created_at, default=None)
+        if latest is None:
+            return None
+        return {
+            "id": latest.pk,
+            "status": latest.status,
+            "reject_reason": latest.reject_reason,
+            "transaction_id": latest.transaction_id,
+        }
 
     def get_requirement(self, obj):
         return MatchingRequirementSerializer(obj.requirement, context=self.context).data
@@ -118,3 +135,22 @@ class GuardianApplicationSerializer(DemoFieldsMixin, serializers.ModelSerializer
 
 class BookDemoSerializer(serializers.Serializer):
     demo_at = serializers.DateTimeField()
+
+
+class ConfirmationAnswerSerializer(serializers.Serializer):
+    answer = serializers.ChoiceField(choices=["yes", "no"])
+
+
+class PublicConfirmationSerializer(serializers.Serializer):
+    """What the guardian sees on the one-tap page: who, when, and whether it is answered."""
+
+    tutor_name = serializers.CharField(source="tutor.user.full_name")
+    demo_at = serializers.DateTimeField()
+    answered = serializers.SerializerMethodField()
+    started = serializers.SerializerMethodField()
+
+    def get_answered(self, obj) -> bool:
+        return obj.status in ("confirmed", "declined")
+
+    def get_started(self, obj):
+        return {"confirmed": True, "declined": False}.get(obj.status)

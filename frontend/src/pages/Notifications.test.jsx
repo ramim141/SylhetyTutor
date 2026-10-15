@@ -133,4 +133,29 @@ describe("Notifications page", () => {
     const links = screen.getAllByRole("link", { name: /Applicants দেখুন|Details দেখুন/ });
     links.forEach((link) => expect(link).toHaveAttribute("href", "/requirements/r9/applicants"));
   });
+
+  it("sends each money notification to the page the server named", async () => {
+    getNotifications.mockResolvedValue({
+      count: 3,
+      unread_count: 3,
+      next: null,
+      results: [
+        { id: "m1", kind: "commission_due", data: { path: "/tutor/payments" }, created_at: "2026-10-12T10:00:00+06:00", read_at: null },
+        { id: "m2", kind: "payment_rejected", data: { path: "/tutor/applications", reason: "TrxID not found" }, created_at: "2026-10-12T09:00:00+06:00", read_at: null },
+        { id: "m3", kind: "confirm_tuition", data: { path: "/confirm/abc" }, created_at: "2026-10-12T08:00:00+06:00", read_at: null },
+      ],
+    });
+    renderPage();
+
+    expect(await screen.findByText(mixed["notif.commission_due.title"])).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: mixed["notif.commission_due.cta"] })).toHaveAttribute(
+      "href",
+      "/tutor/payments",
+    );
+    expect(screen.getByText(/TrxID not found/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: mixed["notif.confirm_tuition.cta"] })).toHaveAttribute(
+      "href",
+      "/confirm/abc",
+    );
+  });
 });

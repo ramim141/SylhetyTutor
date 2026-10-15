@@ -111,6 +111,76 @@ COPY = {
             "{when} এ একটি demo class ঠিক হয়েছে।\n\nDetails দেখুন: {link}\n",
         ),
     },
+    Notification.Kind.PAYMENT_VERIFIED: {
+        "en": ("Payment verified", "We verified your bKash payment. Details: {link}\n"),
+        "bn": ("পেমেন্ট যাচাই হয়েছে", "আপনার bKash পেমেন্ট যাচাই হয়েছে। বিস্তারিত: {link}\n"),
+        "mixed": ("Payment verify হয়েছে", "আপনার bKash payment verify হয়েছে। Details: {link}\n"),
+    },
+    Notification.Kind.PAYMENT_REJECTED: {
+        "en": (
+            "Payment could not be verified",
+            "We could not verify your payment.\n\nReason: {reason}\n\n"
+            "Check and try again: {link}\n",
+        ),
+        "bn": (
+            "পেমেন্ট যাচাই করা যায়নি",
+            "আপনার পেমেন্ট যাচাই করা যায়নি।\n\nকারণ: {reason}\n\nদেখে আবার চেষ্টা করুন: {link}\n",
+        ),
+        "mixed": (
+            "Payment verify করা যায়নি",
+            "আপনার payment verify করা যায়নি।\n\nকারণ: {reason}\n\nদেখে আবার try করুন: {link}\n",
+        ),
+    },
+    Notification.Kind.CONFIRM_TUITION: {
+        "en": (
+            "Did the tuition start?",
+            "You met a tutor on SylhetyTutor. Did the tuition start? One tap, no login: {link}\n",
+        ),
+        "bn": (
+            "টিউশন কি শুরু হয়েছে?",
+            "আপনি SylhetyTutor-এ একজন টিউটরের সাথে demo করেছেন। টিউশন কি শুরু হয়েছে? "
+            "এক ট্যাপে জানান, লগইন লাগবে না: {link}\n",
+        ),
+        "mixed": (
+            "Tuition কি শুরু হয়েছে?",
+            "আপনি SylhetyTutor এ একজন tutor এর সাথে demo করেছেন। Tuition কি শুরু হয়েছে? "
+            "এক tap এ জানান, login লাগবে না: {link}\n",
+        ),
+    },
+    Notification.Kind.COMMISSION_DUE: {
+        "en": (
+            "Commission due",
+            "A guardian confirmed the tuition. Your commission is due within 7 days: {link}\n",
+        ),
+        "bn": (
+            "কমিশন দেয়",
+            "অভিভাবক টিউশন নিশ্চিত করেছেন। ৭ দিনের মধ্যে আপনার কমিশন দিন: {link}\n",
+        ),
+        "mixed": (
+            "Commission due",
+            "Guardian tuition confirm করেছেন। ৭ দিনের মধ্যে আপনার commission দিন: {link}\n",
+        ),
+    },
+    Notification.Kind.COMMISSION_REMINDER: {
+        "en": ("Commission reminder", "Your commission is overdue. Please pay: {link}\n"),
+        "bn": ("কমিশনের রিমাইন্ডার", "আপনার কমিশন বাকি আছে। অনুগ্রহ করে দিন: {link}\n"),
+        "mixed": ("Commission reminder", "আপনার commission বাকি আছে। অনুগ্রহ করে দিন: {link}\n"),
+    },
+    Notification.Kind.ACCOUNT_SUSPENDED: {
+        "en": (
+            "Applying is paused",
+            "Your commission is more than 21 days overdue, so new applications are paused. "
+            "Pay to continue: {link}\n",
+        ),
+        "bn": (
+            "আবেদন সাময়িক বন্ধ",
+            "আপনার কমিশন ২১ দিনের বেশি বাকি, তাই নতুন আবেদন বন্ধ আছে। চালু করতে দিন: {link}\n",
+        ),
+        "mixed": (
+            "Apply সাময়িক বন্ধ",
+            "আপনার commission ২১ দিনের বেশি বাকি, তাই নতুন apply বন্ধ আছে। চালু করতে দিন: {link}\n",
+        ),
+    },
 }
 
 LINKS = {
@@ -120,6 +190,12 @@ LINKS = {
     Notification.Kind.APPLICATION_SHORTLISTED: "/tutor/applications",
     Notification.Kind.APPLICATION_REJECTED: "/tutor/applications",
     Notification.Kind.DEMO_BOOKED: "{demo_path}",
+    Notification.Kind.PAYMENT_VERIFIED: "{path}",
+    Notification.Kind.PAYMENT_REJECTED: "{path}",
+    Notification.Kind.CONFIRM_TUITION: "{path}",
+    Notification.Kind.COMMISSION_DUE: "{path}",
+    Notification.Kind.COMMISSION_REMINDER: "{path}",
+    Notification.Kind.ACCOUNT_SUSPENDED: "{path}",
 }
 
 
@@ -132,7 +208,12 @@ def send_notification_email(notification):
     if not copy:
         return False
     subject, body = copy.get(user.preferred_language) or copy["mixed"]
-    data = {"requirement_id": "", "demo_path": "/dashboard", **notification.data}
+    data = {
+        "requirement_id": "",
+        "demo_path": "/dashboard",
+        "path": "/dashboard",
+        **notification.data,
+    }
     link = settings.FRONTEND_URL.rstrip("/") + LINKS[notification.kind].format(**data)
     try:
         send_mail(

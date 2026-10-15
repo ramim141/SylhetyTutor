@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Bell, CalendarCheck, CheckCircle2, CircleAlert, UserPlus } from "lucide-react";
+import {
+  ArrowLeft,
+  Bell,
+  CalendarCheck,
+  CheckCircle2,
+  CircleAlert,
+  HelpCircle,
+  UserPlus,
+  Wallet,
+} from "lucide-react";
 import { useTranslation } from "../i18n";
 import { getNotifications, markAllRead, markRead } from "../api/notifications";
 import { useNotificationStore } from "../store/notificationStore";
@@ -26,6 +35,13 @@ const KINDS = {
     to: (data, role) =>
       role === "guardian" ? `/requirements/${data.requirement_id}/applicants` : "/tutor/applications",
   },
+  // the server says where these lead (data.path), so the page never guesses
+  payment_verified: { icon: Wallet, tone: "text-success", to: (data) => data.path },
+  payment_rejected: { icon: CircleAlert, tone: "text-error", to: (data) => data.path },
+  confirm_tuition: { icon: HelpCircle, tone: "text-info", to: (data) => data.path },
+  commission_due: { icon: Wallet, tone: "text-info", to: (data) => data.path },
+  commission_reminder: { icon: Wallet, tone: "text-error", to: (data) => data.path },
+  account_suspended: { icon: CircleAlert, tone: "text-error", to: (data) => data.path },
 };
 
 function NotificationItem({ item, onOpen }) {
