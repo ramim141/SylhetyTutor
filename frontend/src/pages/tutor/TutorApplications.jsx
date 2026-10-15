@@ -5,10 +5,13 @@ import { useTranslation } from "../../i18n";
 import { labelOf } from "../../utils/lookups";
 import { formatDateTime } from "../../utils/dateTime";
 import { getMyApplications } from "../../api/applications";
+import { getPaymentInfo, payUnlock } from "../../api/payments";
+import { Alert } from "../../components/ui/Alert";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { BottomNav } from "../../components/layout/BottomNav";
 import { ContactCard } from "../../components/applications/ContactCard";
+import { PayDialog } from "../../components/payments/PayDialog";
 import { budgetText, headline } from "../../components/requirements/requirementText";
 
 const STATUS_VARIANT = {
@@ -18,7 +21,7 @@ const STATUS_VARIANT = {
   rejected: "tag",
 };
 
-function ApplicationCard({ item }) {
+function ApplicationCard({ item, onPay }) {
   const ctx = useTranslation();
   const { t, lang } = ctx;
   const requirement = item.requirement;
@@ -49,7 +52,23 @@ function ApplicationCard({ item }) {
       )}
       {item.contact && <ContactCard contact={item.contact} title={t("app.contact.guardian")} />}
       {item.demo_at && !item.contact && item.unlock_fee != null && (
-        <p className="text-sm text-fg-secondary">{t("app.unlock.pending", { fee: item.unlock_fee })}</p>
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-fg-secondary">
+            {item.payment?.status === "pending"
+              ? t("app.unlock.verifying")
+              : t("app.unlock.pending", { fee: item.unlock_fee })}
+          </p>
+          {item.payment?.status === "rejected" && (
+            <p role="alert" className="text-sm text-error">
+              {t("app.unlock.rejected", { reason: item.payment.reject_reason })}
+            </p>
+          )}
+          {item.payment?.status !== "pending" && (
+            <Button className="w-full sm:w-auto sm:self-start" onClick={() => onPay(item)}>
+              {t("app.unlock.pay", { fee: item.unlock_fee })}
+            </Button>
+          )}
+        </div>
       )}
       {!item.demo_at && item.status === "shortlisted" && (
         <p className="text-xs text-fg-muted">{t("app.contact.closed")}</p>
@@ -63,6 +82,18 @@ export default function TutorApplications() {
   const { t } = useTranslation();
   const [state, setState] = useState({ status: "loading", items: [] });
   const [attempt, setAttempt] = useState(0);
+  const [paying, setPaying] = useState(null);
+  const [number, setNumber] = useState("");
+  const [sent, setSent] = useState(false);
+
+  const startPaying = async (item) => {
+    try {
+      setNumber((await getPaymentInfo()).number);
+      setPaying(item);
+    } catch {
+      setState({ status: "error", items: [] });
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -90,6 +121,7 @@ export default function TutorApplications() {
       </header>
 
       <main className="max-w-lg mx-auto px-4 py-5 flex flex-col gap-3">
+        {sent && <Alert variant="success">{t("pay.sent")}</Alert>}
         {state.status === "loading" && (
           <p role="status" className="text-sm text-fg-secondary text-center py-10">
             {t("common.loading")}
@@ -127,12 +159,26 @@ export default function TutorApplications() {
             <p className="text-sm text-fg-secondary">{t("app.mine.intro")}</p>
             <ul className="flex flex-col gap-3">
               {state.items.map((item) => (
-                <ApplicationCard key={item.id} item={item} />
+                <ApplicationCard key={item.id} item={item} onPay={startPaying} />
               ))}
             </ul>
           </>
         )}
       </main>
+
+      {paying && (
+        <PayDialog
+          amount={paying.unlock_fee}
+          number={number}
+          submit={(body) => payUnlock(paying.id, body)}
+          onClose={() => setPaying(null)}
+          onDone={() => {
+            setPaying(null);
+            setSent(true);
+            setAttempt((n) => n + 1);
+          }}
+        />
+      )}
 
       <BottomNav />
     </div>

@@ -34,3 +34,49 @@ export async function getDocumentBlob(url, config = {}) {
   const response = await api.get(path, { ...config, responseType: "blob" });
   return response.data;
 }
+
+// --- payments, commissions, call list ------------------------------------------
+
+/** status: pending (default) | verified | rejected. { counts, results } */
+export async function getAdminPayments(params = {}, config = {}) {
+  const response = await api.get("/admin/payments/", { ...config, params });
+  return response.data;
+}
+
+export async function verifyPayment(id) {
+  const response = await api.post(`/admin/payments/${id}/verify/`);
+  return response.data;
+}
+
+export async function rejectPayment(id, reason) {
+  const response = await api.post(`/admin/payments/${id}/reject/`, { reason });
+  return response.data;
+}
+
+/** status: pending (default) | paid | waived | disputed. { counts, results } */
+export async function getAdminCommissions(params = {}, config = {}) {
+  const response = await api.get("/admin/commissions/", { ...config, params });
+  return response.data;
+}
+
+export async function markCommissionPaid(id) {
+  const response = await api.post(`/admin/commissions/${id}/mark-paid/`);
+  return response.data;
+}
+
+export async function waiveCommission(id, reason) {
+  const response = await api.post(`/admin/commissions/${id}/waive/`, { reason });
+  return response.data;
+}
+
+/** Guardians who did not answer the confirmation link. */
+export async function getCallList(config = {}) {
+  const response = await api.get("/admin/call-list/", config);
+  return response.data;
+}
+
+/** answer: "yes" | "no"; channel: "call" | "whatsapp". */
+export async function answerCall(id, answer, channel = "call") {
+  const response = await api.post(`/admin/call-list/${id}/answer/`, { answer, channel });
+  return response.data;
+}

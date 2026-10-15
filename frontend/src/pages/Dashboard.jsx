@@ -170,6 +170,11 @@ export default function Dashboard() {
                   {t("dashboard.tutor.appsCta")}
                 </Button>
               </Link>
+              <Link to="/tutor/payments" className="block">
+                <Button variant="ghost" className="w-full">
+                  {t("pay.cta")}
+                </Button>
+              </Link>
             </section>
           </>
         ) : user?.role === "admin" ? (
