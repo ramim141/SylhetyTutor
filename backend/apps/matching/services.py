@@ -30,6 +30,10 @@ def apply(profile, requirement_id, message=""):
     An approved tutor applies to an open requirement that suits them (the same rule that lists it
     for them). One application per tutor per requirement.
     """
+    if profile.suspended_at:
+        raise MatchingError(
+            "account_suspended", "Pay your overdue commission to apply again.", status=403
+        )
     requirement = (
         matching_requirements(profile).select_related("guardian__user").filter(pk=requirement_id)
     ).first()

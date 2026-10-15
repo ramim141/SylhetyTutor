@@ -82,6 +82,11 @@ class TutorProfile(models.Model):
     rating_avg = models.DecimalField(max_digits=3, decimal_places=1, default=0)
     review_count = models.PositiveIntegerField(default=0)
 
+    # Money (Sprint_6.md). Founding tutors owe no commission until this date (Architecture Doc
+    # 8.8); an unpaid commission past the limit pauses new applications until it is paid.
+    founding_until = models.DateField(null=True, blank=True)
+    suspended_at = models.DateTimeField(null=True, blank=True)
+
     # Preferences & Specializations
     subjects = models.ManyToManyField(Subject, blank=True, related_name="tutors")
     class_levels = models.ManyToManyField(ClassLevel, blank=True, related_name="tutors")

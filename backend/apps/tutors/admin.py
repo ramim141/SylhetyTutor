@@ -73,6 +73,7 @@ class TutorProfileAdmin(admin.ModelAdmin):
         "verified_at",
         "verified_by",
         "document_links",
+        "suspended_at",
     )
     fieldsets = (
         ("User Association", {"fields": ("user", "gender")}),
@@ -116,6 +117,7 @@ class TutorProfileAdmin(admin.ModelAdmin):
                 )
             },
         ),
+        ("Money", {"fields": ("founding_until", "suspended_at")}),
     )
 
     def get_queryset(self, request):

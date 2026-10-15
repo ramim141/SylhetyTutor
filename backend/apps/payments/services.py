@@ -139,8 +139,17 @@ def fulfil_unlock(payment):
     return unlock
 
 
-# purpose -> what a verified payment of that kind does (commission is added in services below)
-FULFIL = {Payment.Purpose.UNLOCK: fulfil_unlock}
+def fulfil_commission(payment):
+    from . import commissions
+
+    commissions.fulfil(payment)
+
+
+# purpose -> what a verified payment of that kind does
+FULFIL = {
+    Payment.Purpose.UNLOCK: fulfil_unlock,
+    Payment.Purpose.COMMISSION: fulfil_commission,
+}
 
 
 def submit_unlock(application, user, transaction_id, sender_number):

@@ -8,9 +8,9 @@ from rest_framework.views import APIView
 from apps.accounts.permissions import IsTutor
 from apps.matching.models import TutorApplication
 
-from . import services
-from .models import Payment
-from .serializers import MyPaymentSerializer, PaymentSubmitSerializer
+from . import commissions, services
+from .models import Commission, Payment
+from .serializers import CommissionSerializer, MyPaymentSerializer, PaymentSubmitSerializer
 from .throttles import PaymentSubmitThrottle
 
 
@@ -92,3 +92,62 @@ class MyPaymentsView(APIView):
                 Payment.objects.filter(user=request.user).order_by("-created_at"), many=True
             ).data
         )
+
+
+def my_commissions(user):
+    return (
+        Commission.objects.filter(tutor__user=user)
+        .select_related("match__requirement__area")
+        .prefetch_related("payments")
+        .order_by("-created_at")
+    )
+
+
+class MyCommissionsView(APIView):
+    """What I owe: commissions newest first, and whether applying is currently paused."""
+
+    permission_classes = [IsTutor]
+
+    @extend_schema(
+        responses=inline_serializer(
+            "MyCommissions",
+            {
+                "suspended": serializers.BooleanField(),
+                "results": CommissionSerializer(many=True),
+            },
+        ),
+        tags=["payments"],
+    )
+    def get(self, request):
+        profile = getattr(request.user, "tutor_profile", None)
+        return Response(
+            {
+                "suspended": bool(profile and profile.suspended_at),
+                "results": CommissionSerializer(my_commissions(request.user), many=True).data,
+            }
+        )
+
+
+class PayCommissionView(APIView):
+    permission_classes = [IsTutor]
+
+    def get_throttles(self):
+        return [PaymentSubmitThrottle()]
+
+    @extend_schema(
+        request=PaymentSubmitSerializer, responses=MyPaymentSerializer, tags=["payments"]
+    )
+    def post(self, request, pk):
+        try:
+            commission = Commission.objects.select_related("tutor__user").get(
+                pk=pk, tutor__user=request.user
+            )
+        except Commission.DoesNotExist:
+            raise NotFound() from None
+        serializer = PaymentSubmitSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            payment = commissions.submit(commission, request.user, **serializer.validated_data)
+        except services.PaymentError as error:
+            raise PaymentFailed(error) from None
+        return Response(MyPaymentSerializer(payment).data, status=status.HTTP_201_CREATED)

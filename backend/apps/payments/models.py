@@ -36,6 +36,13 @@ class Payment(models.Model):
     match = models.ForeignKey(
         "matching.Match", null=True, blank=True, on_delete=models.SET_NULL, related_name="payments"
     )
+    commission = models.ForeignKey(
+        "payments.Commission",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="payments",
+    )
     reject_reason = models.CharField(max_length=300, blank=True)
     reviewed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
@@ -49,3 +56,41 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"{self.purpose} ৳{self.amount} {self.transaction_id} ({self.status})"
+
+
+class Commission(models.Model):
+    """
+    What a free tutor owes once a guardian confirms the tuition started (Architecture Doc 8.8).
+    Due a week after the confirmation; a founding tutor's is waived.
+    """
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Due"
+        PAID = "paid", "Paid"
+        WAIVED = "waived", "Waived"
+        DISPUTED = "disputed", "Disputed"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    match = models.OneToOneField(
+        "matching.Match", on_delete=models.CASCADE, related_name="commission"
+    )
+    tutor = models.ForeignKey(
+        "tutors.TutorProfile", on_delete=models.CASCADE, related_name="commissions"
+    )
+    amount = models.PositiveIntegerField(help_text="BDT, from settings.COMMISSION_AMOUNT")
+    due_date = models.DateField()
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    payment = models.ForeignKey(
+        Payment, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    note = models.CharField(max_length=300, blank=True, help_text="Why waived, or how it was paid")
+    reminded_at = models.DateTimeField(null=True, blank=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["due_date", "created_at"]
+        indexes = [models.Index(fields=["status", "due_date"])]
+
+    def __str__(self):
+        return f"Commission ৳{self.amount} ({self.status})"
