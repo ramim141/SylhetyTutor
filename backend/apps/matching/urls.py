@@ -3,6 +3,7 @@ from django.urls import path
 from .views import (
     ApplicationDecisionView,
     ApplyView,
+    BookDemoView,
     MyApplicationsView,
     RequirementApplicantsView,
 )
@@ -27,4 +28,5 @@ urlpatterns = [
         ApplicationDecisionView.as_view(action="reject"),
         name="reject",
     ),
+    path("applications/<uuid:pk>/book-demo/", BookDemoView.as_view(), name="book-demo"),
 ]

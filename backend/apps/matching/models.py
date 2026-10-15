@@ -8,6 +8,7 @@ when: contact stays hidden until that row exists.
 
 import uuid
 
+from django.conf import settings
 from django.db import models
 
 
@@ -42,3 +43,64 @@ class TutorApplication(models.Model):
 
     def __str__(self):
         return f"Application {self.pk} ({self.status})"
+
+
+class Match(models.Model):
+    """A shortlisted tutor with a demo class booked on a requirement (Architecture Doc 3.13)."""
+
+    class Status(models.TextChoices):
+        TRIAL_SCHEDULED = "trial_scheduled", "Demo booked"
+        CONFIRMED = "confirmed", "Confirmed by the guardian"  # Sprint 6
+        DECLINED = "declined", "Declined"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    requirement = models.ForeignKey(
+        "guardians.Requirement", on_delete=models.CASCADE, related_name="matches"
+    )
+    tutor = models.ForeignKey(
+        "tutors.TutorProfile", on_delete=models.CASCADE, related_name="matches"
+    )
+    application = models.OneToOneField(
+        TutorApplication, null=True, on_delete=models.SET_NULL, related_name="match"
+    )
+    booked_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    demo_at = models.DateTimeField()
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.TRIAL_SCHEDULED)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name_plural = "matches"
+        constraints = [
+            models.UniqueConstraint(fields=["requirement", "tutor"], name="one_match_per_pair")
+        ]
+
+    def __str__(self):
+        return f"Match {self.pk} ({self.status})"
+
+
+class ContactUnlock(models.Model):
+    """
+    The audit row for contact opening: which tutor got which guardian's number (through the
+    requirement), when, and what was paid. Without this row nobody sees anybody's phone.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    match = models.OneToOneField(Match, on_delete=models.CASCADE, related_name="unlock")
+    tutor = models.ForeignKey(
+        "tutors.TutorProfile", on_delete=models.CASCADE, related_name="contact_unlocks"
+    )
+    requirement = models.ForeignKey(
+        "guardians.Requirement", on_delete=models.CASCADE, related_name="contact_unlocks"
+    )
+    fee_paid = models.PositiveIntegerField(default=0, help_text="BDT; 0 while the fee is off")
+    unlocked_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-unlocked_at"]
+
+    def __str__(self):
+        return f"Unlock {self.pk}"

@@ -11,6 +11,7 @@ from . import services
 from .models import TutorApplication
 from .serializers import (
     ApplyWriteSerializer,
+    BookDemoSerializer,
     GuardianApplicationSerializer,
     TutorApplicationSerializer,
 )
@@ -113,3 +114,23 @@ def own_application(request, pk):
         )
     except TutorApplication.DoesNotExist:
         raise NotFound() from None
+
+
+class BookDemoView(APIView):
+    """Pick the demo time for a shortlisted tutor. Contact opens for both sides (8.8)."""
+
+    permission_classes = [IsGuardian]
+
+    @extend_schema(
+        request=BookDemoSerializer, responses=GuardianApplicationSerializer, tags=["applications"]
+    )
+    def post(self, request, pk):
+        application = own_application(request, pk)
+        serializer = BookDemoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            services.book_demo(application, serializer.validated_data["demo_at"], request.user)
+        except services.MatchingError as error:
+            raise MatchingFailed(error) from None
+        application = applicants_queryset(application.requirement).get(pk=pk)
+        return Response(GuardianApplicationSerializer(application).data)
