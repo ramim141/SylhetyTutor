@@ -218,6 +218,7 @@ REST_FRAMEWORK = {
         "requirement_create": "10/hour",
         "application_create": "30/hour",
         "payment_submit": "10/hour",
+        "confirm_link": "30/hour",
     },
 }
 

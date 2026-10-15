@@ -135,3 +135,22 @@ class GuardianApplicationSerializer(DemoFieldsMixin, serializers.ModelSerializer
 
 class BookDemoSerializer(serializers.Serializer):
     demo_at = serializers.DateTimeField()
+
+
+class ConfirmationAnswerSerializer(serializers.Serializer):
+    answer = serializers.ChoiceField(choices=["yes", "no"])
+
+
+class PublicConfirmationSerializer(serializers.Serializer):
+    """What the guardian sees on the one-tap page: who, when, and whether it is answered."""
+
+    tutor_name = serializers.CharField(source="tutor.user.full_name")
+    demo_at = serializers.DateTimeField()
+    answered = serializers.SerializerMethodField()
+    started = serializers.SerializerMethodField()
+
+    def get_answered(self, obj) -> bool:
+        return obj.status in ("confirmed", "declined")
+
+    def get_started(self, obj):
+        return {"confirmed": True, "declined": False}.get(obj.status)

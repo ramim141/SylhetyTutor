@@ -53,6 +53,11 @@ class Match(models.Model):
         CONFIRMED = "confirmed", "Confirmed by the guardian"  # Sprint 6
         DECLINED = "declined", "Declined"
 
+    class Channel(models.TextChoices):
+        LINK = "link", "Link"
+        CALL = "call", "Phone call"
+        WHATSAPP = "whatsapp", "WhatsApp"
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     requirement = models.ForeignKey(
         "guardians.Requirement", on_delete=models.CASCADE, related_name="matches"
@@ -68,6 +73,11 @@ class Match(models.Model):
     )
     demo_at = models.DateTimeField()
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.TRIAL_SCHEDULED)
+    # Guardian confirmation (Architecture Doc 8.8): asked some days after the demo
+    confirmation_requested_at = models.DateTimeField(null=True, blank=True)
+    confirmation_answered_at = models.DateTimeField(null=True, blank=True)
+    guardian_confirmed_at = models.DateTimeField(null=True, blank=True, help_text="Only for 'yes'")
+    confirmation_channel = models.CharField(max_length=10, choices=Channel.choices, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
