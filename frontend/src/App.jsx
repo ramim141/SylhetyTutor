@@ -21,6 +21,8 @@ const RequirementForm = lazy(() => import("./pages/requirements/RequirementForm"
 const TutorRequirements = lazy(() => import("./pages/tutor/TutorRequirements"));
 const TutorApplications = lazy(() => import("./pages/tutor/TutorApplications"));
 const TutorPayments = lazy(() => import("./pages/tutor/TutorPayments"));
+const ConfirmTuition = lazy(() => import("./pages/ConfirmTuition"));
+const PaymentsAdmin = lazy(() => import("./pages/admin/PaymentsAdmin"));
 const Applicants = lazy(() => import("./pages/requirements/Applicants"));
 const VerificationQueue = lazy(() => import("./pages/admin/VerificationQueue"));
 const VerificationDetail = lazy(() => import("./pages/admin/VerificationDetail"));
@@ -120,6 +122,15 @@ export default function App() {
           element={
             <RoleRoute roles={["guardian"]}>
               <Applicants />
+            </RoleRoute>
+          }
+        />
+        <Route path="/confirm/:token" element={<ConfirmTuition />} />
+        <Route
+          path="/admin/payments"
+          element={
+            <RoleRoute roles={["admin"]}>
+              <PaymentsAdmin />
             </RoleRoute>
           }
         />

@@ -42,6 +42,11 @@ export function AdminQueueCard() {
       <Link to="/admin/verification" className="block">
         <Button className="w-full">{t("admin.dashboard.open")}</Button>
       </Link>
+      <Link to="/admin/payments" className="block">
+        <Button variant="outline" className="w-full">
+          {t("admin.pay.open")}
+        </Button>
+      </Link>
     </section>
   );
 }
