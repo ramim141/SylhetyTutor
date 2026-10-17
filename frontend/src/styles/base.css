@@ -2,6 +2,13 @@
   html {
     background: var(--color-bg);
     color: var(--color-fg);
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: var(--color-orange-light);
+    color: var(--color-orange-text);
   }
   body {
     font-family: var(--font-body);
@@ -20,6 +27,57 @@
   :focus-visible {
     outline: 2px solid var(--color-orange);
     outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+  p {
+    text-wrap: pretty;
+  }
+  /* Every page's main area settles in instead of appearing at once */
+  main {
+    animation: var(--animate-fade-up);
+  }
+  /* Thin, quiet scrollbars where there is one (desktop) */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+  }
+}
+
+/* Skeleton: a soft light passing over the block, in the page's own surface colours */
+.skeleton {
+  background: linear-gradient(
+      100deg,
+      transparent 30%,
+      color-mix(in srgb, var(--color-bg-card) 70%, transparent) 50%,
+      transparent 70%
+    )
+    0 0 / 200% 100% var(--color-bg-subtle);
+  animation: var(--animate-shimmer);
+}
+
+/* Lists whose first items arrive one after another (cards, rows) */
+.stagger > * {
+  animation: var(--animate-fade-up);
+}
+.stagger > :nth-child(2) { animation-delay: 45ms; }
+.stagger > :nth-child(3) { animation-delay: 90ms; }
+.stagger > :nth-child(4) { animation-delay: 135ms; }
+.stagger > :nth-child(5) { animation-delay: 180ms; }
+.stagger > :nth-child(6) { animation-delay: 225ms; }
+.stagger > :nth-child(n + 7) { animation-delay: 270ms; }
+
+/* Anyone who asked their device for less motion gets none */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 

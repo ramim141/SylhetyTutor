@@ -108,8 +108,8 @@ export default function TutorRegistration() {
   if (loadStatus === "loading") {
     return shell(
       <div role="status" aria-label={t("common.loading")} className="flex flex-col gap-4">
-        <div className="h-12 rounded-lg bg-bg-card animate-pulse" />
-        <div className="h-72 rounded-lg bg-bg-card animate-pulse" />
+        <div className="h-12 rounded-lg skeleton" />
+        <div className="h-72 rounded-lg skeleton" />
       </div>,
     );
   }

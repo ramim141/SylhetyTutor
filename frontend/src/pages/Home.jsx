@@ -136,9 +136,13 @@ export default function Home() {
         {/* Hero + search */}
         {/* overflow-clip, not -hidden: a hidden box is still scrollable by the browser, which
             shifted the hero sideways when filters changed (the decor circle overflows) */}
-        <section className="relative overflow-clip bg-orange-pale border-b border-border pt-6 pb-8 md:py-20">
+        <section className="relative overflow-clip bg-linear-to-b from-orange-pale to-bg border-b border-border pt-6 pb-8 md:py-20">
           <div
-            className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-orange/10 pointer-events-none"
+            className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-orange/15 blur-2xl pointer-events-none"
+            aria-hidden
+          />
+          <div
+            className="absolute -bottom-24 -left-20 w-72 h-72 rounded-full bg-info/10 blur-3xl pointer-events-none"
             aria-hidden
           />
           <div className={`${CONTAINER} relative`}>
@@ -156,7 +160,7 @@ export default function Home() {
               {t("hero.subtitle")}
             </p>
 
-            <div className="max-w-2xl mx-auto mt-6 md:mt-10 bg-bg-card border border-border rounded-xl p-3 shadow-md">
+            <div className="max-w-2xl mx-auto mt-6 md:mt-10 bg-bg-card border border-border rounded-xl p-3 shadow-lg">
               <form
                 role="search"
                 onSubmit={(e) => {
@@ -248,7 +252,7 @@ export default function Home() {
 
             {tutorsState === "loading" && (
               <div
-                className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6"
+                className="stagger grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6"
                 role="status"
                 aria-label={t("home.tutorsLoading")}
               >
@@ -269,7 +273,7 @@ export default function Home() {
             )}
 
             {tutorsState === "ready" && tutors.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
+              <div className="stagger grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
                 {tutors.map((tutor) => (
                   <TutorCard key={tutor.id} {...tutor} />
                 ))}

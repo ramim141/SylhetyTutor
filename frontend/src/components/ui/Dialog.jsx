@@ -33,7 +33,7 @@ export function Dialog({ isOpen, onClose, title, children, footer, busy = false 
   return (
     <div className="fixed inset-0 z-60 flex items-end md:items-center justify-center">
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-xs"
+        className="fixed inset-0 bg-black/50 backdrop-blur-xs animate-fade-in"
         onClick={busy ? undefined : onClose}
         aria-hidden="true"
       />
@@ -43,7 +43,7 @@ export function Dialog({ isOpen, onClose, title, children, footer, busy = false 
         aria-modal="true"
         aria-label={title}
         tabIndex={-1}
-        className="relative z-10 w-full md:max-w-md bg-bg-card border border-border rounded-t-2xl md:rounded-2xl shadow-2xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] max-h-[90dvh] overflow-y-auto focus:outline-hidden"
+        className="relative z-10 w-full md:max-w-md bg-bg-card border border-border rounded-t-2xl md:rounded-2xl shadow-2xl p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] max-h-[90dvh] overflow-y-auto focus:outline-hidden animate-sheet-up md:animate-pop"
       >
         <div className="flex items-start justify-between gap-3 mb-3">
           <h2 className="font-display font-bold text-lg text-fg">{title}</h2>

@@ -42,13 +42,13 @@ export function BottomSheet({ isOpen, onClose, title, children, footer, hideAt =
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity animate-in fade-in"
+        className="fixed inset-0 bg-black/50 backdrop-blur-xs animate-fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Bottom Sheet Box */}
-      <div className="relative bg-bg-card border-t border-border rounded-t-2xl shadow-2xl p-5 pb-8 max-h-[85vh] overflow-y-auto z-10 animate-in slide-in-from-bottom duration-300">
+      <div className="relative bg-bg-card border-t border-border rounded-t-2xl shadow-2xl p-5 pb-8 max-h-[85vh] overflow-y-auto z-10 animate-sheet-up">
         {/* Grab Handle */}
         <div
           className="w-12 h-1.5 bg-fg-muted/30 rounded-full mx-auto mb-4 cursor-pointer"

@@ -1,4 +1,4 @@
-import { Star, CheckCircle } from "lucide-react";
+import { ArrowRight, Star, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "../ui/Badge";
 import { useTranslation } from "../../i18n";
@@ -32,9 +32,9 @@ export function TutorCard({
 
   return (
     <div
-      className={`group relative rounded-lg p-5 shadow-card hover:shadow-md transition-all duration-200 flex flex-col justify-between ${
+      className={`group relative rounded-lg p-5 shadow-card hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 ease-out flex flex-col justify-between ${
         isFeatured
-          ? "border-2 border-featured-border bg-featured-bg"
+          ? "border border-featured-border/70 ring-1 ring-featured-border/25 bg-featured-bg"
           : "border border-border bg-bg-card"
       }`}
     >
@@ -151,9 +151,13 @@ export function TutorCard({
       {/* Looks like a button; the stretched link above is what is actually clicked */}
       <span
         aria-hidden
-        className="inline-flex items-center justify-center w-full min-h-11 px-6 rounded-md border-2 border-orange text-orange-text font-display font-semibold text-sm transition-colors group-hover:bg-orange-pale"
+        className="inline-flex items-center justify-center gap-2 w-full min-h-11 px-6 rounded-md border border-border bg-bg-card/60 text-fg font-display font-semibold text-sm transition-all duration-300 group-hover:border-orange group-hover:bg-orange-pale group-hover:text-orange-text"
       >
         {t("card.viewProfile")}
+        <ArrowRight
+          className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"
+          aria-hidden
+        />
       </span>
     </div>
   );

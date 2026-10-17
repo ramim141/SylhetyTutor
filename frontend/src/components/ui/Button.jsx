@@ -29,7 +29,7 @@ export function Button({
     <button
       className={twMerge(
         clsx(
-          "inline-flex items-center justify-center gap-2 rounded-xl font-display font-semibold transition-all duration-150 cursor-pointer select-none",
+          "inline-flex items-center justify-center gap-2 rounded-xl font-display font-semibold transition-all duration-200 ease-out cursor-pointer select-none",
           "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-orange/50 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none disabled:transform-none",
           variants[variant] || variants.primary,
           sizes[size] || sizes.md,
