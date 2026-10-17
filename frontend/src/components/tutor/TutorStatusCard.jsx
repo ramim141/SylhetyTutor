@@ -49,7 +49,7 @@ export function TutorStatusCard() {
       <div
         role="status"
         aria-label={t("common.loading")}
-        className="h-36 rounded-lg bg-bg-card border border-border animate-pulse"
+        className="h-36 rounded-lg border border-border skeleton"
       />
     );
   }

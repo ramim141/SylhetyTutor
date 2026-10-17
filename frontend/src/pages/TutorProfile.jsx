@@ -45,9 +45,9 @@ function ProfileSkeleton() {
   const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-4" role="status" aria-label={t("profile.loading")}>
-      <div className="h-44 rounded-lg bg-bg-subtle animate-pulse" />
-      <div className="h-32 rounded-lg bg-bg-subtle animate-pulse" />
-      <div className="h-56 rounded-lg bg-bg-subtle animate-pulse" />
+      <div className="h-44 rounded-lg skeleton" />
+      <div className="h-32 rounded-lg skeleton" />
+      <div className="h-56 rounded-lg skeleton" />
     </div>
   );
 }

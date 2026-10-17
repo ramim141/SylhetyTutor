@@ -68,6 +68,7 @@
 | `/dev/ui` | component gallery (শুধু dev) |
 
 - তিন ভাষা (EN / বাং / Mixed, default Mixed); light/dark token swap; mobile-first (360px যাচাই); কোনো hard-coded রং বা লেখা নেই।
+- **Motion ও surface (DESIGN.md 5.3.1):** পাতা নিজে থেকে নরমভাবে ওঠে (`main` fade-up), card grid ক্রমে আসে (`.stagger`), loading-এ shimmer `.skeleton`, sheet/dialog নিচ থেকে উঠে আসে, card hover-এ হালকা lift, দুই-স্তরের নরম shadow; `prefers-reduced-motion` এ সব বন্ধ।
 - **Infra:** GitHub Actions (backend + frontend, Postgres 16), pre-commit (ruff + oxlint), CODEOWNERS, PR template, `main`-এ branch ruleset; Docker compose (Postgres + Redis + backend + frontend)।
 
 ## যা যাচাই হয়েছে / হয়নি
@@ -110,6 +111,7 @@
 ## পরিবর্তনের তালিকা (নতুনটা উপরে যোগ হবে)
 
 - **2026-10-16** — সব sprint একসাথে যাচাই: Docker + Postgres 16-এ backend ৩৯৯ পাস, লাইভ API-তে Sprint 1–6 চক্র, সব পাতা ৪ মোডে console/overflow পরিষ্কার (বিস্তারিত "যাচাই হয়েছে"-তে)। কোড বদলায়নি।
+- **2026-10-16** — UI polish (শুধু চেহারা, আচরণ বদলায়নি): `BottomSheet`-এর `animate-in slide-in-from-bottom` আসলে কোথাও ডিফাইন ছিল না (sheet ঝট করে আসত) — নিজস্ব motion token (`theme.css`) দিয়ে ঠিক; দুই-স্তরের shadow; `main` fade-up, `.stagger`, `.skeleton` shimmer (সব `animate-pulse` বদলানো); tutor card: featured-এর মোটা সবুজ border নরম ring-এ, "View Profile" ভারী কমলা outline থেকে শান্ত বোতাম + তীর, hover lift; hero-তে গভীরতা; smooth scroll, selection রং, নরম scrollbar, `prefers-reduced-motion`। `DESIGN.md` হালনাগাদ। Test অপরিবর্তিত (frontend 377 পাস, Sprint 6 সহ)। ব্রাউজারে (Edge headless) Home/Search আগে-পরে দেখা, light ও dark।
 - **2026-10-16** — Sprint 6 `main`-এ আনা: PR #11-এর base ছিল `feat/sprint-5-apply-demo`, তাই merge হয়েও কোড `main`-এ ঢোকেনি। `main`-এর উপর একই tree (৬৭ ফাইল) নতুন branch-এ বসিয়ে PR; `main` + Sprint 6 একসাথে পুরো suite চালানো হয়েছে (backend 399, frontend 377)।
 - **2026-10-15** — Sprint 6 (৫ ভাগে, branch `feat/sprint-6-payment-commission`): নতুন app `apps/payments` (`Payment` + `ManualBkash` gateway, `Commission`), unlock fee bKash TrxID + admin verify (verify হলে `ContactUnlock`), guardian confirmation (signed link, `send_confirmations`, call list), commission (founding মাফ, pay/mark-paid/waive, `process_commissions`: reminder ও apply-বন্ধ), ৬টা নতুন notification kind (+ তিন ভাষার email), `TutorProfile.founding_until/suspended_at`, throttle `payment_submit` ১০/ঘণ্টা ও `confirm_link` ৩০/ঘণ্টা; React: `PayDialog`, `/tutor/payments`, `/confirm/:token`, `/admin/payments`, ১১০টা নতুন i18n key। Test: backend +৩৯ (399), frontend +২৩ (377)। `Sprint_6.md` যোগ।
 - **2026-10-15** — Sprint 5 (৫ ভাগে, branch `feat/sprint-5-apply-demo`): নতুন app `apps/matching` (`TutorApplication`, `Match`, `ContactUnlock`), apply / my-applications / applicants / shortlist / reject / book-demo API, contact শুধু booked demo-র পর, `UNLOCK_FEE_ENABLED` (বন্ধ), ৪টা নতুন notification kind (+ তিন ভাষার email), throttle `application_create` ৩০/ঘণ্টা; React: Apply dialog, `/tutor/applications`, `/requirements/:id/applicants`, ৭১টা নতুন i18n key। Test: backend +৩৭ (360), frontend +১৭ (354)। `Sprint_5.md` যোগ।

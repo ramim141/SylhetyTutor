@@ -33,7 +33,7 @@ import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 
 const SEARCH_DEBOUNCE_MS = 300;
-const GRID = "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6";
+const GRID = "stagger grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6";
 
 export default function Search() {
   const { t } = useTranslation();
