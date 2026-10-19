@@ -6,7 +6,7 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.accounts.permissions import IsApprovedTutor, IsGuardian, IsGuardianOrAdmin
+from apps.accounts.permissions import IsApprovedTutor, IsGuardianOrAdmin
 
 from . import services
 from .matching import matching_requirements

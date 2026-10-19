@@ -7,7 +7,13 @@ from django.contrib.auth.models import AnonymousUser
 from rest_framework.test import APIRequestFactory
 
 from apps.accounts.models import User
-from apps.accounts.permissions import IsAdmin, IsGuardian, IsGuardianOrAdmin, IsOwnerOrAdmin, IsTutor
+from apps.accounts.permissions import (
+    IsAdmin,
+    IsGuardian,
+    IsGuardianOrAdmin,
+    IsOwnerOrAdmin,
+    IsTutor,
+)
 
 pytestmark = pytest.mark.django_db
 

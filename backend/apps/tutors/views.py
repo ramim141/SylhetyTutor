@@ -60,7 +60,10 @@ class TutorListView(ListAPIView):
             .prefetch_related("subjects", "class_levels", "areas")
             .order_by(*SORT_ORDERINGS["featured"])
         )
-        if self.request.user.is_authenticated and getattr(self.request.user, "role", None) == "tutor":
+        if (
+            self.request.user.is_authenticated
+            and getattr(self.request.user, "role", None) == "tutor"
+        ):
             qs = qs.exclude(user=self.request.user)
         return qs
 
