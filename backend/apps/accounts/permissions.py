@@ -25,7 +25,11 @@ class IsGuardianOrAdmin(BasePermission):
             request.user
             and request.user.is_authenticated
             and (
-                request.user.role in (User.Role.GUARDIAN, User.Role.ADMIN)
+                request.user.role
+                in (
+                    User.Role.GUARDIAN,
+                    User.Role.ADMIN,
+                )
                 or request.user.is_staff
             )
         )
