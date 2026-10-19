@@ -158,10 +158,13 @@ describe("validateStep", () => {
       { feeMin: "error.tr.required", feeMax: "error.tr.required" },
     ],
     [{ fee_min: "0", fee_max: "5000" }, { feeMin: "error.feeMin.min_value" }],
+    [{ fee_min: "499", fee_max: "5000" }, { feeMin: "error.feeMin.min_value" }],
     [{ fee_min: "abc", fee_max: "5000" }, { feeMin: "error.feeMin.min_value" }],
     [{ fee_min: "3000", fee_max: "-5" }, { feeMax: "error.feeMax.min_value" }],
+    [{ fee_min: "3000", fee_max: "15001" }, { feeMax: "error.feeMax.max_value" }],
     [{ fee_min: "6000", fee_max: "4000" }, { feeMin: "error.feeMin.fee_range" }],
     [{ fee_min: "3000", fee_max: "3000" }, {}],
+    [{ fee_min: "500", fee_max: "15000" }, {}],
     [{ fee_min: "3000", fee_max: "5000" }, {}],
   ])("step 6 checks the fee %j", (fees, expected) => {
     expect(validateStep(6, { ...empty, ...fees }, profile())).toEqual(expected);

@@ -17,6 +17,20 @@ class IsGuardian(BasePermission):
         )
 
 
+class IsGuardianOrAdmin(BasePermission):
+    """Allows guardians as well as platform admins to manage tuition requirements."""
+
+    def has_permission(self, request, view):
+        return bool(
+            request.user
+            and request.user.is_authenticated
+            and (
+                request.user.role in (User.Role.GUARDIAN, User.Role.ADMIN)
+                or request.user.is_staff
+            )
+        )
+
+
 class IsTutor(BasePermission):
     def has_permission(self, request, view):
         return bool(

@@ -4,6 +4,7 @@ from .views import (
     DocumentDownloadView,
     TutorDetailView,
     TutorDocumentView,
+    TutorFeaturedView,
     TutorListView,
     TutorMeView,
     TutorSubmitView,
@@ -13,6 +14,7 @@ app_name = "tutors"
 
 urlpatterns = [
     path("", TutorListView.as_view(), name="list"),
+    path("featured/", TutorFeaturedView.as_view(), name="featured"),
     path("me/", TutorMeView.as_view(), name="me"),
     path("me/submit/", TutorSubmitView.as_view(), name="submit"),
     path("me/documents/<str:kind>/", TutorDocumentView.as_view(), name="my-document"),

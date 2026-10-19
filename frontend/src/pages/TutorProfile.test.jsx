@@ -12,6 +12,7 @@ vi.mock("../api/tutors", () => ({ getTutor: vi.fn() }));
 
 const TUTOR = {
   id: "t1",
+  userId: "tutor-user-1",
   slug: "rahim-uddin-physics-math",
   name: "Rahim Uddin",
   initials: "RU",
@@ -192,5 +193,34 @@ describe("TutorProfile page", () => {
     await user.click(screen.getByRole("link", { name: mixed["profile.back"] }));
 
     expect(await screen.findByText("Search Page")).toBeInTheDocument();
+  });
+
+  it("shows only name and university when viewed by another tutor", async () => {
+    getTutor.mockResolvedValue(TUTOR);
+    useAuthStore.setState({
+      user: { id: "another-tutor-user", role: "tutor" },
+      status: "authenticated",
+    });
+    renderPage();
+
+    expect(await screen.findByText("Rahim Uddin")).toBeInTheDocument();
+    expect(screen.getByText(/সাস্ট|SUST/)).toBeInTheDocument();
+    expect(screen.getByText(mixed["profile.peerTutorTitle"])).toBeInTheDocument();
+    expect(screen.queryByText(/I teach physics/)).not.toBeInTheDocument();
+    expect(screen.queryByText("৳3,000–5,000")).not.toBeInTheDocument();
+  });
+
+  it("shows full profile and edit button on own tutor profile", async () => {
+    getTutor.mockResolvedValue(TUTOR);
+    useAuthStore.setState({
+      user: { id: "tutor-user-1", role: "tutor", tutor_slug: "rahim-uddin-physics-math" },
+      status: "authenticated",
+    });
+    renderPage();
+
+    expect(await screen.findByText("Rahim Uddin")).toBeInTheDocument();
+    expect(screen.getByText(mixed["profile.ownProfileTitle"])).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: mixed["profile.editProfile"] })).toBeInTheDocument();
+    expect(screen.getByText(/I teach physics/)).toBeInTheDocument();
   });
 });

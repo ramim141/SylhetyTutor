@@ -25,6 +25,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     area = serializers.SlugRelatedField(slug_field="slug", read_only=True)
     avatar = serializers.SerializerMethodField()
+    tutor_slug = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -37,9 +38,15 @@ class UserSerializer(serializers.ModelSerializer):
             "preferred_language",
             "area",
             "avatar",
+            "tutor_slug",
             "date_joined",
         ]
         read_only_fields = ["id", "role", "date_joined"]
+
+    @extend_schema_field(serializers.CharField(allow_null=True))
+    def get_tutor_slug(self, obj):
+        profile = getattr(obj, "tutor_profile", None)
+        return profile.slug if profile else None
 
     @extend_schema_field(serializers.CharField(allow_null=True))
     def get_avatar(self, obj):
@@ -58,6 +65,9 @@ class RegisterSerializer(serializers.Serializer):
     preferred_language = serializers.ChoiceField(
         choices=User.Language.choices, default=User.Language.MIXED
     )
+    acquisition_source = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    acquisition_medium = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    acquisition_campaign = serializers.CharField(max_length=100, required=False, allow_blank=True)
     area = serializers.SlugRelatedField(
         slug_field="slug",
         queryset=Area.objects.filter(is_active=True),
@@ -110,6 +120,11 @@ class RegisterSerializer(serializers.Serializer):
         return attrs
 
     def create(self, validated_data):
+        extra = {}
+        for key in ("acquisition_source", "acquisition_medium", "acquisition_campaign"):
+            if validated_data.get(key):
+                extra[key] = validated_data[key]
+
         return User.objects.create_user(
             full_name=validated_data["full_name"],
             phone=validated_data.get("phone"),
@@ -118,6 +133,7 @@ class RegisterSerializer(serializers.Serializer):
             role=validated_data.get("role", User.Role.GUARDIAN),
             preferred_language=validated_data.get("preferred_language", User.Language.MIXED),
             area=validated_data.get("area"),
+            **extra,
         )
 
 

@@ -40,11 +40,13 @@ class TutorCardSerializer(serializers.ModelSerializer):
     feeMax = serializers.IntegerField(source="fee_max", read_only=True)
     isFeatured = serializers.BooleanField(source="is_featured", read_only=True)
     isVerified = serializers.BooleanField(source="is_verified", read_only=True)
+    userId = serializers.CharField(source="user_id", read_only=True)
 
     class Meta:
         model = TutorProfile
         fields = [
             "id",
+            "userId",
             "slug",
             "name",
             "initials",
@@ -185,10 +187,10 @@ class TutorMeUpdateSerializer(serializers.Serializer):
     student_id_number = serializers.CharField(max_length=50, required=False, allow_blank=True)
     bio = serializers.CharField(max_length=400, required=False, allow_blank=True)
     fee_min = serializers.IntegerField(
-        min_value=1, max_value=1_000_000, required=False, allow_null=True
+        min_value=500, max_value=15_000, required=False, allow_null=True
     )
     fee_max = serializers.IntegerField(
-        min_value=1, max_value=1_000_000, required=False, allow_null=True
+        min_value=500, max_value=15_000, required=False, allow_null=True
     )
     subjects = _ActiveSlugField(Subject, many=True, required=False)
     class_levels = _ActiveSlugField(ClassLevel, many=True, required=False)
@@ -254,11 +256,13 @@ class TutorPublicSerializer(serializers.ModelSerializer):
     feeMax = serializers.IntegerField(source="fee_max", read_only=True)
     isFeatured = serializers.BooleanField(source="is_featured", read_only=True)
     isVerified = serializers.BooleanField(source="is_verified", read_only=True)
+    userId = serializers.CharField(source="user_id", read_only=True)
 
     class Meta:
         model = TutorProfile
         fields = [
             "id",
+            "userId",
             "slug",
             "name",
             "initials",

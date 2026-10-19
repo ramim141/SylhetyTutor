@@ -11,6 +11,7 @@ import { Alert } from "../../components/ui/Alert";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Dialog } from "../../components/ui/Dialog";
+import { Header } from "../../components/layout/Header";
 
 const CHECKS = ["name", "university", "clear"];
 const REASON_CHIPS = ["nid", "studentId", "mismatch"];
@@ -151,7 +152,11 @@ export default function VerificationDetail() {
 
   return (
     <div className="min-h-dvh bg-bg-subtle text-fg pb-36 md:pb-10">
-      <header className="sticky top-0 z-40 bg-bg/95 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top)]">
+      <div className="hidden md:block">
+        <Header />
+      </div>
+
+      <header className="md:hidden sticky top-0 z-40 bg-bg/95 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top)]">
         <div className="max-w-2xl mx-auto px-2 h-14 flex items-center gap-1">
           <Link
             to="/admin/verification"

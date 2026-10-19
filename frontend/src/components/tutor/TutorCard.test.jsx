@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import { TutorCard } from "./TutorCard";
 import { mixed } from "../../i18n";
+import { useAuthStore } from "../../store/authStore";
 import { useLanguageStore } from "../../store/languageStore";
 
 const base = {
@@ -25,10 +26,24 @@ const base = {
 };
 
 describe("TutorCard", () => {
+  beforeEach(() => {
+    useAuthStore.setState({ user: null, status: "guest" });
+  });
+
   it("shows the fee range with thousands separators", () => {
     render(<TutorCard {...base} feeMin={3000} feeMax={12000} />);
 
     expect(screen.getByText("৳3,000–12,000")).toBeInTheDocument();
+  });
+
+  it("shows only name and university when viewed by another tutor", () => {
+    useAuthStore.setState({ user: { role: "tutor" }, status: "authenticated" });
+    render(<TutorCard {...base} feeMin={3000} feeMax={12000} />);
+
+    expect(screen.getByText("Rahim Uddin")).toBeInTheDocument();
+    expect(screen.getByText(/শাহজালাল|SUST/)).toBeInTheDocument();
+    expect(screen.queryByText("৳3,000–12,000")).not.toBeInTheDocument();
+    expect(screen.queryByText("Physics, Math")).not.toBeInTheDocument();
   });
 
   it("shows no fee at all (not ৳0) when the tutor has not set one", () => {

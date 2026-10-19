@@ -39,6 +39,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     preferred_language = models.CharField(
         max_length=5, choices=Language.choices, default=Language.MIXED
     )
+    # Attribution & UTM tracking (Sprint 7, Architecture Doc 13.6)
+    acquisition_source = models.CharField(max_length=50, blank=True, default="")
+    acquisition_medium = models.CharField(max_length=50, blank=True, default="")
+    acquisition_campaign = models.CharField(max_length=100, blank=True, default="")
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)

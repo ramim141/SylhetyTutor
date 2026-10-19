@@ -6,7 +6,7 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.accounts.permissions import IsApprovedTutor, IsGuardian
+from apps.accounts.permissions import IsApprovedTutor, IsGuardian, IsGuardianOrAdmin
 
 from . import services
 from .matching import matching_requirements
@@ -66,7 +66,7 @@ class GuardianMeSerializer(serializers.Serializer):
 
 
 class GuardianMeView(APIView):
-    permission_classes = [IsGuardian]
+    permission_classes = [IsGuardianOrAdmin]
 
     @extend_schema(responses=GuardianMeSerializer, tags=["guardians"])
     def get(self, request):
@@ -85,7 +85,7 @@ class GuardianMeView(APIView):
 
 
 class RequirementListView(APIView):
-    permission_classes = [IsGuardian]
+    permission_classes = [IsGuardianOrAdmin]
 
     def get_throttles(self):
         return [RequirementCreateThrottle()] if self.request.method == "POST" else []
@@ -115,7 +115,7 @@ class RequirementListView(APIView):
 
 
 class RequirementDetailView(APIView):
-    permission_classes = [IsGuardian]
+    permission_classes = [IsGuardianOrAdmin]
 
     @extend_schema(responses=RequirementSerializer, tags=["requirements"])
     def get(self, request, pk):
@@ -151,7 +151,7 @@ class RequirementDetailView(APIView):
 
 
 class RequirementPublishView(APIView):
-    permission_classes = [IsGuardian]
+    permission_classes = [IsGuardianOrAdmin]
 
     @extend_schema(request=None, responses=RequirementSerializer, tags=["requirements"])
     def post(self, request, pk):
@@ -164,7 +164,7 @@ class RequirementPublishView(APIView):
 
 
 class RequirementCloseView(APIView):
-    permission_classes = [IsGuardian]
+    permission_classes = [IsGuardianOrAdmin]
 
     @extend_schema(request=CloseSerializer, responses=RequirementSerializer, tags=["requirements"])
     def post(self, request, pk):

@@ -7,7 +7,7 @@ from django.contrib.auth.models import AnonymousUser
 from rest_framework.test import APIRequestFactory
 
 from apps.accounts.models import User
-from apps.accounts.permissions import IsAdmin, IsGuardian, IsOwnerOrAdmin, IsTutor
+from apps.accounts.permissions import IsAdmin, IsGuardian, IsGuardianOrAdmin, IsOwnerOrAdmin, IsTutor
 
 pytestmark = pytest.mark.django_db
 
@@ -57,6 +57,14 @@ def test_anonymous_user_is_always_denied(permission):
 def test_staff_flag_counts_as_admin(guardian):
     guardian.is_staff = True
     assert IsAdmin().has_permission(request_as(guardian), None) is True
+
+
+def test_is_guardian_or_admin_allows_both(guardian, tutor, admin):
+    perm = IsGuardianOrAdmin()
+    assert perm.has_permission(request_as(guardian), None) is True
+    assert perm.has_permission(request_as(admin), None) is True
+    assert perm.has_permission(request_as(tutor), None) is False
+    assert perm.has_permission(request_as(AnonymousUser()), None) is False
 
 
 def test_owner_or_admin_object_permission(guardian, tutor, admin):

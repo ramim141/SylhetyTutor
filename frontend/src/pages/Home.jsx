@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Header } from "../components/layout/Header";
 import { BottomNav } from "../components/layout/BottomNav";
+import { Footer } from "../components/layout/Footer";
 import { Alert } from "../components/ui/Alert";
 import { Button } from "../components/ui/Button";
 import { BottomSheet } from "../components/ui/BottomSheet";
@@ -22,10 +23,9 @@ import { TutorCardSkeleton } from "../components/tutor/TutorCardSkeleton";
 import { useTranslation } from "../i18n";
 import { useAuthStore } from "../store/authStore";
 import { getLookups } from "../api/lookups";
-import { getTutors } from "../api/tutors";
+import { getTutors, getFeaturedTutors } from "../api/tutors";
 import { searchPath } from "../utils/searchParams";
 
-const CURRENT_YEAR = new Date().getFullYear();
 const CONTAINER = "max-w-[1200px] mx-auto px-4 md:px-6";
 const PREVIEW_SIZE = 6; // the home page shows the top tutors; /tutors is the full search
 
@@ -79,12 +79,27 @@ export default function Home() {
   useEffect(() => {
     let active = true;
     setTutorsState("loading");
-    getTutors({ page_size: PREVIEW_SIZE })
+    const fetchPromise =
+      typeof getFeaturedTutors === "function"
+        ? getFeaturedTutors().catch(() => getTutors({ page_size: PREVIEW_SIZE }))
+        : getTutors({ page_size: PREVIEW_SIZE });
+
+    fetchPromise
       .then((data) => {
         if (!active) return;
-        setTutors(data?.results ?? []);
-        setTutorCount(data?.count ?? 0);
-        setTutorsState("ready");
+        const results = Array.isArray(data) ? data : (data?.results ?? []);
+        if (results.length > 0) {
+          setTutors(results.slice(0, PREVIEW_SIZE));
+          setTutorCount(data?.count ?? results.length);
+          setTutorsState("ready");
+        } else {
+          return getTutors({ page_size: PREVIEW_SIZE }).then((fallbackData) => {
+            if (!active) return;
+            setTutors(fallbackData?.results ?? []);
+            setTutorCount(fallbackData?.count ?? 0);
+            setTutorsState("ready");
+          });
+        }
       })
       .catch(() => active && setTutorsState("error"));
     return () => {
@@ -95,7 +110,7 @@ export default function Home() {
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
     if (tabId === "post") {
-      if (status === "authenticated" && user?.role === "guardian") navigate("/requirements/new");
+      if (status === "authenticated" && (user?.role === "guardian" || user?.role === "admin")) navigate("/requirements/new");
       else setPostSheetOpen(true);
     }
     else if (tabId === "tutors") navigate(searchPath());
@@ -272,13 +287,23 @@ export default function Home() {
               </div>
             )}
 
-            {tutorsState === "ready" && tutors.length > 0 && (
-              <div className="stagger grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
-                {tutors.map((tutor) => (
-                  <TutorCard key={tutor.id} {...tutor} />
-                ))}
-              </div>
-            )}
+            {tutorsState === "ready" && tutors.length > 0 && (() => {
+              const displayedTutors = tutors.filter((t) => {
+                if (user?.role === "tutor") {
+                  if (t.userId != null && Number(t.userId) === Number(user.id)) return false;
+                  if (user.tutor_slug && t.slug === user.tutor_slug) return false;
+                }
+                return true;
+              });
+              if (displayedTutors.length === 0) return null;
+              return (
+                <div className="stagger grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
+                  {displayedTutors.map((tutor) => (
+                    <TutorCard key={tutor.id} {...tutor} />
+                  ))}
+                </div>
+              );
+            })()}
 
             {tutorsState === "ready" && tutors.length > 0 && (
               <div className="mt-8 flex justify-center">
@@ -358,28 +383,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="bg-navy-deep text-on-navy py-8 md:py-12 text-sm">
-        <div className={`${CONTAINER} flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left`}>
-          <div>
-            <p className="font-display font-bold text-lg">
-              Sylhety<span className="text-orange">Tutor</span>
-            </p>
-            <p className="text-xs opacity-75">Webnify IT Solution, Sylhet</p>
-          </div>
-          <nav className="flex gap-1">
-            {["about", "privacy", "terms"].map((key) => (
-              <a
-                key={key}
-                href={`#${key}`}
-                className="min-h-11 px-3 inline-flex items-center opacity-85 hover:opacity-100 hover:underline"
-              >
-                {t(`footer.${key}`)}
-              </a>
-            ))}
-          </nav>
-          <p className="text-xs opacity-60">© {CURRENT_YEAR} SylhetyTutor</p>
-        </div>
-      </footer>
+      <Footer />
 
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
 
@@ -394,7 +398,7 @@ export default function Home() {
       >
         <div className="flex flex-col gap-4">
           <p className="text-sm text-fg-secondary">{t("post.body")}</p>
-          {status === "authenticated" && user?.role === "guardian" ? (
+          {status === "authenticated" && (user?.role === "guardian" || user?.role === "admin") ? (
             <Link
               to="/requirements/new"
               className="inline-flex items-center justify-center min-h-13 px-8 rounded-md bg-orange text-on-orange font-display font-semibold hover:bg-orange-hover transition-colors"

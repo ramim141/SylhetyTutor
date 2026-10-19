@@ -4,7 +4,20 @@ Produces consistent, localization-friendly error responses with machine-readable
 and field-level error mapping — Architecture Doc Section 5 & Sprint_1.md.
 """
 
+from rest_framework import status
+from rest_framework.exceptions import APIException, ErrorDetail
 from rest_framework.views import exception_handler
+
+
+class ConflictError(APIException):
+    status_code = status.HTTP_409_CONFLICT
+    default_detail = "A conflict occurred."
+    default_code = "conflict"
+
+    def __init__(self, detail=None, code=None):
+        code = code or self.default_code
+        detail = detail or self.default_detail
+        self.detail = ErrorDetail(detail, code)
 
 
 def custom_exception_handler(exc, context):
@@ -40,6 +53,8 @@ def custom_exception_handler(exc, context):
         own_code = exc.get_codes() if hasattr(exc, "get_codes") else None
         if isinstance(own_code, dict):
             own_code = own_code.get("detail")
+        if not own_code and hasattr(exc, "detail") and getattr(exc.detail, "code", None):
+            own_code = exc.detail.code
         if isinstance(own_code, str) and own_code != "permission_denied":
             custom_data["code"] = own_code
             if isinstance(data, dict) and data.get("detail"):

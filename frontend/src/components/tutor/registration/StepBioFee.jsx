@@ -3,7 +3,7 @@ import { useTranslation } from "../../../i18n";
 import { Input } from "../../ui/Input";
 import { BIO_MAX } from "./steps";
 
-const digits = (value) => value.replace(/\D/g, "").slice(0, 7);
+const digits = (value) => value.replace(/\D/g, "").slice(0, 5);
 
 export function StepBioFee({ draft, update, errors }) {
   const { t } = useTranslation();
@@ -13,10 +13,14 @@ export function StepBioFee({ draft, update, errors }) {
   return (
     <div className="flex flex-col gap-6">
       <fieldset>
-        <legend className="text-sm font-display font-bold mb-2">{t("tr.fee.label")}</legend>
+        <legend className="text-sm font-display font-bold mb-1">{t("tr.fee.label")}</legend>
+        <p className="text-xs text-fg-muted mb-2">{t("tr.fee.rangeHint")}</p>
         <div className="grid grid-cols-2 gap-3">
           <Input
             label={t("tr.fee.min")}
+            placeholder="500"
+            min={500}
+            max={15000}
             value={draft.fee_min}
             onChange={(e) => update({ fee_min: digits(e.target.value) })}
             error={errors.feeMin}
@@ -25,6 +29,9 @@ export function StepBioFee({ draft, update, errors }) {
           />
           <Input
             label={t("tr.fee.max")}
+            placeholder="15000"
+            min={500}
+            max={15000}
             value={draft.fee_max}
             onChange={(e) => update({ fee_max: digits(e.target.value) })}
             error={errors.feeMax}

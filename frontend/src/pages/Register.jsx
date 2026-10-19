@@ -23,6 +23,7 @@ import { getLookups } from "../api/lookups";
 import { getFieldErrors, getFormError } from "../api/errors";
 import { toLocalBdPhone } from "../utils/phone";
 import { getReturnTo, keepReturnTo } from "../utils/returnTo";
+import { getStoredUTM } from "../utils/utm";
 import { Input } from "../components/ui/Input";
 import { PasswordInput } from "../components/ui/PasswordInput";
 import { Button } from "../components/ui/Button";
@@ -194,6 +195,7 @@ export default function Register() {
 
     setLoading(true);
     try {
+      const utm = getStoredUTM();
       await register({
         full_name: fullName.trim(),
         phone: toLocalBdPhone(phone),
@@ -201,6 +203,9 @@ export default function Register() {
         password,
         role,
         preferred_language: lang,
+        acquisition_source: utm.acquisition_source || undefined,
+        acquisition_medium: utm.acquisition_medium || undefined,
+        acquisition_campaign: utm.acquisition_campaign || undefined,
       });
       navigate(getReturnTo(location), { replace: true });
     } catch (err) {

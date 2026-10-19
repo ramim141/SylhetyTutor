@@ -9,6 +9,7 @@ import { useLookups } from "../hooks/useLookups";
 import { Alert } from "../components/ui/Alert";
 import { Button } from "../components/ui/Button";
 import { Logo } from "../components/ui/Logo";
+import { Header } from "../components/layout/Header";
 import { StepProgress } from "../components/tutor/registration/StepProgress";
 import { StepAbout } from "../components/tutor/registration/StepAbout";
 import { StepDocuments } from "../components/tutor/registration/StepDocuments";
@@ -83,19 +84,24 @@ export default function TutorRegistration() {
   }, [requestKey]);
 
   const header = (
-    <header className="bg-bg border-b border-border">
-      <div className="max-w-xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
-        <Link to="/dashboard" aria-label={t("brand.name")}>
-          <Logo className="h-8" />
-        </Link>
-        <Link
-          to="/dashboard"
-          className="min-h-11 inline-flex items-center px-2 text-sm font-display font-semibold text-fg-secondary hover:text-fg"
-        >
-          {t("tr.later")}
-        </Link>
+    <>
+      <div className="hidden md:block">
+        <Header />
       </div>
-    </header>
+      <header className="md:hidden bg-bg border-b border-border">
+        <div className="max-w-xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
+          <Link to="/dashboard" aria-label={t("brand.name")}>
+            <Logo className="h-8" />
+          </Link>
+          <Link
+            to="/dashboard"
+            className="min-h-11 inline-flex items-center px-2 text-sm font-display font-semibold text-fg-secondary hover:text-fg"
+          >
+            {t("tr.later")}
+          </Link>
+        </div>
+      </header>
+    </>
   );
 
   const shell = (children) => (

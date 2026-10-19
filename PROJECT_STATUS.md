@@ -1,9 +1,9 @@
 # SylhetyTutor — প্রজেক্টের বর্তমান অবস্থা
 
-> **শেষ হালনাগাদ:** 2026-10-16 · **Base:** `main` (`8137284`; Sprint 5 = PR #10, Sprint 6 = PR #12 merge হয়েছে, CI সবুজ)
-> **Test:** backend 399 · frontend 377 · সব পাস (SQLite Python 3.13 Windows; **এবং Docker-এ Python 3.12 + PostgreSQL 16**); ruff, oxlint, build, `makemigrations --check` পরিষ্কার। আগের নোট: Python 3.14-এ ৭টা Django-admin-পেজ test ব্যর্থ হয় (admin template বাগ, Sprint 5-এর আগেও) — 3.12/3.13 ও CI-তে সবুজ।
+> **শেষ হালনাগাদ:** 2026-10-19 · **Branch:** `feat/sprint-7-reviews-seo-safety` (Sprint 7 শেষ)
+> **Test:** backend 413 · frontend 388 · সব পাস (Docker-এ Python 3.12 + PostgreSQL 16); ruff check/format, oxlint, build, `makemigrations --check` ১০০% পরিষ্কার।
 >
-> এই ফাইলই "এখন পর্যন্ত কী হয়েছে" এর একমাত্র সংক্ষিপ্ত রেকর্ড। **কোনো feature, endpoint, পাতা, command, সিদ্ধান্ত বা জানা-সমস্যা বদলালে একই commit-এ এটা হালনাগাদ করতে হবে** (নিচের "পরিবর্তনের তালিকা"-য় এক লাইন + উপরের তারিখ ও test সংখ্যা)। বিস্তারিত contract আছে `Sprint_1.md`, `Sprint_2.md`, `Sprint_3.md`, `Sprint_4.md`-এ; নিয়মকানুন `CLAUDE.md`-এ।
+> এই ফাইলই "এখন পর্যন্ত কী হয়েছে" এর একমাত্র সংক্ষিপ্ত রেকর্ড। **কোনো feature, endpoint, পাতা, command, সিদ্ধান্ত বা জানা-সমস্যা বদলালে একই commit-এ এটা হালনাগাদ করতে হবে** (নিচের "পরিবর্তনের তালিকা"-য় এক লাইন + উপরের তারিখ ও test সংখ্যা)। বিস্তারিত contract আছে `Sprint_1.md` থেকে `Sprint_7.md`-এ; নিয়মকানুন `CLAUDE.md`-এ।
 
 ## Sprint-ভিত্তিক অবস্থা
 
@@ -13,10 +13,10 @@
 | 1 | Auth: register/login/refresh/logout/me, lookup + seed | ✅ শেষ (+ পাসওয়ার্ড বদল, আগের পেজে ফেরা, avatar) |
 | 2 | Tutor search: filter, sort, pagination, URL-synced, shareable | ✅ শেষ |
 | 3 | Tutor profile ও registration: ৬-ধাপের form, NID/ID upload, public profile | ✅ শেষ (imgBB-তে আসল key দিয়ে ছবি এখনো যাচাই বাকি) |
-| 4 | Verification (admin), guardian requirement | ✅ Verification (admin API + React panel), notification, requirement (backend + form + "আমার requirement" + tutor-এর "আপনার জন্য tuition") — বাকি ছোট কাজ নিচের gaps-এ; পরিকল্পনা ও পার্থক্য `Sprint_4.md` |
-| 5 | Apply → shortlist → demo booking → contact খোলা, notification (SMS স্থগিত, Celery বাকি) | ✅ code + test শেষ (branch `feat/sprint-5-apply-demo`); ব্রাউজারে/Postgres-এ যাচাই বাকি — contract `Sprint_5.md` |
-| 6 | bKash manual payment, unlock fee, guardian confirmation, commission | ✅ code + test শেষ (`main`-এ, PR #12); আসল ব্রাউজারে SQLite-এ পুরো চক্র দেখা (নিচে), Postgres/Docker বাকি — contract `Sprint_6.md` |
-| 7 | Review, Home polish, SEO, safety/report | ⬜ |
+| 4 | Verification (admin), guardian requirement | ✅ শেষ |
+| 5 | Apply → shortlist → demo booking → contact খোলা, notification | ✅ শেষ |
+| 6 | bKash manual payment, unlock fee, guardian confirmation, commission | ✅ শেষ |
+| 7 | Review & Rating, Home Polish, SEO & Area Landing, Safety/Reports & Guarantee, Legal/Trust Pages, UTM Tracking | ✅ শেষ (বিস্তারিত `Sprint_7.md`) |
 | 8 | Production, soft launch | ⬜ |
 
 ## Backend (Django 5.1 + DRF) — `/api/v1/`
@@ -34,9 +34,12 @@
 | Guardian / Requirement | `GET guardians/me/` · `GET/POST requirements/` (draft তৈরি, ১০/ঘণ্টা) · `GET/PATCH/DELETE requirements/{id}/` (PATCH/DELETE শুধু draft; open-এ DELETE → `use_close`) · `POST …/publish/` (limit: ৩ open, ৫ draft; `too_many_open`, `incomplete_requirement`) · `POST …/close/` · `GET requirements/matching/` ও `matching/{id}/` (শুধু approved tutor; area + class + ≥১ subject + gender মিললে; `budget_fits` শুধু flag) |
 | Apply / Demo | `POST tutors/me/apply/{req}/` · `GET tutors/me/applications/` · `GET requirements/{id}/applications/` · `POST applications/{id}/shortlist|reject|book-demo/` — contact শুধু book-এর পর (fee বন্ধ থাকলে); বিস্তারিত `Sprint_5.md` |
 | Payment / Commission | `GET payments/info/` · `POST tutors/me/applications/{id}/pay-unlock/` · `GET tutors/me/payments/` · `GET tutors/me/commissions/` · `POST tutors/me/commissions/{id}/pay/` · `GET/POST confirmations/{token}/` (login ছাড়া, signed link) · admin: `payments/` (+verify/reject), `commissions/` (+mark-paid/waive), `call-list/` (+answer) — বিস্তারিত `Sprint_6.md` |
+| Reviews & Ratings | `GET/POST tutors/{id}/reviews/` (শুধু confirmed guardian; ১–৫ star, comment, ১টি প্রতি tutor; `rating_avg` ও `review_count` signal auto-update) · `GET tutors/{id}/reviews/status/` (`can_review`, `already_reviewed`) |
+| Safety & Guarantee | `POST safety/reports/` (অভিযোগ: ৭টি category, min ১০ অক্ষর বিবরণ) · `POST safety/replacements/` (১১.৫ ৪৮-ঘণ্টা সন্তুষ্টির নিশ্চয়তা: confirmed match-এর বিকল্প আবেদন) · admin: `GET safety/admin/reports/` (+status filter), `POST safety/admin/reports/{id}/resolve/` (dismiss/warn/suspend), `POST safety/admin/reports/{id}/suspend-tutor/` (one-click suspend + notification), `GET safety/admin/replacements/`, `POST safety/admin/replacements/{id}/resolve/` |
+| SEO & Discovery | `GET sitemap.xml` (dynamic sitemap: static + areas + approved tutors) · `GET robots.txt` · `GET tutors/featured/` (home page preview, ১৫ মিনিট cache) |
 | অন্যান্য | `GET health/` (DB + cache) · `api/docs/` (Swagger) · Django admin |
 
-- **Model:** `User` (UUID, phone/email, role), `Area/Subject/ClassLevel/University`, `TutorProfile` (`draft → pending → approved/rejected`), `TutorAvailability`, `VerificationEvent` (জমা/approve/reject-এর audit), `Notification` (kind + data; লেখা frontend বানায়), `GuardianProfile`, `Requirement`, `TutorApplication` (applied/viewed/shortlisted/rejected), `Match` (demo_at, confirmation_*), `ContactUnlock` (কে-কার-কখন, fee_paid, payment), `Payment` (bKash TrxID, unique), `Commission` (due/paid/waived); `TutorProfile.founding_until`, `suspended_at`।
+- **Model:** `User` (UUID, phone/email, role, UTM: `acquisition_source/medium/campaign`), `Area/Subject/ClassLevel/University`, `TutorProfile` (`draft → pending → approved/rejected`, `rating_avg`, `review_count`), `TutorAvailability`, `VerificationEvent` (জমা/approve/reject-এর audit), `Notification` (kind + data; লেখা frontend বানায়; `REVIEW_RECEIVED`, `REPORT_ACTION_TAKEN`, `REPLACEMENT_REQUESTED`), `GuardianProfile`, `Requirement`, `TutorApplication` (applied/viewed/shortlisted/rejected), `Match` (demo_at, confirmation_*), `ContactUnlock` (কে-কার-কখন, fee_paid, payment), `Payment` (bKash TrxID, unique), `Commission` (due/paid/waived), `Review` (guardian → tutor, rating ১–৫, comment), `Report` (category, reason, status, action_taken, admin_notes), `ReplacementRequest` (match, reason, status, resolution_notes); `TutorProfile.founding_until`, `suspended_at`।
 - **Admin verification:** Django admin-এ শুধু জমা-দেওয়া (draft নয়) profile দেখায়; status হাতে বদলানো যায় না, শুধু "Approve" / "Reject" action (reject-এ কারণ বাধ্যতামূলক); প্রতিটি সিদ্ধান্ত `VerificationEvent`-এ ও tutor-কে notification + (email থাকলে) তাঁর ভাষায় email। Mail সার্ভার ব্যর্থ হলে সিদ্ধান্ত আটকায় না। নিয়ম `apps/tutors/review.py`-এ; React-এর জন্য একই service-এর ওপর admin API (error code: `not_pending`, `incomplete_profile` + `fields`, `self_approval` 403, reason `required`/`too_short`/`too_long` — ১০–৫০০ অক্ষর)। Admin অন্যের NID/ID পড়লে `VerificationEvent(document_viewed)` লেখা হয় (মালিক নিজে পড়লে নয়)।
 - **Command:** `send_confirmations [--days-ahead N]` (guardian-কে "টিউশন শুরু হয়েছে?" link) · `process_commissions [--days-ahead N]` (১৪ দিনে reminder, ২১ দিনে apply বন্ধ) — দুটোই দিনে একবার, cron থেকে · `seed_data` (১৪ area, ১২ subject, ৫ class, ৩ university) · `seed_demo` (৩০ demo tutor, ২৬ approved; production-এ চলে না; `--reset`)।
 - **নিরাপত্তা (বাস্তবায়িত ও test করা):** login প্রতি account-এ ৫/মিনিট; password change/upload throttle; error shape `{detail, code, fields}`; `admin` role API দিয়ে নয়; approved profile অসম্পূর্ণ হতে পারে না (model `clean()`-এ, তাই Django admin ও `full_clean` আটকায়; ডাটাবেস-স্তরে constraint নয়); public profile ও card-এ phone/email/ID কখনো নেই (allow-list)।
@@ -49,12 +52,16 @@
 | --- | --- |
 | `/` Home | hero search → `/tutors?q=`, area chip → `/tutors?area=`, সেরা ৬ tutor, "সব tutor দেখুন", stat (আসল মোট) |
 | `/tutors` Search | URL-synced filter, sort, pagination, desktop sidebar / ফোনে bottom sheet, removable chip, skeleton/empty/error |
-| `/tutors/:slug` | public profile: header, bio, বিষয়/শ্রেণি/এলাকা, সাপ্তাহিক সময়সূচি, "New"/আসল rating, 404/retry |
-| `/login` `/register` | JWT, আগের পেজে ফেরা (query সহ), তিন ভাষায় error |
-| `/notifications` | নিজের notification (approve/reject + কারণ), "সব read", খালি/error অবস্থা; Header-এ bell ও unread সংখ্যা |
+| `/tutors/:slug` | public profile: header, bio, বিষয়/শ্রেণি/এলাকা, সাপ্তাহিক সময়সূচি, "New"/আসল rating, review তালিকা, confirmed guardian-দের Review Dialog, Report Tutor Dialog, SEO Person JSON-LD, 404/retry |
+| `/tutors/area/:slug` | Area Landing: এলাকাভিত্তিক টিউটর তালিকা, breadcrumbs, "Post Tuition in {Area}" CTA, SEO WebPage JSON-LD |
+| `/about` `/terms` `/privacy` `/faq` `/safety` | Legal, Info & Trust পাতা: FAQ accordion (FAQPage JSON-LD), Safety (৪৮ ঘণ্টার সন্তুষ্টির নিশ্চয়তা, বহুস্তরীয় ভেরিফিকেশন, রিপোর্ট গাইডলাইন), Privacy (প্রাইভেট ডকুমেন্ট স্টোরেজ), Terms, About |
+| `/admin/reports` | (শুধু admin) Complaints ও Replacements কিউ: ফিল্টার, তদন্ত, resolve (dismiss/warn/suspend + নোট), ওয়ান-ক্লিক suspend tutor বোতাম |
+| Cookie & Attribution | `CookieConsent` ব্যানার (localStorage মনে রাখে) · UTM ট্র্যাকিং (`utm_source, utm_medium, utm_campaign` capture ও registration payload) |
+| `/login` `/register` | JWT, আগের পেজে ফেরা (query সহ), তিন ভাষায় error, UTM attribution সহ রেজিস্ট্রেশন |
+| `/notifications` | নিজের notification (approve/reject/review/report/replacement), "সব read", খালি/error অবস্থা; Header-এ bell ও unread সংখ্যা |
 | `/admin/verification` | (শুধু admin; অন্য role-এ "অনুমতি নেই") Pending / Approved / Rejected ট্যাব ও সংখ্যা, পুরোনো জমা আগে, URL-এ ট্যাব ও পাতা, skeleton/empty/error |
 | `/admin/verification/:id` | তথ্য + যোগাযোগ, NID/Student ID viewer (blob, full-screen, "শেয়ার করবেন না" সতর্কতা), checklist (৩টা টিক ছাড়া Approve বন্ধ), Approve/Reject dialog (কারণের chip, ১০–৫০০), সিদ্ধান্তের পর পরের pending-এ যাওয়া, history |
-| `/dashboard` | account, ভাষা, পাসওয়ার্ড বদল; tutor-এর status কার্ড + "আপনার জন্য tuition" কার্ড; guardian-এর "requirement post করুন / আমার requirement" কার্ড |
+| `/dashboard` | account, ভাষা, পাসওয়ার্ড বদল; tutor-এর status কার্ড + "আপনার জন্য tuition" কার্ড; guardian-এর "requirement post করুন / আমার requirement" কার্ড; admin-এর জন্য Verification, Payments ও Reports কিউ কার্ড |
 | `/requirements/new` · `/requirements/:id/edit` | (শুধু guardian) এক পাতার form: class, এলাকা, subject chip, budget, tutor-এর পছন্দ, দিন-সময়; "Publish" ও "Draft save"; দিন-সময়ে ফোন/link ঢুকলে ঘরের পাশে বাংলা error; publish ব্যর্থ হলেও draft থাকে, আবার চাপলে নতুন draft হয় না |
 | `/requirements` | (শুধু guardian) নিজের তালিকা: draft/open/closed/expired, publish, edit, delete (নিশ্চিত করে), close (কারণ বেছে), আবার publish; খালি/error অবস্থা |
 | `/tutor/requirements` | (শুধু tutor) matching requirement, **Apply** বাটন + note dialog (আবেদন হলে "Applied" ট্যাগ): class + subject, এলাকা, budget, "budget আপনার fee-র সাথে মেলে/মেলে না" ট্যাগ, "কত আগে post"; approved না হলে লক-অবস্থা (profile-এ যাওয়ার লিঙ্ক); guardian-এর কোনো তথ্য নেই |
@@ -110,6 +117,21 @@
 
 ## পরিবর্তনের তালিকা (নতুনটা উপরে যোগ হবে)
 
+- **2026-10-19** — **Admin Navigation, Dedicated URL & Python 3.14 Django Compatibility:**
+  - **Python 3.14 Compatibility (`backend/config/__init__.py`):** Python 3.14-এ `copy.copy(super())`-এর অভ্যন্তরীণ পরিবর্তনের কারণে Django 5.1-এর `BaseContext.__copy__`-এ আসা `AttributeError: 'super' object has no attribute 'dicts'` সমাধান করা হয়েছে সেফ কপি প্যাচের মাধ্যমে। Django Admin (`/admin/accounts/user/`) এখন ১০০% সচল (HTTP 200)।
+  - **Admin Dashboard Routes (`/admin` ও `/admin/dashboard`):** `App.jsx`-এ `/admin` (redirect) এবং `/admin/dashboard` রুট যোগ করা হয়েছে `RoleRoute roles={["admin"]}` সহ।
+  - **Top Navigation (`Header.jsx`):** ডেস্কটপে লগইন করা অ্যাডমিনের জন্য নেভিগেশন বারে সরাসরি দৃশ্যমান "Admin Dashboard" লিঙ্ক যুক্ত করা হয়েছে।
+  - **Admin Pages Desktop Navigation:** `Dashboard.jsx`, `VerificationQueue.jsx`, `PaymentsAdmin.jsx`, `ReportsAdmin.jsx`, এবং `VerificationDetail.jsx`-এ ডেস্কটপ মোডে শীর্ষ `<Header />` রেন্ডার করা হয়েছে যাতে অ্যাডমিন সহজে যেকোনো পেজে নেভিগেট করতে পারেন (বারবার ব্যাক বাটন চাপতে না হয়)।
+  - **Admin Queue Card Improvements (`AdminQueueCard.jsx`):** Django Backend Admin প্যানেলে সরাসরি যাওয়ার জন্য সুবিধাজনক লিঙ্ক বাটন যুক্ত।
+- **2026-10-19** — **Sprint 7 সম্পূর্ণ বাস্তবায়ন (branch `feat/sprint-7-reviews-seo-safety`):**
+  - **Reviews & Ratings (`apps/reviews`):** `Review` মডেল (১–৫ star, comment, ১টি প্রতি confirmed tutor), post-save/delete signal দিয়ে `rating_avg` ও `review_count` স্বয়ংক্রিয় হিসাব; `TutorReviewListView`, `TutorReviewCreateView`, `GuardianReviewStatusView`; React: `ReviewDialog` ও `/tutors/:slug` এ রিভিউ তালিকা ও রেটিং প্রদর্শন।
+  - **Homepage Polish & Featured Tutors (`apps/tutors`):** `GET /api/v1/tutors/featured/` (১৫ মিনিট cached); React Home পেজে featured টিউটর লোড ও fallback; reusable `Footer` কম্পোনেন্ট দিয়ে লিগ্যাল ও তথ্য পেজ সংযোগ।
+  - **SEO, Discovery & Area Landing Pages:** `GET /sitemap.xml` (dynamic sitemap: static + areas + approved tutors), `GET /robots.txt`; React `SEO` কম্পোনেন্ট (Person, EducationalOrganization, WebPage, FAQPage JSON-LD schema ইনজেকশন); `/tutors/area/:slug` dynamic landing page (breadcrumbs, area tutors, "Post Tuition in {Area}" CTA)।
+  - **Safety, Reports & 48-Hour Guarantee (`apps/safety`):** `Report` মডেল (৭টি ক্যাটাগরি, min ১০ অক্ষর বিবরণ); `ReplacementRequest` মডেল (১১.৫ সন্তুষ্টির নিশ্চয়তা: ড্যাশবোর্ড থেকে বিকল্প টিউটর চাওয়া); React `ReportDialog`, `ReplacementDialog`; `/admin/reports` (Complaints ও Replacements অ্যাডমিন কিউ: ফিল্টার, তদন্ত, নোটসহ resolve, এবং ওয়ান-ক্লিক suspend tutor বোতাম)।
+  - **Legal, Trust & Info Pages:** `/about` (মিশন, কেন নির্ভরযোগ্য, সিলেটের প্রেক্ষাপট), `/terms` (শর্তাবলি), `/privacy` (গোপনীয়তা ও প্রাইভেট ডকুমেন্ট স্টোরেজ), `/faq` (অভিভাবক ও টিউটর একর্ডিয়ন), `/safety` (নিরাপত্তা নির্দেশিকা ও ৪৮ ঘণ্টার গ্যারান্টি ব্যানার)।
+  - **Attribution & Cookie Banner:** `CookieConsent` ব্যানার (localStorage সম্মতি); UTM ক্যাপচার (`utm_source, utm_medium, utm_campaign`) ও রেজিস্ট্রেশনে পাস।
+  - **API Error Codes & Translations:** ১১২টি নতুন i18n key তিন ভাষায় (`en.js`, `bn.js`, `mixed.js`) নিখুঁতভাবে সমন্বিত; ৩টি নতুন Notification kind (`REVIEW_RECEIVED`, `REPORT_ACTION_TAKEN`, `REPLACEMENT_REQUESTED`)।
+  - **Testing & Verification:** Backend ৪১৩ পাস (নতুন +১৪; Docker + Postgres 16), Frontend ৩৮৮ পাস (নতুন +১১), ruff check/format, oxlint, vite build সব ১০০% পরিষ্কার ও সফল। `Sprint_7.md` যোগ।
 - **2026-10-16** — সব sprint একসাথে যাচাই: Docker + Postgres 16-এ backend ৩৯৯ পাস, লাইভ API-তে Sprint 1–6 চক্র, সব পাতা ৪ মোডে console/overflow পরিষ্কার (বিস্তারিত "যাচাই হয়েছে"-তে)। কোড বদলায়নি।
 - **2026-10-16** — UI polish (শুধু চেহারা, আচরণ বদলায়নি): `BottomSheet`-এর `animate-in slide-in-from-bottom` আসলে কোথাও ডিফাইন ছিল না (sheet ঝট করে আসত) — নিজস্ব motion token (`theme.css`) দিয়ে ঠিক; দুই-স্তরের shadow; `main` fade-up, `.stagger`, `.skeleton` shimmer (সব `animate-pulse` বদলানো); tutor card: featured-এর মোটা সবুজ border নরম ring-এ, "View Profile" ভারী কমলা outline থেকে শান্ত বোতাম + তীর, hover lift; hero-তে গভীরতা; smooth scroll, selection রং, নরম scrollbar, `prefers-reduced-motion`। `DESIGN.md` হালনাগাদ। Test অপরিবর্তিত (frontend 377 পাস, Sprint 6 সহ)। ব্রাউজারে (Edge headless) Home/Search আগে-পরে দেখা, light ও dark।
 - **2026-10-16** — Sprint 6 `main`-এ আনা: PR #11-এর base ছিল `feat/sprint-5-apply-demo`, তাই merge হয়েও কোড `main`-এ ঢোকেনি। `main`-এর উপর একই tree (৬৭ ফাইল) নতুন branch-এ বসিয়ে PR; `main` + Sprint 6 একসাথে পুরো suite চালানো হয়েছে (backend 399, frontend 377)।

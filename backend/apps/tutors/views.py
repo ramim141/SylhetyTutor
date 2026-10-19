@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.db import transaction
 from django.http import Http404
 from django.utils import timezone
@@ -50,7 +51,7 @@ class TutorListView(ListAPIView):
     filterset_class = TutorFilterSet
 
     def get_queryset(self):
-        return (
+        qs = (
             TutorProfile.objects.filter(
                 verification_status=TutorProfile.VerificationStatus.APPROVED,
                 user__is_active=True,
@@ -59,6 +60,9 @@ class TutorListView(ListAPIView):
             .prefetch_related("subjects", "class_levels", "areas")
             .order_by(*SORT_ORDERINGS["featured"])
         )
+        if self.request.user.is_authenticated and getattr(self.request.user, "role", None) == "tutor":
+            qs = qs.exclude(user=self.request.user)
+        return qs
 
     @extend_schema(
         tags=["tutors"],
@@ -92,6 +96,33 @@ class TutorListView(ListAPIView):
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
+
+
+class TutorFeaturedView(APIView):
+    """
+    Top & featured tutors for homepage preview (Architecture Doc §4.2, Sprint 7).
+    Returns top 6 approved tutors, cached for 15 minutes.
+    """
+
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        cache_key = "tutors:featured:v1"
+        data = cache.get(cache_key)
+        if data is None:
+            tutors = (
+                TutorProfile.objects.filter(
+                    verification_status=TutorProfile.VerificationStatus.APPROVED,
+                    user__is_active=True,
+                )
+                .select_related("user", "university")
+                .prefetch_related("subjects", "class_levels", "areas")
+                .order_by(*SORT_ORDERINGS["featured"])[:6]
+            )
+            serializer = TutorCardSerializer(tutors, many=True)
+            data = serializer.data
+            cache.set(cache_key, data, timeout=900)
+        return Response(data)
 
 
 class TutorDetailView(RetrieveAPIView):

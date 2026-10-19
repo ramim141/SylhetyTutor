@@ -1,9 +1,9 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, Search, PlusCircle, MapPin, User } from "lucide-react";
+import { Home, Search, PlusCircle, MapPin, User, ClipboardList } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import { useAuthStore } from "../../store/authStore";
 
-const ACCOUNT_PATHS = ["/dashboard", "/login", "/register"];
+const ACCOUNT_PATHS = ["/dashboard", "/admin/dashboard", "/login", "/register"];
 
 /**
  * Mobile tab bar (DESIGN.md 6.5). Works on any page: Home passes onTabChange to open
@@ -22,25 +22,39 @@ export function BottomNav({ activeTab, onTabChange }) {
       ? "account"
       : pathname.startsWith("/tutors")
         ? "tutors"
-        : "home");
+        : pathname.startsWith("/tutor/requirements")
+          ? "tuitions"
+          : "home");
 
   const accountLabel =
     status === "authenticated" && user
       ? user.full_name?.split(" ")[0] || t("nav.account")
       : t("nav.signIn");
 
+  const isTutor = status === "authenticated" && user?.role === "tutor";
+
   const tabs = [
     { id: "home", label: t("nav.home"), icon: Home },
-    { id: "tutors", label: t("nav.findTutors"), icon: Search },
-    { id: "post", label: t("nav.post"), icon: PlusCircle, isAction: true },
+    { id: "tutors", label: isTutor ? t("nav.browseTutors") : t("nav.findTutors"), icon: Search },
+    isTutor
+      ? { id: "tuitions", label: t("nav.tuitions"), icon: ClipboardList, isAction: true }
+      : { id: "post", label: t("nav.post"), icon: PlusCircle, isAction: true },
     { id: "areas", label: t("nav.areas"), icon: MapPin },
     { id: "account", label: accountLabel, icon: User },
   ];
 
   const handleTab = (id) => {
     if (onTabChange) return onTabChange(id);
-    if (id === "account") return navigate(status === "authenticated" ? "/dashboard" : "/login");
+    if (id === "account")
+      return navigate(
+        status === "authenticated"
+          ? user?.role === "admin"
+            ? "/admin/dashboard"
+            : "/dashboard"
+          : "/login"
+      );
     if (id === "tutors") return navigate("/tutors");
+    if (id === "tuitions") return navigate("/tutor/requirements");
     navigate("/", id === "home" ? undefined : { state: { tab: id } });
   };
 
