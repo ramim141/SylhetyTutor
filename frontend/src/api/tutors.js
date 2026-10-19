@@ -11,6 +11,14 @@ export async function getTutors(params = {}, config = {}) {
 }
 
 /**
+ * Top & featured tutors for homepage preview (Architecture Doc §4.2).
+ */
+export async function getFeaturedTutors(config = {}) {
+  const response = await api.get("/tutors/featured/", config);
+  return response.data;
+}
+
+/**
  * One tutor's public profile (no phone, email or documents).
  * Rejects with a 404 response when the address is unknown or the tutor is not listed.
  */

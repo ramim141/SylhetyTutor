@@ -8,10 +8,12 @@ from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
-from config.views import health_check
+from config.views import health_check, robots_txt, sitemap_xml
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("sitemap.xml", sitemap_xml, name="sitemap-xml"),
+    path("robots.txt", robots_txt, name="robots-txt"),
     path("api/v1/health/", health_check, name="health-check"),
     path("api/v1/auth/", include("apps.accounts.urls")),
     path("api/v1/lookups/", include("apps.lookups.urls")),
@@ -23,6 +25,9 @@ urlpatterns = [
     path("api/v1/", include("apps.payments.urls")),
     path("api/v1/admin/", include("apps.payments.admin_urls")),
     path("api/v1/admin/", include("apps.matching.admin_urls")),
+    path("api/v1/", include("apps.reviews.urls")),
+    path("api/v1/", include("apps.safety.urls")),
+    path("api/v1/admin/", include("apps.safety.admin_urls")),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
 ]

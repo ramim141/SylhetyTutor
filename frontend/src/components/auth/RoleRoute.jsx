@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { ShieldAlert } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import { useAuthStore } from "../../store/authStore";
@@ -12,7 +12,21 @@ import { ProtectedRoute } from "./ProtectedRoute";
  */
 export function RoleRoute({ roles, children }) {
   const { t } = useTranslation();
-  const user = useAuthStore((state) => state.user);
+  const { user, logout } = useAuthStore();
+
+  // If a tutor accesses a requirement-posting or guardian-management page, redirect them to tuition list
+  if (user?.role === "tutor" && !roles.includes("tutor") && roles.includes("guardian")) {
+    return <Navigate to="/tutor/requirements" replace />;
+  }
+
+  let bodyKey = "forbidden.body";
+  if (roles.includes("guardian") && !roles.includes("admin") && !roles.includes("tutor")) {
+    bodyKey = "forbidden.guardianOnly";
+  } else if (roles.includes("tutor") && !roles.includes("admin") && !roles.includes("guardian")) {
+    bodyKey = "forbidden.tutorOnly";
+  } else if (roles.includes("admin") && !roles.includes("guardian") && !roles.includes("tutor")) {
+    bodyKey = "forbidden.adminOnly";
+  }
 
   return (
     <ProtectedRoute>
@@ -23,10 +37,19 @@ export function RoleRoute({ roles, children }) {
           <div className="max-w-sm text-center flex flex-col items-center gap-4">
             <ShieldAlert className="w-10 h-10 text-fg-muted" aria-hidden />
             <h1 className="text-xl font-display font-bold text-fg">{t("forbidden.title")}</h1>
-            <p className="text-fg-secondary">{t("forbidden.body")}</p>
-            <Link to="/dashboard" className="w-full">
-              <Button className="w-full">{t("dashboard.title")}</Button>
-            </Link>
+            <p className="text-fg-secondary text-sm leading-relaxed">{t(bodyKey)}</p>
+            <div className="flex flex-col sm:flex-row gap-2 w-full mt-2">
+              <Link to="/dashboard" className="flex-1">
+                <Button className="w-full">{t("dashboard.title")}</Button>
+              </Link>
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => logout()}
+              >
+                {t("forbidden.switchAccount")}
+              </Button>
+            </div>
           </div>
         </div>
       )}

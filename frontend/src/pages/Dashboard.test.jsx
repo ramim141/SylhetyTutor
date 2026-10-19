@@ -97,7 +97,8 @@ describe("Dashboard", () => {
   it("logs out and returns to the login page", async () => {
     renderDashboard();
 
-    await userEvent.click(screen.getByRole("button", { name: mixed["dashboard.logout"] }));
+    const logoutButtons = screen.getAllByRole("button", { name: mixed["dashboard.logout"] });
+    await userEvent.click(logoutButtons[logoutButtons.length - 1]);
 
     expect(await screen.findByText("Login Page")).toBeInTheDocument();
     expect(useAuthStore.getState().status).toBe("guest");

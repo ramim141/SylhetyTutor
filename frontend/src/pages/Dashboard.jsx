@@ -9,6 +9,7 @@ import { Button } from "../components/ui/Button";
 import { ChangePasswordForm } from "../components/auth/ChangePasswordForm";
 import { TutorStatusCard } from "../components/tutor/TutorStatusCard";
 import { AdminQueueCard } from "../components/admin/AdminQueueCard";
+import { Header } from "../components/layout/Header";
 import { BottomNav } from "../components/layout/BottomNav";
 
 const LANGUAGES = ["en", "bn", "mixed"];
@@ -114,7 +115,11 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-dvh bg-bg-subtle text-fg pb-28 md:pb-10">
-      <header className="sticky top-0 z-40 bg-bg/95 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top)]">
+      <div className="hidden md:block">
+        <Header />
+      </div>
+
+      <header className="md:hidden sticky top-0 z-40 bg-bg/95 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top)]">
         <div className="max-w-lg mx-auto px-2 h-14 flex items-center gap-1">
           <Link
             to="/"
@@ -123,11 +128,13 @@ export default function Dashboard() {
           >
             <ArrowLeft className="w-5 h-5" aria-hidden />
           </Link>
-          <h1 className="text-lg font-display font-bold">{t("dashboard.title")}</h1>
+          <h1 className="text-lg font-display font-bold">
+            {user?.role === "admin" ? t("nav.adminDashboard") : t("dashboard.title")}
+          </h1>
         </div>
       </header>
 
-      <main className="max-w-lg mx-auto px-4 py-5 flex flex-col gap-4">
+      <main className="max-w-xl mx-auto px-4 py-5 flex flex-col gap-4">
         {/* Profile */}
         <section className="bg-bg-card border border-border rounded-lg p-5 shadow-card flex items-center gap-4">
           <div
@@ -178,7 +185,30 @@ export default function Dashboard() {
             </section>
           </>
         ) : user?.role === "admin" ? (
-          <AdminQueueCard />
+          <>
+            <AdminQueueCard />
+            <section className="bg-bg-card border border-border rounded-lg p-5 shadow-card flex flex-col gap-4">
+              <div className="flex gap-3">
+                <ClipboardList className="w-6 h-6 text-orange shrink-0" aria-hidden />
+                <div className="flex flex-col gap-1">
+                  <h2 className="font-display font-bold text-fg">
+                    {t("dashboard.guardian.postTitle")}
+                  </h2>
+                  <p className="text-sm text-fg-secondary">{t("dashboard.guardian.postBody")}</p>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Link to="/requirements/new" className="flex-1">
+                  <Button className="w-full">{t("dashboard.guardian.postCta")}</Button>
+                </Link>
+                <Link to="/requirements" className="flex-1">
+                  <Button variant="outline" className="w-full">
+                    {t("dashboard.guardian.myCta")}
+                  </Button>
+                </Link>
+              </div>
+            </section>
+          </>
         ) : (
           <NextStep role={user?.role} t={t} onBrowse={() => navigate("/tutors")} />
         )}

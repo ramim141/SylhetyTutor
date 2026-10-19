@@ -6,7 +6,10 @@ import { useAuthStore } from "./store/authStore";
 
 // Pages fetch lookups/tutors on mount; routing tests must not hit a real server
 vi.mock("./api/lookups", () => ({ getLookups: vi.fn().mockResolvedValue({ areas: [], subjects: [], universities: [] }) }));
-vi.mock("./api/tutors", () => ({ getTutors: vi.fn().mockResolvedValue({ results: [] }) }));
+vi.mock("./api/tutors", () => ({
+  getTutors: vi.fn().mockResolvedValue({ results: [] }),
+  getFeaturedTutors: vi.fn().mockResolvedValue([]),
+}));
 
 function renderAt(path) {
   return render(
@@ -49,9 +52,24 @@ describe("routes", () => {
     expect(screen.getByRole("link", { name: mixed["notFound.backHome"] })).toHaveAttribute("href", "/");
   });
 
+  it("redirects /post-requirement to /requirements/new", () => {
+    useAuthStore.setState({ status: "guest", user: null });
+    renderAt("/post-requirement");
+
+    // Unauthenticated user is bounced from /requirements/new to /login
+    expect(screen.getByRole("heading", { level: 1, name: mixed["auth.login.title"] })).toBeInTheDocument();
+  });
+
   it("serves the component gallery at /dev/ui in development", async () => {
     renderAt("/dev/ui");
 
     expect(await screen.findByRole("heading", { name: /component gallery/i })).toBeInTheDocument();
+  });
+
+  it("redirects /admin to /admin/dashboard and bounces unauthenticated users to /login", () => {
+    useAuthStore.setState({ status: "guest", user: null });
+    renderAt("/admin");
+
+    expect(screen.getByRole("heading", { level: 1, name: mixed["auth.login.title"] })).toBeInTheDocument();
   });
 });

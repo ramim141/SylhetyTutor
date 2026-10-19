@@ -7,6 +7,7 @@ import { timeAgo } from "../../utils/timeAgo";
 import { Alert } from "../../components/ui/Alert";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
+import { Header } from "../../components/layout/Header";
 
 const TABS = ["pending", "approved", "rejected"];
 
@@ -73,10 +74,14 @@ export default function VerificationQueue() {
 
   return (
     <div className="min-h-dvh bg-bg-subtle text-fg pb-10">
-      <header className="sticky top-0 z-40 bg-bg/95 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top)]">
+      <div className="hidden md:block">
+        <Header />
+      </div>
+
+      <header className="md:hidden sticky top-0 z-40 bg-bg/95 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top)]">
         <div className="max-w-2xl mx-auto px-2 h-14 flex items-center gap-1">
           <Link
-            to="/dashboard"
+            to="/admin/dashboard"
             aria-label={t("common.back")}
             className="w-11 h-11 flex items-center justify-center rounded-full text-fg-secondary hover:text-fg hover:bg-bg-subtle"
           >

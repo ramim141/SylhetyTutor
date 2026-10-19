@@ -14,6 +14,7 @@ import { Alert } from "../../components/ui/Alert";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Dialog } from "../../components/ui/Dialog";
+import { Header } from "../../components/layout/Header";
 import { BottomNav } from "../../components/layout/BottomNav";
 import { budgetText, headline } from "../../components/requirements/requirementText";
 
@@ -150,25 +151,27 @@ export default function MyRequirements() {
   };
 
   return (
-    <div className="min-h-dvh bg-bg-subtle text-fg pb-28 md:pb-10">
-      <header className="sticky top-0 z-40 bg-bg/95 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top)]">
-        <div className="max-w-lg mx-auto px-2 h-14 flex items-center gap-1">
-          <Link
-            to="/dashboard"
-            className="w-11 h-11 flex items-center justify-center rounded-full text-fg-secondary hover:text-fg hover:bg-bg-subtle"
+    <div className="min-h-dvh flex flex-col bg-bg-subtle text-fg pb-28 md:pb-10">
+      <Header />
+      <div className="sticky top-15 md:top-18 z-30 bg-bg/95 backdrop-blur-md border-b border-border">
+        <div className="max-w-lg mx-auto px-4 h-14 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/dashboard"))}
+            className="w-10 h-10 flex items-center justify-center rounded-full text-fg-secondary hover:text-fg hover:bg-bg-subtle transition-colors cursor-pointer"
             aria-label={t("common.back")}
           >
             <ArrowLeft className="w-5 h-5" aria-hidden />
-          </Link>
+          </button>
           <h1 className="text-lg font-display font-bold flex-1">{t("req.title")}</h1>
           <Button size="sm" onClick={() => navigate("/requirements/new")}>
             <Plus className="w-4 h-4 mr-1" aria-hidden />
             {t("req.new")}
           </Button>
         </div>
-      </header>
+      </div>
 
-      <main className="max-w-lg mx-auto px-4 py-5 flex flex-col gap-3">
+      <main className="max-w-lg mx-auto px-4 py-5 flex-1 w-full flex flex-col gap-3">
         {notice && !message && (
           <Alert variant="success">
             {notice === "published" ? t("req.form.published") : t("req.form.saved")}

@@ -16,6 +16,7 @@ import { Button } from "../../components/ui/Button";
 import { ChipSelect } from "../../components/ui/ChipSelect";
 import { Input } from "../../components/ui/Input";
 import { SelectField } from "../../components/ui/SelectField";
+import { Header } from "../../components/layout/Header";
 import { BottomNav } from "../../components/layout/BottomNav";
 
 const EMPTY = {
@@ -121,23 +122,31 @@ export default function RequirementForm() {
   }));
 
   return (
-    <div className="min-h-dvh bg-bg-subtle text-fg pb-28 md:pb-10">
-      <header className="sticky top-0 z-40 bg-bg/95 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top)]">
-        <div className="max-w-lg mx-auto px-2 h-14 flex items-center gap-1">
-          <Link
-            to="/requirements"
-            className="w-11 h-11 flex items-center justify-center rounded-full text-fg-secondary hover:text-fg hover:bg-bg-subtle"
+    <div className="min-h-dvh flex flex-col bg-bg-subtle text-fg pb-28 md:pb-10">
+      <Header />
+      <div className="sticky top-15 md:top-18 z-30 bg-bg/95 backdrop-blur-md border-b border-border">
+        <div className="max-w-lg mx-auto px-4 h-14 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/"))}
+            className="w-10 h-10 flex items-center justify-center rounded-full text-fg-secondary hover:text-fg hover:bg-bg-subtle transition-colors cursor-pointer"
             aria-label={t("common.back")}
           >
             <ArrowLeft className="w-5 h-5" aria-hidden />
-          </Link>
-          <h1 className="text-lg font-display font-bold flex-1">
+          </button>
+          <h1 className="text-lg font-display font-bold flex-1 truncate">
             {id ? t("req.form.titleEdit") : t("req.form.titleNew")}
           </h1>
+          <Link
+            to="/"
+            className="text-xs font-display font-semibold text-fg-muted hover:text-orange transition-colors shrink-0"
+          >
+            {t("nav.home")}
+          </Link>
         </div>
-      </header>
+      </div>
 
-      <main className="max-w-lg mx-auto px-4 py-5">
+      <main className="max-w-lg mx-auto px-4 py-5 flex-1 w-full">
         {loading ? (
           <p role="status" className="text-sm text-fg-secondary text-center py-10">
             {t("common.loading")}

@@ -7,7 +7,10 @@ import { getTutors } from "../api/tutors";
 import { getLookups } from "../api/lookups";
 import { useAuthStore } from "../store/authStore";
 
-vi.mock("../api/tutors", () => ({ getTutors: vi.fn() }));
+vi.mock("../api/tutors", () => ({
+  getTutors: vi.fn(),
+  getFeaturedTutors: vi.fn().mockResolvedValue([]),
+}));
 vi.mock("../api/lookups", () => ({ getLookups: vi.fn() }));
 
 const LOOKUPS = {

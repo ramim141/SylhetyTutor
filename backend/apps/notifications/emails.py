@@ -181,6 +181,51 @@ COPY = {
             "আপনার commission ২১ দিনের বেশি বাকি, তাই নতুন apply বন্ধ আছে। চালু করতে দিন: {link}\n",
         ),
     },
+    Notification.Kind.REVIEW_RECEIVED: {
+        "en": (
+            "You received a new review",
+            "A guardian left a review on your tutor profile.\n\nView profile: {link}\n",
+        ),
+        "bn": (
+            "আপনার প্রোফাইলে নতুন রিভিউ এসেছে",
+            "একজন অভিভাবক আপনার প্রোফাইলে রিভিউ দিয়েছেন।\n\nপ্রোফাইল দেখুন: {link}\n",
+        ),
+        "mixed": (
+            "আপনার profile এ নতুন review এসেছে",
+            "একজন guardian আপনার tutor profile এ review দিয়েছেন।\n\nProfile দেখুন: {link}\n",
+        ),
+    },
+    Notification.Kind.REPORT_ACTION_TAKEN: {
+        "en": (
+            "Update on reported issue",
+            "An update regarding your account or report: {reason}\n\nDashboard: {link}\n",
+        ),
+        "bn": (
+            "রিপোর্ট সম্পর্কিত আপডেট",
+            "আপনার একাউন্ট বা অভিযোগ সম্পর্কিত আপডেট: {reason}\n\nড্যাশবোর্ড: {link}\n",
+        ),
+        "mixed": (
+            "Report সম্পর্কিত update",
+            "আপনার account বা report সম্পর্কিত update: {reason}\n\nDashboard: {link}\n",
+        ),
+    },
+    Notification.Kind.REPLACEMENT_REQUESTED: {
+        "en": (
+            "Tuition replacement request received",
+            "We received your tuition replacement request. Our team will contact you shortly.\n\n"
+            "Dashboard: {link}\n",
+        ),
+        "bn": (
+            "টিউশন পরিবর্তনের আবেদন গ্রহণ করা হয়েছে",
+            "আপনার বিকল্প টিউটরের আবেদন গ্রহণ করা হয়েছে। আমাদের টিম দ্রুত যোগাযোগ করবে।\n\n"
+            "ড্যাশবোর্ড: {link}\n",
+        ),
+        "mixed": (
+            "Tuition replacement request নেওয়া হয়েছে",
+            "আপনার replacement request পাওয়া গেছে। আমাদের team খুব দ্রুত যোগাযোগ করবে।\n\n"
+            "Dashboard: {link}\n",
+        ),
+    },
 }
 
 LINKS = {
@@ -196,6 +241,9 @@ LINKS = {
     Notification.Kind.COMMISSION_DUE: "{path}",
     Notification.Kind.COMMISSION_REMINDER: "{path}",
     Notification.Kind.ACCOUNT_SUSPENDED: "{path}",
+    Notification.Kind.REVIEW_RECEIVED: "{path}",
+    Notification.Kind.REPORT_ACTION_TAKEN: "{path}",
+    Notification.Kind.REPLACEMENT_REQUESTED: "{path}",
 }
 
 

@@ -28,6 +28,7 @@ import { TutorCard } from "../components/tutor/TutorCard";
 import { TutorCardSkeleton } from "../components/tutor/TutorCardSkeleton";
 import { TutorFilters } from "../components/tutor/TutorFilters";
 import { Alert } from "../components/ui/Alert";
+import { useAuthStore } from "../store/authStore";
 import { BottomSheet } from "../components/ui/BottomSheet";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
@@ -46,8 +47,19 @@ export default function Search() {
   const [draft, setDraft] = useState({});
   const [text, setText] = useState(filters.q ?? "");
   const [state, setState] = useState("loading"); // loading | ready | error
+  const user = useAuthStore((s) => s.user);
   const [data, setData] = useState({ count: 0, results: [] });
   const [reloadKey, setReloadKey] = useState(0);
+
+  const displayedResults = useMemo(() => {
+    if (!data?.results) return [];
+    if (user?.role !== "tutor") return data.results;
+    return data.results.filter((t) => {
+      if (t.userId != null && Number(t.userId) === Number(user.id)) return false;
+      if (user.tutor_slug && t.slug === user.tutor_slug) return false;
+      return true;
+    });
+  }, [data?.results, user?.id, user?.role, user?.tutor_slug]);
 
   const change = useCallback(
     (patch, { replace = false } = {}) =>
@@ -223,15 +235,15 @@ export default function Search() {
               </div>
             )}
 
-            {state === "ready" && data.results.length > 0 && (
+            {state === "ready" && displayedResults.length > 0 && (
               <div className={GRID}>
-                {data.results.map((tutor) => (
+                {displayedResults.map((tutor) => (
                   <TutorCard key={tutor.id} {...tutor} />
                 ))}
               </div>
             )}
 
-            {state === "ready" && data.results.length === 0 && (
+            {state === "ready" && displayedResults.length === 0 && (
               <div className="max-w-lg mx-auto text-center py-10 px-6 bg-bg-card rounded-lg border border-border flex flex-col items-center gap-3">
                 <div className="w-14 h-14 rounded-full bg-orange-light text-orange-text flex items-center justify-center">
                   <GraduationCap className="w-7 h-7" aria-hidden />

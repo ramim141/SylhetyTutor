@@ -19,6 +19,7 @@ function renderAt(roles = ["admin"]) {
           }
         />
         <Route path="/login" element={<div>Login Page</div>} />
+        <Route path="/tutor/requirements" element={<div>Tutor Requirements Page</div>} />
       </Routes>
     </MemoryRouter>,
   );
@@ -49,4 +50,10 @@ describe("RoleRoute", () => {
       expect(screen.getByText(mixed["forbidden.title"])).toBeInTheDocument();
     },
   );
+
+  it("redirects a tutor trying to access a guardian requirement route to /tutor/requirements", () => {
+    useAuthStore.setState({ status: "authenticated", user: { role: "tutor" } });
+    renderAt(["guardian"]);
+    expect(screen.getByText("Tutor Requirements Page")).toBeInTheDocument();
+  });
 });

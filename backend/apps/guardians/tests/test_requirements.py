@@ -120,11 +120,17 @@ def test_guest_gets_401(lookups):
         assert response.status_code == 401
 
 
-def test_tutor_and_admin_cannot_use_guardian_endpoints(lookups):
-    for role, phone in (("tutor", "01755555555"), ("admin", "01766666666")):
-        client = client_for(make_user(role, phone))
-        assert client.get(LIST).status_code == 403
-        assert client.post(LIST, payload(), format="json").status_code == 403
+def test_tutor_cannot_use_guardian_endpoints(lookups):
+    client = client_for(make_user("tutor", "01755555555"))
+    assert client.get(LIST).status_code == 403
+    assert client.post(LIST, payload(), format="json").status_code == 403
+
+
+def test_admin_can_use_guardian_endpoints(lookups):
+    client = client_for(make_user("admin", "01766666666"))
+    assert client.get(LIST).status_code == 200
+    res = client.post(LIST, payload(), format="json")
+    assert res.status_code == 201
 
 
 def test_guardian_cannot_see_matching(lookups, guardian):

@@ -26,6 +26,9 @@ class Notification(models.Model):
         COMMISSION_DUE = "commission_due", "A commission is due"
         COMMISSION_REMINDER = "commission_reminder", "A commission is overdue"
         ACCOUNT_SUSPENDED = "account_suspended", "Applying is paused until commission is paid"
+        REVIEW_RECEIVED = "review_received", "A guardian left a review on your profile"
+        REPORT_ACTION_TAKEN = "report_action_taken", "An action was taken on a reported issue"
+        REPLACEMENT_REQUESTED = "replacement_requested", "Tuition replacement requested"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(

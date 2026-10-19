@@ -142,7 +142,8 @@ describe("TutorApplications page", () => {
     getMyApplications.mockResolvedValueOnce([]);
     const { unmount } = renderPage();
     expect(await screen.findByText(mixed["app.mine.empty"])).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: mixed["app.mine.find"] })).toHaveAttribute(
+    const findLinks = screen.getAllByRole("link", { name: mixed["app.mine.find"] });
+    expect(findLinks[findLinks.length - 1]).toHaveAttribute(
       "href",
       "/tutor/requirements",
     );

@@ -17,6 +17,8 @@ export const EDIT_FLOW = [4, 5, 6];
 
 export const YEAR_VALUES = ["1st Year", "2nd Year", "3rd Year", "4th Year", "Masters"];
 export const BIO_MAX = 400;
+export const FEE_MIN = 500;
+export const FEE_MAX = 15000;
 
 /** Fields the server reports as `student_id_number`, `fee_min` … as the form's error keys. */
 export const FIELD_NAMES = {
@@ -88,9 +90,13 @@ export function validateStep(step, draft, profile) {
   }
   if (step === 6) {
     if (blank(draft.fee_min)) problems.feeMin = "error.tr.required";
-    else if (!whole(draft.fee_min)) problems.feeMin = "error.feeMin.min_value";
+    else if (!whole(draft.fee_min) || Number(draft.fee_min) < FEE_MIN) problems.feeMin = "error.feeMin.min_value";
+    else if (Number(draft.fee_min) > FEE_MAX) problems.feeMin = "error.feeMin.max_value";
+
     if (blank(draft.fee_max)) problems.feeMax = "error.tr.required";
-    else if (!whole(draft.fee_max)) problems.feeMax = "error.feeMax.min_value";
+    else if (!whole(draft.fee_max) || Number(draft.fee_max) < FEE_MIN) problems.feeMax = "error.feeMax.min_value";
+    else if (Number(draft.fee_max) > FEE_MAX) problems.feeMax = "error.feeMax.max_value";
+
     if (!problems.feeMin && !problems.feeMax && Number(draft.fee_min) > Number(draft.fee_max)) {
       problems.feeMin = "error.feeMin.fee_range";
     }

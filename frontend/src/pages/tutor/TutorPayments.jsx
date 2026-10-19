@@ -13,6 +13,7 @@ import {
 import { Alert } from "../../components/ui/Alert";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
+import { Header } from "../../components/layout/Header";
 import { BottomNav } from "../../components/layout/BottomNav";
 import { PayDialog } from "../../components/payments/PayDialog";
 
@@ -93,7 +94,11 @@ export default function TutorPayments() {
 
   return (
     <div className="min-h-dvh bg-bg-subtle text-fg pb-28 md:pb-10">
-      <header className="sticky top-0 z-40 bg-bg/95 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top)]">
+      <div className="hidden md:block">
+        <Header />
+      </div>
+
+      <header className="md:hidden sticky top-0 z-40 bg-bg/95 backdrop-blur-md border-b border-border pt-[env(safe-area-inset-top)]">
         <div className="max-w-lg mx-auto px-2 h-14 flex items-center gap-1">
           <Link
             to="/dashboard"

@@ -53,14 +53,39 @@ export function Header() {
             to="/tutors"
             className="text-sm font-display font-semibold text-fg-secondary hover:text-fg transition-colors"
           >
-            {t("nav.findTutors")}
+            {user?.role === "tutor" ? t("nav.browseTutors") : t("nav.findTutors")}
           </Link>
-          <a
-            href="/post-requirement"
-            className="text-sm font-display font-semibold text-fg-secondary hover:text-fg transition-colors"
-          >
-            {t("nav.postRequirement")}
-          </a>
+          {user?.role === "tutor" ? (
+            <>
+              <Link
+                to="/tutor/requirements"
+                className="text-sm font-display font-semibold text-fg-secondary hover:text-fg transition-colors"
+              >
+                {t("nav.tuitionJobs")}
+              </Link>
+              <Link
+                to="/tutor/profile"
+                className="text-sm font-display font-semibold text-fg-secondary hover:text-fg transition-colors"
+              >
+                {t("nav.myProfile")}
+              </Link>
+            </>
+          ) : (
+            <Link
+              to="/requirements/new"
+              className="text-sm font-display font-semibold text-fg-secondary hover:text-fg transition-colors"
+            >
+              {t("nav.postRequirement")}
+            </Link>
+          )}
+          {user?.role === "admin" && (
+            <Link
+              to="/admin/dashboard"
+              className="text-sm font-display font-semibold text-orange-text hover:text-orange transition-colors"
+            >
+              {t("nav.adminDashboard")}
+            </Link>
+          )}
         </nav>
 
         {/* Desktop Actions */}
@@ -84,10 +109,10 @@ export function Header() {
 
           {status === "authenticated" && user ? (
             <div className="flex items-center gap-2">
-              <Link to="/dashboard">
+              <Link to={user.role === "admin" ? "/admin/dashboard" : "/dashboard"}>
                 <Button variant="ghost" size="sm" className="font-display font-semibold">
                   <UserIcon className="w-4 h-4 mr-1 text-orange" />
-                  <span>{user.full_name?.split(" ")[0] || t("dashboard.title")}</span>
+                  <span>{user.full_name?.split(" ")[0] || (user.role === "admin" ? t("nav.adminDashboard") : t("dashboard.title"))}</span>
                 </Button>
               </Link>
               <Button

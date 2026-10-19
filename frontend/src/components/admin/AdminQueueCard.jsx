@@ -47,6 +47,21 @@ export function AdminQueueCard() {
           {t("admin.pay.open")}
         </Button>
       </Link>
+      <Link to="/admin/reports" className="block">
+        <Button variant="ghost" className="w-full">
+          {t("admin.reports.open")}
+        </Button>
+      </Link>
+      <a
+        href="http://127.0.0.1:8000/admin/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block"
+      >
+        <Button variant="ghost" className="w-full text-xs text-fg-muted hover:text-fg">
+          Django Backend Admin ↗
+        </Button>
+      </a>
     </section>
   );
 }
